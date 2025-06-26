@@ -1,20 +1,39 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import AppNavigator from './src/navigation/AppNavigator';
+import { ThemeProvider, useThemeContext } from './src/context/ThemeContext';
+import CustomToast from './src/components/CustomToast';
+import Toast from 'react-native-toast-message';
+import { AuthProvider } from './src/context/AuthContext';
+
+const AppInner = () => {
+  const { theme } = useThemeContext();
+
+  return (
+    <>
+    <NavigationContainer theme={theme}>
+      <AuthProvider>
+      <AppNavigator />
+      </AuthProvider>
+    </NavigationContainer>
+          <Toast
+        position="top"
+        bottomOffset={40}
+        config={{
+          success: (props) => <CustomToast {...props} type="success" />,
+          error: (props) => <CustomToast {...props} type="error" />,
+          info: (props) => <CustomToast {...props} type="info" />,
+        }}
+      />
+    </>
+    
+  );
+};
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <ThemeProvider>
+      <AppInner />
+    </ThemeProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
