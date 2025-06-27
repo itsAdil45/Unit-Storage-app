@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text , View, FlatList} from 'react-native';
-import WarehouseList from '../components/WarehouseList';
+import WarehouseList from '../components/Lists/WarehouseList';
 export default function WareHouses() {
   return (
       <FlatList

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text , View, FlatList} from 'react-native';
-import ExpenseList from '../components/ExpenseList';
+import ExpenseList from '../components/Lists/ExpenseList';
 export default function Expenses() {
   return (
       <FlatList
@@ -11,7 +11,6 @@ export default function Expenses() {
               removeClippedSubviews={false}
               ListHeaderComponent={() => (
           <View>
-              {/* <QuickActions/> */}
               <ExpenseList/>
           </View>
           )}

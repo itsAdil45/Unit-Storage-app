@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, FlatList} from 'react-native';
-import UserList from '../components/UserList';
+import CustomersList from '../components/Lists/CustomersList';
 export default function Customers() {
   return (
       <FlatList
@@ -12,7 +12,7 @@ export default function Customers() {
               ListHeaderComponent={() => (
           <View>
               {/* <QuickActions/> */}
-              <UserList/>
+              <CustomersList/>
           </View>
           )}
     />

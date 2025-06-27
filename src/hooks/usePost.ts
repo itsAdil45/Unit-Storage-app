@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BASE_URL = 'https://chooseandmoves.cloud/unitapi';
 
@@ -16,16 +17,25 @@ export const usePost = () => {
     token?: string
   ): Promise<ApiResponse<T> | null> => {
     try {
+      // If token not passed, try to fetch it from AsyncStorage
+      const authToken = token || await AsyncStorage.getItem('auth_token');
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const response = await fetch(`${BASE_URL}${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers,
         body: JSON.stringify(payload),
       });
 
       const data = await response.json();
+
       if (!response.ok) {
         console.error('API Error:', data);
         throw new Error(data.message || 'Unknown API error');
