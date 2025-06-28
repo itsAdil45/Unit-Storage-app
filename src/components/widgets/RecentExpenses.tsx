@@ -10,8 +10,9 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
-
-import { ExpenseData } from '../../types/Types';
+import { useNavigation } from '@react-navigation/native';
+import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import { ExpenseData,DrawerParamList } from '../../types/Types';
 
 interface Props {
   expenses: ExpenseData[] | null;
@@ -20,6 +21,7 @@ interface Props {
 const RecentExpenses: React.FC<Props> = ({ expenses }) => {
   const { dark } = useTheme();
   const themeColors = dark ? darkColors : lightColors;
+const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
 
   return (
     <View style={[styles.card, { backgroundColor: themeColors.card }]}>
@@ -36,6 +38,9 @@ const RecentExpenses: React.FC<Props> = ({ expenses }) => {
 
       <TouchableOpacity
         style={[styles.viewAllButton, { borderColor: themeColors.primary }]}
+          onPress={() => navigation.navigate('Expenses')}
+
+        
       >
         <Text style={[styles.viewAllText, { color: themeColors.primary }]}>
           View All
@@ -43,7 +48,7 @@ const RecentExpenses: React.FC<Props> = ({ expenses }) => {
       </TouchableOpacity>
 
       <FlatList
-        data={expenses || []}
+        data={expenses?.slice(0,4) || []}
         keyExtractor={(item) => String(item.id)}
         ItemSeparatorComponent={() => (
           <View

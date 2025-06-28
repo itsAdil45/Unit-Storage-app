@@ -1,9 +1,15 @@
+
 export type StorageUnit = {
-  id: string;
-  percentage: number;
-  customers: number;
-  warehouse: string;
-  floor: string;
+  id: number;              // Unit number (display ID)
+  dbId: number;           // Database ID for operations
+  percentage: number;     // Occupancy percentage
+  customers: number;      // Number of customers
+  warehouse: string;      // Warehouse name
+  floor: string;         // Floor identifier
+  size: number;          // Size in square feet
+  status: string;        // Unit status (e.g., 'available', 'maintenance')
+  warehouseId: number;   // Warehouse ID for operations
+  bookings: any[];       // Array of bookings (you may want to define a Booking type)
 };
 
 // types/Unit.ts
@@ -71,3 +77,10 @@ export interface ExpenseData {
   };
 }
 
+
+
+export type DrawerParamList = {
+  Home: undefined;
+  Expenses: undefined;
+  // Add any other screens here
+};
