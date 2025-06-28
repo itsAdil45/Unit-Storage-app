@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Modal,
   View,
@@ -7,10 +7,14 @@ import {
   TextInput,
   TouchableOpacity,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
+import { useGet } from '../../hooks/useGet'; // Adjust path as needed
+import { usePost } from '../../hooks/usePost'; // Adjust path as needed
 
 interface AddUnitModalProps {
   visible: boolean;
@@ -23,6 +27,17 @@ interface AddUnitModalProps {
   }) => void;
 }
 
+interface Warehouse {
+  id: number;
+  name: string;
+  address: string;
+  createdAt: string;
+  updatedAt: string;
+  videoFileLink: string;
+  deleted: number;
+  userId: number;
+}
+
 const AddUnitModal: React.FC<AddUnitModalProps> = ({
   visible,
   onClose,
@@ -30,15 +45,93 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
 }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
+  const { get, loading: getLoading } = useGet();
+  const { post } = usePost();
 
   const [warehouse, setWarehouse] = React.useState('');
   const [unitNumber, setUnitNumber] = React.useState('');
   const [size, setSize] = React.useState('');
   const [floor, setFloor] = React.useState('');
+  const [warehouses, setWarehouses] = React.useState<Warehouse[]>([]);
+  const [submitting, setSubmitting] = React.useState(false);
 
-  const handleAdd = () => {
-    onAdd({ warehouse, unitNumber, size, floor });
-    onClose(); // Optionally reset fields if needed
+  // Fetch warehouses when modal opens
+  useEffect(() => {
+    if (visible) {
+      fetchWarehouses();
+    }
+  }, [visible]);
+
+  const fetchWarehouses = async () => {
+    try {
+      const response = await get('/warehouses');
+      if (response && response.status === 'success' && response.data?.warehouses) {
+        setWarehouses(response.data.warehouses);
+      } else {
+        Alert.alert('Error', 'Failed to fetch warehouses');
+      }
+    } catch (error) {
+      console.error('Error fetching warehouses:', error);
+      Alert.alert('Error', 'Failed to fetch warehouses');
+    }
+  };
+
+  const handleAdd = async () => {
+    // Validate required fields
+    if (!warehouse || !unitNumber || !size || !floor) {
+      Alert.alert('Error', 'Please fill all fields');
+      return;
+    }
+
+    setSubmitting(true);
+    
+    try {
+      const payload = {
+        warehouseId: parseInt(warehouse),
+        unitNumber: unitNumber.trim(),
+        size: parseInt(size),
+        floor: floor.trim(),
+        status: 'available'
+      };
+
+      const response = await post('/storage-units', payload); // Adjust endpoint as needed
+      
+      if (response && response.status === 'success') {
+        Alert.alert('Success', 'Unit added successfully');
+        
+        // Call the onAdd callback with the original format
+        onAdd({ 
+          warehouse: warehouses.find(w => w.id.toString() === warehouse)?.name || warehouse,
+          unitNumber, 
+          size, 
+          floor 
+        });
+        
+        // Reset form
+        setWarehouse('');
+        setUnitNumber('');
+        setSize('');
+        setFloor('');
+        
+        onClose();
+      } else {
+        Alert.alert('Error', response?.message || 'Failed to add unit');
+      }
+    } catch (error) {
+      console.error('Error adding unit:', error);
+      Alert.alert('Error', 'Failed to add unit. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    // Reset form when closing
+    setWarehouse('');
+    setUnitNumber('');
+    setSize('');
+    setFloor('');
+    onClose();
   };
 
   return (
@@ -46,7 +139,7 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
         <View style={[styles.modalContainer, { backgroundColor: colors.card }]}>
@@ -54,16 +147,28 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
 
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Warehouse</Text>
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={warehouse}
-                onValueChange={(itemValue) => setWarehouse(itemValue)}
-                style={styles.picker}
-              >
-                <Picker.Item label="Select Warehouse" value="" />
-                <Picker.Item label="Warehouse A" value="A" />
-                <Picker.Item label="Warehouse B" value="B" />
-              </Picker>
+            <View style={[styles.pickerWrapper, { borderColor: colors.border }]}>
+              {getLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color={colors.text} />
+                  <Text style={[styles.loadingText, { color: colors.text }]}>Loading warehouses...</Text>
+                </View>
+              ) : (
+                <Picker
+                  selectedValue={warehouse}
+                  onValueChange={(itemValue) => setWarehouse(itemValue)}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Select Warehouse" value="" />
+                  {warehouses.map((wh) => (
+                    <Picker.Item 
+                      key={wh.id} 
+                      label={wh.name} 
+                      value={wh.id.toString()} 
+                    />
+                  ))}
+                </Picker>
+              )}
             </View>
           </View>
 
@@ -75,6 +180,7 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
               placeholder="e.g. 101"
               style={[styles.input, { color: colors.text, borderColor: colors.border }]}
               placeholderTextColor={colors.border}
+              editable={!submitting}
             />
           </View>
 
@@ -87,6 +193,7 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
               keyboardType="numeric"
               style={[styles.input, { color: colors.text, borderColor: colors.border }]}
               placeholderTextColor={colors.border}
+              editable={!submitting}
             />
           </View>
 
@@ -95,18 +202,31 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
             <TextInput
               value={floor}
               onChangeText={setFloor}
-              placeholder="e.g. 1"
+              placeholder="e.g. Ground"
               style={[styles.input, { color: colors.text, borderColor: colors.border }]}
               placeholderTextColor={colors.border}
+              editable={!submitting}
             />
           </View>
 
           <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <TouchableOpacity 
+              style={[styles.closeButton, submitting && styles.disabledButton]} 
+              onPress={handleClose}
+              disabled={submitting}
+            >
               <Text style={styles.buttonText}>Close</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-              <Text style={styles.buttonText}>Add Unit</Text>
+            <TouchableOpacity 
+              style={[styles.addButton, submitting && styles.disabledButton]} 
+              onPress={handleAdd}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Add Unit</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -158,6 +278,16 @@ const styles = StyleSheet.create({
     height: 50,
     width: '100%',
   },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+  },
+  loadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+  },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -175,6 +305,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   buttonText: {
     color: '#fff',
