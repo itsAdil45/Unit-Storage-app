@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,81 +6,147 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from "../constants/color"
-import { StorageUnit } from '../types/Types';
-import { Item } from '../types/Types';
-import { floors, warehouses, occupancyFilters } from '../Utils/Filters';
+import { UnitData } from '../types/Types';
+import { warehouses } from '../Utils/Filters';
+import { useGet } from '../hooks/useGet';
+import { useDelete } from '../hooks/useDelete';
+import AnimatedDeleteWrapper, { useAnimatedDelete } from './Reusable/AnimatedDeleteWrapper';
+import EditUnitModal from './modals/EditUnitModal';
+import Pagination from './Reusable/Pagination';
 
-const units: StorageUnit[] = [
-  { id: 'G-401', percentage: 43, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-402', percentage: 100, customers: 3, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-403', percentage: 100, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-404', percentage: 100, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-405', percentage: 100, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-406', percentage: 100, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-407', percentage: 100, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-408', percentage: 100, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-409', percentage: 85, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-410', percentage: 60, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-411', percentage: 90, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-412', percentage: 75, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-413', percentage: 50, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-414', percentage: 100, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-415', percentage: 65, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-416', percentage: 80, customers: 1, warehouse: 'Warehouse 4B', floor: 'Ground' },
-  { id: 'G-418', percentage: 45, customers: 1, warehouse: 'Warehouse 4C', floor: 'Ground' },
-  { id: 'F-501', percentage: 70, customers: 2, warehouse: 'Warehouse 4B', floor: 'First' },
-  { id: 'F-502', percentage: 55, customers: 1, warehouse: 'Warehouse 4B', floor: 'First' },
-  { id: 'F-503', percentage: 90, customers: 2, warehouse: 'Warehouse 4B', floor: 'First' },
-];
+// Updated StorageUnit type to match API response
+export type StorageUnit = {
+  id: number;              
+  warehouseId: number;     
+  warehouseName: string;   
+  unitNumber: string;      
+  size: number;           
+  floor: string;          
+  status: 'available' | 'maintenance'; 
+  pricePerDay: number | null;
+  totalSpaceOccupied: number;
+  bookings: any[];        // Array of bookings
+  percentage: number;     // Calculated occupancy percentage
+  customers: number;      // Calculated number of customers
+};
+
+// Type for grouped warehouse data
+type WarehouseGroup = {
+  [warehouseName: string]: StorageUnit[];
+};
 
 const UnitList = () => {
   const [selectedWarehouse, setSelectedWarehouse] = useState('All');
-  const [selectedFloor, setSelectedFloor] = useState('All');
-  const [selectedOccupancy, setSelectedOccupancy] = useState('All');
-  const [sortBy, setSortBy] = useState<keyof Item>('id');
+  const [sortBy, setSortBy] = useState<'unitNumber' | 'percentage' | 'customers'>('unitNumber');
   const [sortDirection, setSortDirection] = useState('asc');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<StorageUnit | null>(null);
+  
+  // Changed to store all units and grouped data
+  const [allUnits, setAllUnits] = useState<StorageUnit[]>([]);
+  const [warehouseGroups, setWarehouseGroups] = useState<WarehouseGroup>({});
+  const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [editingUnit, setEditingUnit] = useState<UnitData | null>(null);
+  
+  // Pagination states - now for client-side pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+  
   const { dark } = useTheme();
-
-  // Theme-based colors
   const colors = dark ? darkColors : lightColors;
   
-  const filteredAndSortedUnits = useMemo(() => {
-    let filtered = units.filter((unit) => {
-      // Warehouse filter
-      if (selectedWarehouse !== 'All' && unit.warehouse !== selectedWarehouse) {
-        return false;
-      }
-      
-      // Floor filter
-      if (selectedFloor !== 'All' && unit.floor !== selectedFloor) {
-        return false;
-      }
-      
-      // Occupancy filter
-      if (selectedOccupancy !== 'All') {
-        const occupancyFilter = occupancyFilters.find(f => f.label === selectedOccupancy);
-        if (occupancyFilter && (unit.percentage < occupancyFilter.min || unit.percentage > occupancyFilter.max)) {
-          return false;
-        }
-      }
-      return true;
-    });
+  const { get } = useGet();
+  const { del: deleteRequest } = useDelete();
+  
+  // Use the custom hook for animated delete
+  const { removingId, handleDelete: baseHandleDelete } = useAnimatedDelete<StorageUnit>(
+    deleteRequest,
+    '/storage-units'
+  );
 
-    filtered.sort((a, b) => {
-      let aValue = a[sortBy];
-      let bValue = b[sortBy];
+  useEffect(() => {
+    fetchAllUnits();
+  }, []);
+
+  // Reset to page 1 when warehouse filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedWarehouse]);
+
+  const fetchAllUnits = async () => {
+    setLoading(true);
+    try {
+      // Fetch all units at once - modify this endpoint as needed
+      const endpoint = `/storage-units?limit=1000`; // or `/storage-units?limit=1000` if you need to specify a large limit
+      const res = await get(endpoint);
       
-      if (sortBy === 'id') {
-        aValue = a.id;
-        bValue = b.id;
+      if (res?.status === 'success') {
+        // Process units directly from API response
+        const processedUnits = res.data.units.map((apiUnit: any): StorageUnit => {
+          const totalBookings = apiUnit.bookings?.length || 0;
+          const totalCustomers = new Set(apiUnit.bookings?.map((b: any) => b.customerId) || []).size;
+          const occupancyPercentage = apiUnit.totalSpaceOccupied ? 
+            Math.round((apiUnit.totalSpaceOccupied / apiUnit.size) * 100) : 0;
+
+          return {
+            ...apiUnit,
+            percentage: occupancyPercentage,
+            customers: totalCustomers,
+          };
+        });
+        
+        setAllUnits(processedUnits);
+        
+        // Group units by warehouse
+        const grouped = groupUnitsByWarehouse(processedUnits);
+        setWarehouseGroups(grouped);
       }
+    } catch (error) {
+      console.error('Error fetching units:', error);
+      setAllUnits([]);
+      setWarehouseGroups({});
+    }
+    
+    setLoading(false);
+    if (initialLoad) {
+      setInitialLoad(false);
+    }
+  };
+
+  // Helper function to group units by warehouse
+  const groupUnitsByWarehouse = (units: StorageUnit[]): WarehouseGroup => {
+    return units.reduce((groups, unit) => {
+      const warehouseName = unit.warehouseName;
+      if (!groups[warehouseName]) {
+        groups[warehouseName] = [];
+      }
+      groups[warehouseName].push(unit);
+      return groups;
+    }, {} as WarehouseGroup);
+  };
+
+  // Get filtered and sorted units with client-side pagination
+  const { paginatedUnits, totalPages, totalUnits } = useMemo(() => {
+    // Get units based on selected warehouse
+    let unitsToDisplay: StorageUnit[] = [];
+    
+    if (selectedWarehouse === 'All') {
+      unitsToDisplay = allUnits;
+    } else {
+      unitsToDisplay = warehouseGroups[selectedWarehouse] || [];
+    }
+
+    // Sort the units
+    const sorted = [...unitsToDisplay].sort((a, b) => {
+      let aValue: any = a[sortBy];
+      let bValue: any = b[sortBy];
       
       if (sortDirection === 'asc') {
         return aValue > bValue ? 1 : -1;
@@ -89,8 +155,19 @@ const UnitList = () => {
       }
     });
 
-    return filtered;
-  }, [units, selectedWarehouse, selectedFloor, selectedOccupancy, sortBy, sortDirection]);
+    // Calculate pagination
+    const total = sorted.length;
+    const pages = Math.ceil(total / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginated = sorted.slice(startIndex, endIndex);
+
+    return {
+      paginatedUnits: paginated,
+      totalPages: pages,
+      totalUnits: total
+    };
+  }, [allUnits, warehouseGroups, selectedWarehouse, sortBy, sortDirection, currentPage, itemsPerPage]);
 
   const getStatusColor = (percentage: number) => {
     if (percentage >= 100) return '#FF3B30'; // Red - Full
@@ -106,36 +183,120 @@ const UnitList = () => {
     return 'AVAILABLE';
   };
 
-  const renderFilterChip = (label: string, isSelected: boolean, onPress: () => void) => (
-    <TouchableOpacity
-      key={label}
-      onPress={onPress}
-      style={[
-        styles.filterChip,
-        {
-          backgroundColor: isSelected ? colors.primary : (dark ? colors.border : '#F2F2F7'),
-          borderColor: isSelected ? colors.primary : colors.border
-        }
-      ]}
-    >
-      <Text style={[
-        styles.filterChipText,
-        {
-          color: isSelected ? '#FFFFFF' : colors.text
-        }
-      ]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
+  const handleEdit = (unit: StorageUnit) => {
+    // Transform StorageUnit to UnitData for the modal
+    const unitData: UnitData = {
+      id: unit.id,
+      unitNumber: unit.unitNumber,
+      size: unit.size,
+      floor: unit.floor,
+      status: unit.status,
+      warehouseId: unit.warehouseId,
+      warehouseName: unit.warehouseName,
+      pricePerDay: unit.pricePerDay,
+      totalSpaceOccupied: unit.totalSpaceOccupied,
+    };
+    setEditingUnit(unitData);
+  };
 
+  const updateUnit = (updatedUnit: UnitData) => {
+    // Update in allUnits
+    setAllUnits((prev) =>
+      prev.map((unit) => 
+        unit.id === updatedUnit.id 
+          ? { ...unit, 
+              unitNumber: updatedUnit.unitNumber,
+              size: updatedUnit.size,
+              floor: updatedUnit.floor,
+              status: updatedUnit.status 
+            }
+          : unit
+      )
+    );
+    
+    // Update warehouse groups
+    setWarehouseGroups((prev) => {
+      const newGroups = { ...prev };
+      Object.keys(newGroups).forEach(warehouseName => {
+        newGroups[warehouseName] = newGroups[warehouseName].map(unit =>
+          unit.id === updatedUnit.id 
+            ? { ...unit, 
+                unitNumber: updatedUnit.unitNumber,
+                size: updatedUnit.size,
+                floor: updatedUnit.floor,
+                status: updatedUnit.status 
+              }
+            : unit
+        );
+      });
+      return newGroups;
+    });
+  };
+
+  // Custom delete handler that updates both allUnits and warehouseGroups
+  const handleUnitDelete = (unitId: number) => {
+    setAllUnits(prev => prev.filter(unit => unit.id !== unitId));
+    setWarehouseGroups(prev => {
+      const newGroups = { ...prev };
+      Object.keys(newGroups).forEach(warehouseName => {
+        newGroups[warehouseName] = newGroups[warehouseName].filter(unit => unit.id !== unitId);
+      });
+      return newGroups;
+    });
+  };
+
+  // Pagination handlers
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const renderFilterChip = (label: string, isSelected: boolean, onPress: () => void) => {
+    // Show count for each warehouse
+    const count = label === 'All' ? allUnits.length : (warehouseGroups[label]?.length || 0);
+    
+    return (
+      <TouchableOpacity
+        key={label}
+        onPress={onPress}
+        style={[
+          styles.filterChip,
+          {
+            backgroundColor: isSelected ? colors.primary : (dark ? colors.border : '#F2F2F7'),
+            borderColor: isSelected ? colors.primary : colors.border
+          }
+        ]}
+      >
+        <Text style={[
+          styles.filterChipText,
+          {
+            color: isSelected ? '#FFFFFF' : colors.text
+          }
+        ]}>
+          {label} ({count})
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const handleDelete = async (id: number) => {
+  await baseHandleDelete(id, setAllUnits);
+  handleUnitDelete(id);
+};
   const renderRightActions = (item: StorageUnit, close: () => void) => (
     <View style={[styles.actionsContainer, { backgroundColor: colors.background }]}>
       <TouchableOpacity
         style={[styles.actionButton, styles.editButton]}
         onPress={() => {
           close();
-          alert(`Edit ${item.id}`);
+          handleEdit(item);
         }}
       >
         <Text style={styles.actionText}>Edit</Text>
@@ -144,7 +305,7 @@ const UnitList = () => {
         style={[styles.actionButton, styles.deleteButton]}
         onPress={() => {
           close();
-          alert(`Delete ${item.id}`);
+  handleDelete(item.id); // Remove the second parameter
         }}
       >
         <Text style={styles.actionText}>Delete</Text>
@@ -152,88 +313,104 @@ const UnitList = () => {
     </View>
   );
 
+
   const renderStorageUnit = ({ item, index }: { item: StorageUnit; index: number }) => {
     let swipeableRow: Swipeable | null;
     const closeSwipe = () => swipeableRow?.close();
 
+    
     return (
-      <Swipeable 
-        ref={(ref) => { swipeableRow = ref; }}
-        renderRightActions={() => renderRightActions(item, closeSwipe)}
-        overshootRight={false}
+      <AnimatedDeleteWrapper
+        itemId={item.id}
+        removingId={removingId}
+        onDelete={(id) => handleDelete(id)}
+        deleteTitle="Delete Storage Unit"
+        itemName={item.unitNumber}
       >
-        <Animated.View
-          entering={FadeInRight.delay(index * 50)}
-          exiting={FadeOutLeft}
+        <Swipeable 
+          ref={(ref) => { swipeableRow = ref; }}
+          renderRightActions={() => renderRightActions(item, closeSwipe)}
+          overshootRight={false}
         >
-          <TouchableOpacity
-            onPress={() => setSelectedUnit(selectedUnit?.id === item.id ? null : item)}
-            style={[
-              styles.unitCard,
-              {
-                backgroundColor: colors.card,
-                borderColor: selectedUnit?.id === item.id ? colors.primary : 'transparent',
-                shadowColor: dark ? '#000' : '#000'
-              },
-              selectedUnit?.id === item.id && styles.unitCardSelected
-            ]}
+          <Animated.View
+            entering={FadeInRight.delay(index * 50)}
+            exiting={FadeOutLeft}
           >
-            <View style={styles.unitCardLeft}>
-              <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(item.percentage) }]} />
-              <View style={styles.unitInfo}>
-                <Text style={[styles.unitId, { color: colors.text }]}>{item.id}</Text>
-                <Text style={[styles.unitLocation, { color: colors.subtext }]}>
-                  {item.warehouse} • {item.floor} Floor
-                </Text>
-                <View style={styles.customerInfo}>
-                  <Text style={styles.customerIcon}>👥</Text>
-                  <Text style={[styles.customerText, { color: colors.subtext }]}>
-                    {item.customers} Customer{item.customers !== 1 ? 's' : ''}
+            <TouchableOpacity
+              onPress={() => setSelectedUnit(selectedUnit?.id === item.id ? null : item)}
+              style={[
+                styles.unitCard,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: selectedUnit?.id === item.id ? colors.primary : 'transparent',
+                  shadowColor: dark ? '#000' : '#000'
+                },
+                selectedUnit?.id === item.id && styles.unitCardSelected
+              ]}
+            >
+              <View style={styles.unitCardLeft}>
+                <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(item.percentage) }]} />
+                <View style={styles.unitInfo}>
+                  <Text style={[styles.unitId, { color: colors.text }]}>{item.unitNumber}</Text>
+                  <Text style={[styles.unitLocation, { color: colors.subtext }]}>
+                    {item.warehouseName} • {item.floor} Floor • {item.size} sqft
+                  </Text>
+                  <View style={styles.customerInfo}>
+                    <Text style={styles.customerIcon}>👥</Text>
+                    <Text style={[styles.customerText, { color: colors.subtext }]}>
+                      {item.customers} Customer{item.customers !== 1 ? 's' : ''}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.unitCardRight}>
+                <View style={styles.percentageContainer}>
+                  <Text style={[styles.percentageText, { color: getStatusColor(item.percentage) }]}>
+                    {item.percentage}%
+                  </Text>
+                  <Text style={[styles.statusText, { color: getStatusColor(item.percentage) }]}>
+                    {getStatusText(item.percentage)}
                   </Text>
                 </View>
-              </View>
-            </View>
-
-            <View style={styles.unitCardRight}>
-              <View style={styles.percentageContainer}>
-                <Text style={[styles.percentageText, { color: getStatusColor(item.percentage) }]}>
-                  {item.percentage}%
-                </Text>
-                <Text style={[styles.statusText, { color: getStatusColor(item.percentage) }]}>
-                  {getStatusText(item.percentage)}
-                </Text>
-              </View>
-              <View style={styles.progressBarContainer}>
-                <View style={[styles.progressBarBackground, { backgroundColor: colors.border }]}>
-                  <View
-                    style={[
-                      styles.progressBarFill,
-                      {
-                        width: `${item.percentage}%`,
-                        backgroundColor: getStatusColor(item.percentage)
-                      }
-                    ]}
-                  />
+                <View style={styles.progressBarContainer}>
+                  <View style={[styles.progressBarBackground, { backgroundColor: colors.border }]}>
+                    <View
+                      style={[
+                        styles.progressBarFill,
+                        {
+                          width: `${item.percentage}%`,
+                          backgroundColor: getStatusColor(item.percentage)
+                        }
+                      ]}
+                    />
+                  </View>
                 </View>
               </View>
-            </View>
-          </TouchableOpacity>
-        </Animated.View>
-      </Swipeable>
+            </TouchableOpacity>
+          </Animated.View>
+        </Swipeable>
+      </AnimatedDeleteWrapper>
     );
   };
 
   const renderHeader = () => (
     <View style={[styles.headerContainer, { backgroundColor: colors.card }]}>
-      {/* Quick Filters */}
-      <View style={styles.quickFiltersContainer}>
-        <Text style={[styles.filterSectionTitle, { color: colors.text }]}>Occupancy</Text>
+      {/* Warehouse Filter */}
+      <View style={styles.filterContainer}>
+        <Text style={[styles.filterSectionTitle, { color: colors.text }]}>Warehouse</Text>
         <View style={styles.filterChipsContainer}>
-          {occupancyFilters.map((filter) =>
+          {/* Add 'All' option */}
+          {renderFilterChip(
+            'All',
+            selectedWarehouse === 'All',
+            () => setSelectedWarehouse('All')
+          )}
+          {warehouses.map((warehouse) =>
             renderFilterChip(
-              filter.label,
-              selectedOccupancy === filter.label,
-              () => setSelectedOccupancy(filter.label)
+              warehouse,
+              selectedWarehouse === warehouse,
+              () => setSelectedWarehouse(warehouse)
             )
           )}
         </View>
@@ -245,57 +422,31 @@ const UnitList = () => {
         style={styles.advancedFiltersToggle}
       >
         <Text style={[styles.advancedFiltersText, { color: colors.primary }]}>
-          {showFilters ? '▼' : '▶'} Advanced Filters
+          {showFilters ? '▼' : '▶'} Sort Options
         </Text>
       </TouchableOpacity>
 
-      {/* Advanced Filters */}
+      {/* Sort Options */}
       {showFilters && (
         <View style={styles.advancedFiltersContainer}>
-          <View style={styles.filterRow}>
-            <Text style={[styles.filterLabel, { color: colors.text }]}>Warehouse:</Text>
-            <View style={styles.filterChipsContainer}>
-              {warehouses.map((warehouse) =>
-                renderFilterChip(
-                  warehouse,
-                  selectedWarehouse === warehouse,
-                  () => setSelectedWarehouse(warehouse)
-                )
-              )}
-            </View>
-          </View>
-
-          <View style={styles.filterRow}>
-            <Text style={[styles.filterLabel, { color: colors.text }]}>Floor:</Text>
-            <View style={styles.filterChipsContainer}>
-              {floors.map((floor) =>
-                renderFilterChip(
-                  floor,
-                  selectedFloor === floor,
-                  () => setSelectedFloor(floor)
-                )
-              )}
-            </View>
-          </View>
-
           <View style={styles.filterRow}>
             <Text style={[styles.filterLabel, { color: colors.text }]}>Sort by:</Text>
             <View style={styles.sortContainer}>
               <TouchableOpacity
-                onPress={() => setSortBy('id')}
+                onPress={() => setSortBy('unitNumber')}
                 style={[
                   styles.sortButton,
                   {
-                    backgroundColor: sortBy === 'id' ? colors.primary : (dark ? colors.border : '#F2F2F7'),
-                    borderColor: sortBy === 'id' ? colors.primary : colors.border
+                    backgroundColor: sortBy === 'unitNumber' ? colors.primary : (dark ? colors.border : '#F2F2F7'),
+                    borderColor: sortBy === 'unitNumber' ? colors.primary : colors.border
                   }
                 ]}
               >
                 <Text style={[
                   styles.sortButtonText,
-                  { color: sortBy === 'id' ? '#FFFFFF' : colors.text }
+                  { color: sortBy === 'unitNumber' ? '#FFFFFF' : colors.text }
                 ]}>
-                  ID
+                  Unit Number
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -334,17 +485,45 @@ const UnitList = () => {
               </TouchableOpacity>
             </View>
           </View>
+
+          <View style={styles.filterRow}>
+            <Text style={[styles.filterLabel, { color: colors.text }]}>Direction:</Text>
+            <TouchableOpacity
+              onPress={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+              style={[styles.sortDirectionButton, { backgroundColor: colors.primary }]}
+            >
+              <Text style={styles.sortDirectionText}>
+                {sortDirection === 'asc' ? 'up' : 'down'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
       {/* Results Summary */}
       <View style={[styles.resultsSummary, { borderTopColor: colors.border }]}>
         <Text style={[styles.resultsText, { color: colors.subtext }]}>
-          {filteredAndSortedUnits.length} unit{filteredAndSortedUnits.length !== 1 ? 's' : ''} found
+          {totalUnits} total units • Page {currentPage} of {totalPages}
         </Text>
       </View>
     </View>
   );
+
+  if (initialLoad) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <View style={[styles.appHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+          <Text style={[styles.appTitle, { color: colors.text }]}>Storage Units</Text>
+        </View>
+        <View style={styles.initialLoadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.text }]}>
+            Loading storage units...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -353,9 +532,9 @@ const UnitList = () => {
       </View>
 
       <FlatList
-        data={filteredAndSortedUnits}
+        data={paginatedUnits}
         renderItem={renderStorageUnit}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         ListHeaderComponent={renderHeader}
         style={[styles.flatList, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.flatListContent}
@@ -370,7 +549,39 @@ const UnitList = () => {
             </Text>
           </View>
         }
+        ListFooterComponent={() => (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            loading={loading}
+            colors={colors}
+            onPreviousPage={handlePreviousPage}
+            onNextPage={handleNextPage}
+          />
+        )}
       />
+
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.text }]}>
+            Loading...
+          </Text>
+        </View>
+      )}
+
+      {/* Edit Modal */}
+      {editingUnit && (
+        <EditUnitModal
+          visible={true}
+          unit={editingUnit}
+          onClose={() => setEditingUnit(null)}
+          onSaveSuccess={(updated) => {
+            updateUnit(updated);
+            setEditingUnit(null);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -391,16 +602,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
   },
-  menuButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuButtonText: {
-    fontSize: 18,
-  },
   flatList: {
     flex: 1,
   },
@@ -413,35 +614,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     marginBottom: 8,
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    marginBottom: 16,
-  },
-  searchIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-  },
-  clearButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  clearButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  quickFiltersContainer: {
+  filterContainer: {
     marginBottom: 16,
   },
   filterSectionTitle: {
@@ -460,16 +633,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
   },
-  filterChipSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
   filterChipText: {
     fontSize: 14,
     fontWeight: '500',
-  },
-  filterChipTextSelected: {
-    color: '#FFFFFF',
   },
   advancedFiltersToggle: {
     paddingVertical: 8,
@@ -484,16 +650,21 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   filterLabel: {
     fontSize: 14,
     fontWeight: '500',
-    marginBottom: 6,
+    flex: 1,
   },
   sortContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap:'wrap',
     gap: 8,
+    flex: 2,
   },
   sortButton: {
     paddingHorizontal: 12,
@@ -501,19 +672,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
   },
-  sortButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
   sortButtonText: {
     fontSize: 14,
     fontWeight: '500',
   },
-  sortButtonTextActive: {
-    color: '#FFFFFF',
-  },
   sortDirectionButton: {
-    width: 32,
+    width: 50,
     height: 32,
     borderRadius: 16,
     alignItems: 'center',
@@ -521,6 +685,7 @@ const styles = StyleSheet.create({
   },
   sortDirectionText: {
     fontSize: 16,
+    color: '#FFFFFF',
   },
   resultsSummary: {
     paddingTop: 8,
@@ -658,6 +823,21 @@ const styles = StyleSheet.create({
   actionText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  initialLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingOverlay: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  loadingText: {
+    fontSize: 14,
+    marginLeft: 8,
   },
 });
 
