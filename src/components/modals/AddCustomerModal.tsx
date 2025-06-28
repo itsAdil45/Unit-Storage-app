@@ -8,9 +8,12 @@ import {
   TouchableOpacity,
   Platform,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
+import { usePost } from '../../hooks/usePost'; // Adjust path as needed
 
 interface AddCustomerModalProps {
   visible: boolean;
@@ -28,6 +31,7 @@ interface AddCustomerModalProps {
 const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ visible, onClose, onAdd }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
+  const { post } = usePost();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -35,51 +39,194 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ visible, onClose, o
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [inquiry, setInquiry] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleAdd = () => {
-    onAdd({ firstName, lastName, email, phone, address, inquiry });
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string) => {
+    // Basic phone validation - adjust regex based on your requirements
+    const phoneRegex = /^\d{10,15}$/;
+    return phoneRegex.test(phone.replace(/\s+/g, ''));
+  };
+
+  const handleAdd = async () => {
+    // Validate required fields
+    if (!firstName.trim()) {
+      Alert.alert('Error', 'Please enter first name');
+      return;
+    }
+    
+    if (!lastName.trim()) {
+      Alert.alert('Error', 'Please enter last name');
+      return;
+    }
+    
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter email');
+      return;
+    }
+    
+    if (!validateEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+    
+    if (!phone.trim()) {
+      Alert.alert('Error', 'Please enter phone number');
+      return;
+    }
+    
+    if (!validatePhone(phone)) {
+      Alert.alert('Error', 'Please enter a valid phone number');
+      return;
+    }
+
+    setSubmitting(true);
+    
+    try {
+      const payload = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        address: address.trim(),
+        inquiry: inquiry.trim()
+      };
+
+      const response = await post('/customers', payload);
+      
+      if (response && response.status === 'success') {
+        Alert.alert('Success', 'Customer added successfully');
+        
+        // Call the onAdd callback with the customer data
+        onAdd(payload);
+        
+        // Reset form
+        resetForm();
+        onClose();
+      } else {
+        Alert.alert('Error', response?.message || 'Failed to add customer');
+      }
+    } catch (error) {
+      console.error('Error adding customer:', error);
+      Alert.alert('Error', 'Failed to add customer. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFirstName('');
+    setLastName('');
+    setEmail('');
+    setPhone('');
+    setAddress('');
+    setInquiry('');
+  };
+
+  const handleClose = () => {
+    resetForm();
     onClose();
   };
+
+  const inputFields = [
+    { 
+      label: 'First Name', 
+      value: firstName, 
+      setter: setFirstName, 
+      required: true,
+      placeholder: 'Enter first name'
+    },
+    { 
+      label: 'Last Name', 
+      value: lastName, 
+      setter: setLastName, 
+      required: true,
+      placeholder: 'Enter last name'
+    },
+    { 
+      label: 'Email', 
+      value: email, 
+      setter: setEmail, 
+      keyboardType: 'email-address',
+      required: true,
+      placeholder: 'Enter email address'
+    },
+    { 
+      label: 'Phone', 
+      value: phone, 
+      setter: setPhone, 
+      keyboardType: 'phone-pad',
+      required: true,
+      placeholder: 'Enter phone number'
+    },
+    { 
+      label: 'Address', 
+      value: address, 
+      setter: setAddress,
+      placeholder: 'Enter address (optional)'
+    },
+    { 
+      label: 'Inquiry', 
+      value: inquiry, 
+      setter: setInquiry,
+      placeholder: 'Enter inquiry details (optional)'
+    },
+  ];
 
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
         <View style={[styles.modalContainer, { backgroundColor: colors.card }]}>
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={[styles.title, { color: colors.text }]}>Add Customer</Text>
 
-            {[
-              { label: 'First Name', value: firstName, setter: setFirstName },
-              { label: 'Last Name', value: lastName, setter: setLastName },
-              { label: 'Email', value: email, setter: setEmail, keyboardType: 'email-address' },
-              { label: 'Phone', value: phone, setter: setPhone, keyboardType: 'phone-pad' },
-              { label: 'Address', value: address, setter: setAddress },
-              { label: 'Inquiry', value: inquiry, setter: setInquiry },
-            ].map(({ label, value, setter, keyboardType }) => (
+            {inputFields.map(({ label, value, setter, keyboardType, required, placeholder }) => (
               <View key={label} style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  {label}
+                  {required && <Text style={styles.required}> *</Text>}
+                </Text>
                 <TextInput
                   value={value}
                   onChangeText={setter}
-                  placeholder={`Enter ${label.toLowerCase()}`}
+                  placeholder={placeholder}
                   keyboardType={keyboardType as any}
                   style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                   placeholderTextColor={colors.border}
+                  editable={!submitting}
+                  autoCapitalize={keyboardType === 'email-address' ? 'none' : 'words'}
+                  autoCorrect={false}
                 />
               </View>
             ))}
 
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <TouchableOpacity 
+                style={[styles.closeButton, submitting && styles.disabledButton]} 
+                onPress={handleClose}
+                disabled={submitting}
+              >
                 <Text style={styles.buttonText}>Close</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-                <Text style={styles.buttonText}>Add Customer</Text>
+              <TouchableOpacity 
+                style={[styles.addButton, submitting && styles.disabledButton]} 
+                onPress={handleAdd}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Add Customer</Text>
+                )}
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -118,6 +265,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 4,
   },
+  required: {
+    color: '#ff4444',
+    fontSize: 14,
+  },
   input: {
     borderWidth: 1,
     borderRadius: 8,
@@ -141,6 +292,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   buttonText: {
     color: '#fff',
