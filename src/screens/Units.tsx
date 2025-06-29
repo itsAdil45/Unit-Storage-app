@@ -91,8 +91,10 @@ export default function Units() {
 
           { !loadings &&
           <UnitList />
-
           }
+      { loadings &&
+        <Text style={{textAlign:"center"}}>Loading...</Text>
+      }
         </View>
       )}
     />

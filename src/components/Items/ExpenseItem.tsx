@@ -47,7 +47,7 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({
 
   return (
     <TouchableOpacity
-      style={[styles.expenseCard, { backgroundColor: "white", borderWidth: 0}]}
+      style={[styles.expenseCard, { backgroundColor: dark ? colors.card : 'white', borderWidth: 0}]}
       activeOpacity={0.8}
     >
       <View style={styles.cardHeader}>

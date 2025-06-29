@@ -36,7 +36,7 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
 
   return (
     <TouchableOpacity
-      style={[styles.userCard, { backgroundColor: "white", borderWidth: 0}]}
+      style={[styles.userCard, { backgroundColor: dark ? colors.card : 'white', borderWidth: 0}]}
       activeOpacity={0.8}
     >
       <View style={styles.cardHeader}>

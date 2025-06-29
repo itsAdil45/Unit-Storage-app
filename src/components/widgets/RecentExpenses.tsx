@@ -12,16 +12,17 @@ import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
 import { useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import { ExpenseData,DrawerParamList } from '../../types/Types';
+import { ExpenseData, DrawerParamList } from '../../types/Types';
 
 interface Props {
   expenses: ExpenseData[] | null;
+  onAddExpense?: () => void; // Add this prop for opening the modal
 }
 
-const RecentExpenses: React.FC<Props> = ({ expenses }) => {
+const RecentExpenses: React.FC<Props> = ({ expenses, onAddExpense }) => {
   const { dark } = useTheme();
   const themeColors = dark ? darkColors : lightColors;
-const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
+  const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
 
   return (
     <View style={[styles.card, { backgroundColor: themeColors.card }]}>
@@ -31,6 +32,7 @@ const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
         </Text>
         <TouchableOpacity
           style={[styles.addButton, { backgroundColor: themeColors.primary }]}
+          onPress={onAddExpense} // Connect to the modal
         >
           <Text style={styles.addButtonText}>+ Add Expense</Text>
         </TouchableOpacity>
@@ -38,9 +40,7 @@ const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
 
       <TouchableOpacity
         style={[styles.viewAllButton, { borderColor: themeColors.primary }]}
-          onPress={() => navigation.navigate('Expenses')}
-
-        
+        onPress={() => navigation.navigate('Expenses')}
       >
         <Text style={[styles.viewAllText, { color: themeColors.primary }]}>
           View All
@@ -48,7 +48,7 @@ const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
       </TouchableOpacity>
 
       <FlatList
-        data={expenses?.slice(0,4) || []}
+        data={expenses?.slice(0, 4) || []}
         keyExtractor={(item) => String(item.id)}
         ItemSeparatorComponent={() => (
           <View

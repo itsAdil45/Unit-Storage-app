@@ -63,7 +63,7 @@ const WarehouseItem: React.FC<WarehouseItemProps> = ({
 
   return (
     <TouchableOpacity
-      style={[styles.warehouseCard, { backgroundColor: "white", borderWidth: 0}]}
+      style={[styles.warehouseCard, { backgroundColor: dark ? colors.card : 'white', borderWidth: 0}]}
       activeOpacity={0.8}
     >
       <View style={styles.cardHeader}>

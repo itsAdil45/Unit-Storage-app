@@ -16,6 +16,7 @@ import AvailabilityCalendar from '../components/widgets/AvailabilityCalendar';
 import AddUnitModal from '../components/modals/AddUnitModal';
 import AddCustomerModal from '../components/modals/AddCustomerModal';
 import AddBookingModal from '../components/modals/AddBookingModal';
+import AddExpenseModal from '../components/modals/AddExpenseModal';
 
 import { useGet } from '../hooks/useGet';
 import { StorageOverviewData, PaymentOverviewData, ExpenseData } from '../types/Types';
@@ -66,6 +67,7 @@ const Dashboard = () => {
   const [showAddUnitModal, setShowAddUnitModal] = useState(false);
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [showAddBookingModal, setShowAddBookingModal] = useState(false);
+  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
 
   const [paymentOverview, setPaymentOverview] = useState<PaymentOverviewData | null>(null);
   const [storageOverview, setStorageOverview] = useState<StorageOverviewData | null>(null);
@@ -135,7 +137,10 @@ const Dashboard = () => {
             </AnimatedWidget>
 
             <AnimatedWidget delay={150}>
-              <RecentExpenses expenses={expenses} />
+              <RecentExpenses expenses={expenses}
+                onAddExpense={() => setShowAddExpenseModal(true)}
+
+              />
             </AnimatedWidget>
 
             <AnimatedWidget delay={200}>
@@ -152,6 +157,7 @@ const Dashboard = () => {
       <AddUnitModal visible={showAddUnitModal} onClose={() => setShowAddUnitModal(false)} onAdd={(unit) => console.log('Added unit:', unit)} />
       <AddCustomerModal visible={showAddCustomerModal} onClose={() => setShowAddCustomerModal(false)} onAdd={(c) => console.log('New customer:', c)} />
       <AddBookingModal visible={showAddBookingModal} onClose={() => setShowAddBookingModal(false)} onAdd={(b) => console.log('Booking added:', b)} />
+      <AddExpenseModal visible={showAddExpenseModal} onClose={() => setShowAddExpenseModal(false)} onAdd={(b) => console.log('Expense added:', b)} />
     </>
   );
 };
