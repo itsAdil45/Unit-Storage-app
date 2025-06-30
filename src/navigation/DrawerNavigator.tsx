@@ -8,6 +8,7 @@ import {lightColors,darkColors} from "../constants/color"
 import Customers from '../screens/Customers';
 import Expenses from '../screens/Expenses'
 import WareHouses from '../screens/WareHouses';
+import Bookings from '../screens/Bookings';
 const Drawer = createDrawerNavigator();
 import { TouchableOpacity } from 'react-native';
 import { useAuth } from '../context/AuthContext';
@@ -48,6 +49,7 @@ const DrawerNavigator = () => (
     <Drawer.Screen name="Customers" component={Customers} options={{ drawerLabel: 'Customers', headerShown:true }}  />
       <Drawer.Screen name="Expenses" component={Expenses} options={{ drawerLabel: 'Expenses', headerShown:true }}  />
     <Drawer.Screen name="Warehouses" component={WareHouses} options={{ drawerLabel: 'Warehouses', headerShown:true }}  />
+    <Drawer.Screen name="Bookings" component={Bookings} options={{ drawerLabel: 'Bookings', headerShown:true }}  />
 
   </Drawer.Navigator>
 );
