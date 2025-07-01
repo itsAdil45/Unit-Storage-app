@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'; 
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -73,7 +73,9 @@ const UnitListModal: React.FC<Props> = ({ visible, onClose, selectedDate }) => {
     }).start(() => onClose());
   };
 
-  const uniqueWarehouses = Array.from(new Set(units.map((u) => u.warehouseName)));
+  const uniqueWarehouses = Array.from(
+    new Set(units.map((u) => u.warehouseName)),
+  );
   const filteredUnits = filter
     ? units.filter((u) => u.warehouseName === filter)
     : units;
@@ -88,7 +90,7 @@ const UnitListModal: React.FC<Props> = ({ visible, onClose, selectedDate }) => {
 
   const updateUnit = (updated: UnitData) => {
     setUnits((prev) =>
-      prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u))
+      prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)),
     );
   };
 
@@ -114,28 +116,46 @@ const UnitListModal: React.FC<Props> = ({ visible, onClose, selectedDate }) => {
 
   return (
     <>
-      <Modal visible={visible} animationType="fade" transparent statusBarTranslucent>
-        <StatusBar backgroundColor="rgba(0,0,0,0.6)" barStyle={dark ? 'light-content' : 'dark-content'} />
+      <Modal
+        visible={visible}
+        animationType="fade"
+        transparent
+        statusBarTranslucent
+      >
+        <StatusBar
+          backgroundColor="rgba(0,0,0,0.6)"
+          barStyle={dark ? 'light-content' : 'dark-content'}
+        />
         <View style={styles.overlay}>
           <Animated.View
             style={[
               styles.modal,
-              { backgroundColor: theme.card, transform: [{ translateY: slideAnim }] },
+              {
+                backgroundColor: theme.card,
+                transform: [{ translateY: slideAnim }],
+              },
             ]}
           >
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.headerContent}>
-                <Text style={[styles.title, { color: theme.text }]}>Storage Units</Text>
+                <Text style={[styles.title, { color: theme.text }]}>
+                  Storage Units
+                </Text>
                 <Text style={[styles.subtitle, { color: theme.subtext }]}>
                   {formatDate(selectedDate)}
                 </Text>
               </View>
               <TouchableOpacity
-                style={[styles.closeButton, { backgroundColor: theme.background }]}
+                style={[
+                  styles.closeButton,
+                  { backgroundColor: theme.background },
+                ]}
                 onPress={handleClose}
               >
-                <Text style={[styles.closeButtonText, { color: theme.text }]}>✕</Text>
+                <Text style={[styles.closeButtonText, { color: theme.text }]}>
+                  ✕
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -162,14 +182,17 @@ const UnitListModal: React.FC<Props> = ({ visible, onClose, selectedDate }) => {
                   </Text>
                 </TouchableOpacity>
                 {uniqueWarehouses.map((wh) => {
-                  const count = units.filter((u) => u.warehouseName === wh).length;
+                  const count = units.filter(
+                    (u) => u.warehouseName === wh,
+                  ).length;
                   return (
                     <TouchableOpacity
                       key={wh}
                       style={[
                         styles.chip,
                         {
-                          backgroundColor: filter === wh ? theme.primary : 'transparent',
+                          backgroundColor:
+                            filter === wh ? theme.primary : 'transparent',
                           borderColor: theme.primary,
                         },
                       ]}

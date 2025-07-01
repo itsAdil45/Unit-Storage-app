@@ -9,6 +9,8 @@ import {
   FlatList,
   TextInput,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 import { useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
@@ -17,10 +19,13 @@ import { lightColors, darkColors } from '../../constants/color';
 import { FilterType } from '../../types/Types';
 import EmailLogModal from '../modals/EmailLogModal';
 import EditCustomerModal from '../modals/EditCustomerModal';
-import AnimatedDeleteWrapper, { useAnimatedDelete } from '../Reusable/AnimatedDeleteWrapper';
+import AnimatedDeleteWrapper, {
+  useAnimatedDelete,
+} from '../Reusable/AnimatedDeleteWrapper';
 import Pagination from '../Reusable/Pagination';
 import CustomerItem from '../Items/CustomerItem';
-import {Customer} from "../../types/Customers"
+import { Customer } from '../../types/Customers';
+import styles from './Styles/CustomersList';
 
 const CustomersList: React.FC = () => {
   const { dark } = useTheme();
@@ -39,11 +44,11 @@ const CustomersList: React.FC = () => {
 
   const { get } = useGet();
   const { del: deleteRequest } = useDelete();
-  
+
   // Use the custom hook for animated delete
   const { removingId, handleDelete } = useAnimatedDelete<Customer>(
     deleteRequest,
-    '/customers'
+    '/customers',
   );
 
   useEffect(() => {
@@ -63,10 +68,15 @@ const CustomersList: React.FC = () => {
     fetchCustomers(page);
   }, [page, searchDebounced, statusFilter]);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchCustomers(1);
+    }, []),
+  );
   const fetchCustomers = async (pg: number) => {
     setLoading(true);
     setCustomers([]);
-    
+
     try {
       const queryParams = new URLSearchParams({
         page: pg.toString(),
@@ -84,7 +94,7 @@ const CustomersList: React.FC = () => {
 
       const endpoint = `/customers?${queryParams.toString()}`;
       const res = await get(endpoint);
-      
+
       if (res?.status === 'success') {
         setCustomers(res.data.customers || []);
         setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
@@ -94,7 +104,7 @@ const CustomersList: React.FC = () => {
       setCustomers([]);
       setTotalPages(1);
     }
-    
+
     setLoading(false);
     if (initialLoad) {
       setInitialLoad(false);
@@ -112,7 +122,9 @@ const CustomersList: React.FC = () => {
 
   const updateCustomer = (updated: Customer) => {
     setCustomers((prev) =>
-      prev.map((customer) => (customer.id === updated.id ? { ...customer, ...updated } : customer))
+      prev.map((customer) =>
+        customer.id === updated.id ? { ...customer, ...updated } : customer,
+      ),
     );
   };
 
@@ -145,22 +157,29 @@ const CustomersList: React.FC = () => {
     setStatusFilter(filter);
   };
 
-  const renderFilterChip = (label: string, value: FilterType, color?: string) => (
+  const renderFilterChip = (
+    label: string,
+    value: FilterType,
+    color?: string,
+  ) => (
     <TouchableOpacity
       key={value}
       onPress={() => handleStatusFilter(value)}
       style={[
         styles.filterChip,
         {
-          backgroundColor: statusFilter === value ? colors.primary : colors.card,
+          backgroundColor:
+            statusFilter === value ? colors.primary : colors.card,
           borderColor: colors.border,
         },
       ]}
     >
-      <Text style={[
-        styles.filterText,
-        { color: statusFilter === value ? '#fff' : colors.text }
-      ]}>
+      <Text
+        style={[
+          styles.filterText,
+          { color: statusFilter === value ? '#fff' : colors.text },
+        ]}
+      >
         {label}
       </Text>
       {color && statusFilter === value && (
@@ -169,7 +188,13 @@ const CustomersList: React.FC = () => {
     </TouchableOpacity>
   );
 
-  const renderUserCard = ({ item, index }: { item: Customer; index: number }) => (
+  const renderUserCard = ({
+    item,
+    index,
+  }: {
+    item: Customer;
+    index: number;
+  }) => (
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
@@ -196,7 +221,9 @@ const CustomersList: React.FC = () => {
         {searchDebounced ? 'No customers found' : 'No customers available'}
       </Text>
       <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
-        {searchDebounced ? 'Try adjusting your search or filters' : 'Add some customers to get started'}
+        {searchDebounced
+          ? 'Try adjusting your search or filters'
+          : 'Add some customers to get started'}
       </Text>
     </View>
   );
@@ -204,7 +231,10 @@ const CustomersList: React.FC = () => {
   if (initialLoad) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
+        <StatusBar
+          barStyle={dark ? 'light-content' : 'dark-content'}
+          backgroundColor={colors.card}
+        />
         <View style={styles.initialLoadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -217,10 +247,18 @@ const CustomersList: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
-      
+      <StatusBar
+        barStyle={dark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.card}
+      />
+
       {/* Search Bar */}
-      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View
+        style={[
+          styles.searchContainer,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
         <MaterialIcons name="search" size={20} color={colors.subtext} />
         <TextInput
           value={search}
@@ -247,7 +285,9 @@ const CustomersList: React.FC = () => {
 
       {/* Filter Chips */}
       <View style={styles.filtersContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Filter:</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Filter:
+        </Text>
         <View style={styles.chipsRow}>
           {renderFilterChip('All', 'All')}
           {renderFilterChip('Active', 'Active', '#4CAF50')}
@@ -313,101 +353,6 @@ const CustomersList: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
-  },
-  searchIndicator: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  searchIndicatorText: {
-    fontSize: 12,
-    fontStyle: 'italic',
-  },
-  filtersContainer: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    marginRight: 8,
-    marginBottom: 4,
-  },
-  filterText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  colorDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginLeft: 6,
-  },
-  listContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 100,
-  },
-  initialLoadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingOverlay: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  loadingText: {
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    marginTop: 60,
-  },  
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 16,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-});
+
 
 export default CustomersList;

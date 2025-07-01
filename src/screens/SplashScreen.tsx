@@ -7,7 +7,7 @@ import {
   AppState,
   AppStateStatus,
   Dimensions,
-  Image
+  Image,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -42,7 +42,10 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
       appState.current = nextAppState;
     };
 
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange,
+    );
     startSplashSequence();
 
     return () => {
@@ -55,7 +58,10 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     logoScale.value = withSpring(1, { damping: 10, stiffness: 80 });
 
     titleOpacity.value = withDelay(400, withTiming(1, { duration: 500 }));
-    titleTranslateY.value = withDelay(400, withSpring(0, { damping: 12, stiffness: 90 }));
+    titleTranslateY.value = withDelay(
+      400,
+      withSpring(0, { damping: 12, stiffness: 90 }),
+    );
 
     setTimeout(() => {
       runOnJS(finishSplash)();
@@ -80,7 +86,10 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
       <Animated.View style={[styles.logoWrapper, logoAnimatedStyle]}>
         <View style={styles.logoBackground}>
           {/* <MaterialIcons name="security" size={60} color="#fff" /> */}
-<Image source={require('../../assets/logo.png')} style={styles.logoImage} />
+          <Image
+            source={require('../../assets/logo.png')}
+            style={styles.logoImage}
+          />
         </View>
       </Animated.View>
 
@@ -132,10 +141,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   logoImage: {
-  width: 70,
-  height: 70,
-  resizeMode: 'contain',
-}
+    width: 70,
+    height: 70,
+    resizeMode: 'contain',
+  },
 });
 
 export default SplashScreen;

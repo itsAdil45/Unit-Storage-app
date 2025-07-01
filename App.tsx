@@ -11,12 +11,12 @@ const AppInner = () => {
 
   return (
     <>
-    <NavigationContainer theme={theme}>
-      <AuthProvider>
-      <AppNavigator />
-      </AuthProvider>
-    </NavigationContainer>
-          <Toast
+      <NavigationContainer theme={theme}>
+        <AuthProvider>
+          <AppNavigator />
+        </AuthProvider>
+      </NavigationContainer>
+      <Toast
         position="top"
         bottomOffset={40}
         config={{
@@ -26,7 +26,6 @@ const AppInner = () => {
         }}
       />
     </>
-    
   );
 };
 

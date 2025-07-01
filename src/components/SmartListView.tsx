@@ -1,8 +1,20 @@
 import React from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 import Animated, {
-  FadeInDown, FadeOutUp, SlideInRight, SlideOutLeft,
-  useSharedValue, useAnimatedStyle, withSpring, withTiming
+  FadeInDown,
+  FadeOutUp,
+  SlideInRight,
+  SlideOutLeft,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { MaterialIcons } from '@expo/vector-icons'; // Changed this line
 
@@ -34,8 +46,7 @@ interface SmartListViewProps<T> {
   emptyIcon?: React.ReactNode;
   emptyTitle?: string;
   emptySubtitle?: string;
-    scrollEnabled?: boolean; // Added this prop
-
+  scrollEnabled?: boolean; // Added this prop
 }
 
 function SmartListView<T>({
@@ -122,7 +133,9 @@ function SmartListView<T>({
       }}
     >
       <MaterialIcons name={opt.icon as any} size={16} color="#2196F3" />
-      <Text style={{ marginLeft: 4, color: '#333', fontWeight: '600' }}>{opt.label}</Text>
+      <Text style={{ marginLeft: 4, color: '#333', fontWeight: '600' }}>
+        {opt.label}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -192,15 +205,18 @@ function SmartListView<T>({
             entering={FadeInDown.springify()}
             style={{ alignItems: 'center', marginTop: 60 }}
           >
-            {emptyIcon || <MaterialIcons name="people-outline" size={64} color="#ccc" />}
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#666' }}>{emptyTitle}</Text>
+            {emptyIcon || (
+              <MaterialIcons name="people-outline" size={64} color="#ccc" />
+            )}
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#666' }}>
+              {emptyTitle}
+            </Text>
             <Text style={{ fontSize: 14, color: '#999' }}>{emptySubtitle}</Text>
           </Animated.View>
         }
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       />
-      
     </View>
   );
 }

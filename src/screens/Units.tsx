@@ -30,7 +30,7 @@ export default function Units() {
 
   const fetchUnitsData = async () => {
     setLoading(true);
-    setUnitData(null); 
+    setUnitData(null);
 
     try {
       const endpoint = `/dashboard/storageOverview`;
@@ -38,34 +38,31 @@ export default function Units() {
 
       if (res?.status === 'success') {
         setUnitData(res.data);
-
-        console.log('API Response:', res.data);
       }
     } catch (error) {
       console.error('Error fetching expenses:', error);
-      setUnitData(null); 
+      setUnitData(null);
     }
 
     setLoading(false);
-
   };
 
   const units: StorageUnit[] = [
-    { 
-      value: unitData?.total || 0, 
-      title: 'Total Units', 
-      iconColor: '#397AF9' 
+    {
+      value: unitData?.total || 0,
+      title: 'Total Units',
+      iconColor: '#397AF9',
     },
-    { 
-      value: unitData?.empty || 0, 
-      title: 'Available Units', 
-      iconColor: '#00B8D9' 
+    {
+      value: unitData?.empty || 0,
+      title: 'Available Units',
+      iconColor: '#00B8D9',
     },
-    { 
-      value: unitData?.occupied || 0, 
-      title: 'Occupied Units', 
-      iconColor: '#FFAB00' 
-    }
+    {
+      value: unitData?.occupied || 0,
+      title: 'Occupied Units',
+      iconColor: '#FFAB00',
+    },
   ];
 
   return (
@@ -80,21 +77,17 @@ export default function Units() {
             horizontal
             keyExtractor={(item) => item.title}
             renderItem={({ item }) => (
-              <UnitCard 
-                label={item.title} 
-                value={item.value} 
-                iconColor={item.iconColor} 
+              <UnitCard
+                label={item.title}
+                value={item.value}
+                iconColor={item.iconColor}
               />
             )}
             showsHorizontalScrollIndicator={false}
           />
 
-          { !loadings &&
-          <UnitList />
-          }
-      { loadings &&
-        <Text style={{textAlign:"center"}}>Loading...</Text>
-      }
+          {!loadings && <UnitList />}
+          {loadings && <Text style={{ textAlign: 'center' }}>Loading...</Text>}
         </View>
       )}
     />

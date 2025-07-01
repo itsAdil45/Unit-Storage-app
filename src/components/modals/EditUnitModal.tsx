@@ -20,14 +20,21 @@ interface Props {
   onSaveSuccess: (updatedUnit: UnitData) => void; // <-- Pass updated unit
 }
 
-const EditUnitModal: React.FC<Props> = ({ visible, unit, onClose, onSaveSuccess }) => {
+const EditUnitModal: React.FC<Props> = ({
+  visible,
+  unit,
+  onClose,
+  onSaveSuccess,
+}) => {
   const { dark } = useTheme();
   const theme = dark ? darkColors : lightColors;
 
   const [unitNumber, setUnitNumber] = useState(unit.unitNumber);
   const [size, setSize] = useState(String(unit.size));
   const [floor, setFloor] = useState(unit.floor);
-  const [status, setStatus] = useState<'available' | 'maintenance'>(unit.status);
+  const [status, setStatus] = useState<'available' | 'maintenance'>(
+    unit.status,
+  );
 
   const { patch, loading } = usePatch();
 
@@ -44,8 +51,8 @@ const EditUnitModal: React.FC<Props> = ({ visible, unit, onClose, onSaveSuccess 
     const res = await patch(`/storage-units/${unit.id}`, payload);
 
     if (res?.status === 'success') {
-      onClose();           // Close modal
-  onSaveSuccess(res.data); // ✅ Pass updated unit back to parent
+      onClose(); // Close modal
+      onSaveSuccess(res.data); // ✅ Pass updated unit back to parent
     }
   };
 
@@ -56,14 +63,20 @@ const EditUnitModal: React.FC<Props> = ({ visible, unit, onClose, onSaveSuccess 
           <Text style={[styles.title, { color: theme.text }]}>Edit Unit</Text>
 
           <TextInput
-            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+            style={[
+              styles.input,
+              { color: theme.text, borderColor: theme.border },
+            ]}
             value={unitNumber}
             onChangeText={setUnitNumber}
             placeholder="Unit Number"
             placeholderTextColor={theme.subtext}
           />
           <TextInput
-            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+            style={[
+              styles.input,
+              { color: theme.text, borderColor: theme.border },
+            ]}
             value={size}
             onChangeText={setSize}
             keyboardType="numeric"
@@ -71,14 +84,21 @@ const EditUnitModal: React.FC<Props> = ({ visible, unit, onClose, onSaveSuccess 
             placeholderTextColor={theme.subtext}
           />
           <TextInput
-            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+            style={[
+              styles.input,
+              { color: theme.text, borderColor: theme.border },
+            ]}
             value={floor}
             onChangeText={setFloor}
             placeholder="Floor"
             placeholderTextColor={theme.subtext}
           />
 
-          <TouchableOpacity onPress={() => setStatus(status === 'available' ? 'maintenance' : 'available')}>
+          <TouchableOpacity
+            onPress={() =>
+              setStatus(status === 'available' ? 'maintenance' : 'available')
+            }
+          >
             <Text style={[styles.dropdown, { color: theme.primary }]}>
               Status: {status === 'available' ? 'Available' : 'Maintenance'}
             </Text>
@@ -97,7 +117,9 @@ const EditUnitModal: React.FC<Props> = ({ visible, unit, onClose, onSaveSuccess 
           </TouchableOpacity>
 
           <TouchableOpacity onPress={onClose}>
-            <Text style={[styles.closeText, { color: theme.primary }]}>Close</Text>
+            <Text style={[styles.closeText, { color: theme.primary }]}>
+              Close
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

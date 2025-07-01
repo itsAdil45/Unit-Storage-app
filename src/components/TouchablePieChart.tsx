@@ -21,9 +21,10 @@ const radius = 100;
 const TouchablePieChart: React.FC = () => {
   const [selected, setSelected] = useState<null | PieDatum>(null);
 
-  const pieSlices = d3Shape.pie<PieDatum>().value(d => d.value)(pieData);
+  const pieSlices = d3Shape.pie<PieDatum>().value((d) => d.value)(pieData);
 
-  const arcGen = d3Shape.arc<d3Shape.PieArcDatum<PieDatum>>()
+  const arcGen = d3Shape
+    .arc<d3Shape.PieArcDatum<PieDatum>>()
     .outerRadius(radius)
     .innerRadius(0);
 

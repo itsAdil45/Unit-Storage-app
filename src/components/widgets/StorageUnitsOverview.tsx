@@ -10,8 +10,7 @@ import { StorageOverviewData } from '../../types/Types'; // ⬅️ import type
 interface Props {
   overview: StorageOverviewData | null;
 }
-const StorageUnitsOverview :React.FC<Props> = ({ overview }) => {
-  
+const StorageUnitsOverview: React.FC<Props> = ({ overview }) => {
   const { dark } = useTheme();
   const themeColors = dark ? darkColors : lightColors;
 
@@ -48,9 +47,13 @@ const StorageUnitsOverview :React.FC<Props> = ({ overview }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: themeColors.card }]}>
-      <Text style={[styles.title, { color: themeColors.text }]}>Storage Overview</Text>
+      <Text style={[styles.title, { color: themeColors.text }]}>
+        Storage Overview
+      </Text>
 
-      <View style={[styles.chartWrapper, { backgroundColor: themeColors.card }]}>
+      <View
+        style={[styles.chartWrapper, { backgroundColor: themeColors.card }]}
+      >
         <PieChart
           data={chartData}
           width={screenWidth - 64}
@@ -71,12 +74,18 @@ const StorageUnitsOverview :React.FC<Props> = ({ overview }) => {
       <View style={styles.legendContainer}>
         {chartData.map((item, index) => (
           <View key={index} style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: item.color }]} />
-            <Text style={[styles.legendLabel, { color: themeColors.text }]}>{item.name}</Text>
+            <View
+              style={[styles.legendColor, { backgroundColor: item.color }]}
+            />
+            <Text style={[styles.legendLabel, { color: themeColors.text }]}>
+              {item.name}
+            </Text>
           </View>
         ))}
       </View>
-      <Text style={{textAlign:"center", fontWeight:"800", fontSize:20}}>Total: {overview?.total}</Text>
+      <Text style={{ textAlign: 'center', fontWeight: '800', fontSize: 20 }}>
+        Total: {overview?.total}
+      </Text>
     </View>
   );
 };

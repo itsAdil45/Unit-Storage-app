@@ -1,24 +1,22 @@
-
 import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   Alert,
-  StyleSheet,
   Linking,
 } from 'react-native';
+import styles from './Styles/WarehouseItem';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { WarehouseItemProps } from '../../types/Warehouses';
 
-
-const WarehouseItem: React.FC<WarehouseItemProps> = ({ 
-  item: warehouse, 
-  index, 
-  colors, 
-  dark, 
-  onEdit, 
-  onDeletePress 
+const WarehouseItem: React.FC<WarehouseItemProps> = ({
+  item: warehouse,
+  index,
+  colors,
+  dark,
+  onEdit,
+  onDeletePress,
 }) => {
   const [showFloors, setShowFloors] = useState(false);
   const storageUnits = warehouse.storageUnits || [];
@@ -29,10 +27,10 @@ const WarehouseItem: React.FC<WarehouseItemProps> = ({
   };
 
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
@@ -55,7 +53,10 @@ const WarehouseItem: React.FC<WarehouseItemProps> = ({
   };
 
   const renderFloorItem = (floor: string, index: number) => (
-    <View key={index} style={[styles.floorItem, { backgroundColor: colors.primary + '10' }]}>
+    <View
+      key={index}
+      style={[styles.floorItem, { backgroundColor: colors.primary + '10' }]}
+    >
       <MaterialIcons name="layers" size={14} color={colors.primary} />
       <Text style={[styles.floorText, { color: colors.primary }]}>{floor}</Text>
     </View>
@@ -63,16 +64,19 @@ const WarehouseItem: React.FC<WarehouseItemProps> = ({
 
   return (
     <TouchableOpacity
-      style={[styles.warehouseCard, { backgroundColor: dark ? colors.card : 'white', borderWidth: 0}]}
+      style={[
+        styles.warehouseCard,
+        { backgroundColor: dark ? colors.card : 'white', borderWidth: 0 },
+      ]}
       activeOpacity={0.8}
     >
       <View style={styles.cardHeader}>
         <View style={styles.avatarContainer}>
           <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <MaterialCommunityIcons 
-              name={getWarehouseIcon() as any} 
-              size={24} 
-              color="white" 
+            <MaterialCommunityIcons
+              name={getWarehouseIcon() as any}
+              size={24}
+              color="white"
             />
           </View>
           <View
@@ -84,10 +88,16 @@ const WarehouseItem: React.FC<WarehouseItemProps> = ({
         </View>
 
         <View style={styles.warehouseInfo}>
-          <Text style={[styles.warehouseName, { color: colors.text }]} numberOfLines={1}>
+          <Text
+            style={[styles.warehouseName, { color: colors.text }]}
+            numberOfLines={1}
+          >
             {warehouse.name}
           </Text>
-          <Text style={[styles.warehouseAddress, { color: colors.subtext }]} numberOfLines={2}>
+          <Text
+            style={[styles.warehouseAddress, { color: colors.subtext }]}
+            numberOfLines={2}
+          >
             {warehouse.address}
           </Text>
           <Text style={[styles.warehouseDetails, { color: colors.subtext }]}>
@@ -96,45 +106,51 @@ const WarehouseItem: React.FC<WarehouseItemProps> = ({
           <Text style={[styles.warehouseDetails, { color: colors.subtext }]}>
             Created: {formatDate(warehouse.createdAt)}
           </Text>
-          
-          {/* Video Button */}
+
           <TouchableOpacity
             style={[
               styles.videoButton,
-              { 
-                backgroundColor: warehouse.videoFileLink ? '#FF0000' : colors.border,
-                opacity: warehouse.videoFileLink ? 1 : 0.5
-              }
+              {
+                backgroundColor: warehouse.videoFileLink
+                  ? '#FF0000'
+                  : colors.border,
+                opacity: warehouse.videoFileLink ? 1 : 0.5,
+              },
             ]}
             onPress={handleViewVideo}
             disabled={!warehouse.videoFileLink}
           >
-            <MaterialIcons 
-              name="play-circle-filled" 
-              size={16} 
-              color="white" 
-            />
+            <MaterialIcons name="play-circle-filled" size={16} color="white" />
             <Text style={styles.videoButtonText}>View Video</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.cardActions}>
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: dark ? colors.border : '#f8f9fa' }]}
+            style={[
+              styles.actionButton,
+              { backgroundColor: dark ? colors.border : '#f8f9fa' },
+            ]}
             onPress={() => onEdit(warehouse)}
           >
             <MaterialIcons name="edit" size={20} color={colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: dark ? colors.border : '#f8f9fa' }]}
+            style={[
+              styles.actionButton,
+              { backgroundColor: dark ? colors.border : '#f8f9fa' },
+            ]}
             onPress={onDeletePress}
           >
-            <MaterialIcons name="delete" size={20} color={colors.notification} />
+            <MaterialIcons
+              name="delete"
+              size={20}
+              color={colors.notification}
+            />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Floors Section */}
       {uniqueFloors.length > 0 && (
         <View style={styles.floorsSection}>
           <TouchableOpacity
@@ -144,23 +160,27 @@ const WarehouseItem: React.FC<WarehouseItemProps> = ({
             <Text style={[styles.floorsTitle, { color: colors.text }]}>
               Floors ({uniqueFloors.length})
             </Text>
-            <MaterialIcons 
-              name={showFloors ? "keyboard-arrow-up" : "keyboard-arrow-down"} 
-              size={20} 
-              color={colors.subtext} 
+            <MaterialIcons
+              name={showFloors ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+              size={20}
+              color={colors.subtext}
             />
           </TouchableOpacity>
-          
+
           {showFloors && (
             <View style={styles.floorsList}>
-              {uniqueFloors.map((floor, index) => renderFloorItem(floor, index))}
+              {uniqueFloors.map((floor, index) =>
+                renderFloorItem(floor, index),
+              )}
             </View>
           )}
         </View>
       )}
 
       <View style={styles.cardFooter}>
-        <View style={[styles.idBadge, { backgroundColor: colors.primary + '20' }]}>
+        <View
+          style={[styles.idBadge, { backgroundColor: colors.primary + '20' }]}
+        >
           <Text style={[styles.idText, { color: colors.primary }]}>
             #{warehouse.id}
           </Text>
@@ -173,132 +193,6 @@ const WarehouseItem: React.FC<WarehouseItemProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  warehouseCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statusIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-  },
-  warehouseInfo: {
-    flex: 1,
-    marginRight: 8,
-  },
-  warehouseName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  warehouseAddress: {
-    fontSize: 14,
-    marginBottom: 4,
-    lineHeight: 18,
-  },
-  warehouseDetails: {
-    fontSize: 12,
-    marginBottom: 2,
-  },
-  videoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginTop: 4,
-    alignSelf: 'flex-start',
-  },
-  videoButtonText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  cardActions: {
-    flexDirection: 'column',
-    gap: 8,
-    justifyContent: 'flex-start',
-  },
-  actionButton: {
-    padding: 6,
-    borderRadius: 8,
-    marginBottom: 6,
-  },
-  floorsSection: {
-    marginTop: 8,
-    marginBottom: 12,
-  },
-  floorsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  floorsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  floorsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 8,
-    gap: 6,
-  },
-  floorItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  floorText: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  idBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  idText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  updateDate: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-});
+
 
 export default WarehouseItem;

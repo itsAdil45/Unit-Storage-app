@@ -16,6 +16,7 @@ import { useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { usePatch } from '../../hooks/usePatch';
 import { lightColors, darkColors } from '../../constants/color';
+import Toast from 'react-native-toast-message';
 
 interface StorageUnit {
   id: number;
@@ -51,7 +52,12 @@ interface EditWarehouseModalProps {
   onSaveSuccess: (warehouse: Warehouse) => void;
 }
 
-const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({ visible, warehouse, onClose, onSaveSuccess }) => {
+const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({
+  visible,
+  warehouse,
+  onClose,
+  onSaveSuccess,
+}) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
   const { patch } = usePatch();
@@ -74,7 +80,7 @@ const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({ visible, wareho
   }, [warehouse]);
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -104,9 +110,13 @@ const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({ visible, wareho
       };
 
       const response = await patch(`/warehouses/${warehouse.id}`, payload);
-      
+
       if (response?.status === 'success') {
-        Alert.alert('Success', 'Warehouse updated successfully');
+      Toast.show({
+        type: 'success',
+        text1: 'Updated',
+        text2: `Warehouse updated successfully `,
+      });
         onSaveSuccess({ ...warehouse, ...payload });
         onClose();
       } else {
@@ -133,11 +143,18 @@ const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({ visible, wareho
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         {/* Header */}
-        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View
+          style={[
+            styles.header,
+            { backgroundColor: colors.card, borderBottomColor: colors.border },
+          ]}
+        >
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <MaterialIcons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Warehouse</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
+            Edit Warehouse
+          </Text>
           <TouchableOpacity
             onPress={handleSave}
             style={[styles.saveButton, { backgroundColor: colors.primary }]}
@@ -152,9 +169,14 @@ const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({ visible, wareho
         </View>
 
         {/* Form */}
-        <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.formContainer}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Warehouse Name *</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Warehouse Name *
+            </Text>
             <TextInput
               style={[
                 styles.input,
@@ -173,7 +195,9 @@ const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({ visible, wareho
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Address *</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Address *
+            </Text>
             <TextInput
               style={[
                 styles.textArea,
@@ -194,7 +218,9 @@ const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({ visible, wareho
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Video URL</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Video URL
+            </Text>
             <TextInput
               style={[
                 styles.input,
@@ -205,7 +231,9 @@ const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({ visible, wareho
                 },
               ]}
               value={formData.videoFileLink}
-              onChangeText={(value) => handleInputChange('videoFileLink', value)}
+              onChangeText={(value) =>
+                handleInputChange('videoFileLink', value)
+              }
               placeholder="https://www.youtube.com/embed/..."
               placeholderTextColor={colors.subtext}
               keyboardType="url"
@@ -214,8 +242,15 @@ const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({ visible, wareho
           </View>
 
           {/* Warehouse Info */}
-          <View style={[styles.infoSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.infoTitle, { color: colors.text }]}>Warehouse Information</Text>
+          <View
+            style={[
+              styles.infoSection,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.infoTitle, { color: colors.text }]}>
+              Warehouse Information
+            </Text>
             <Text style={[styles.infoText, { color: colors.subtext }]}>
               ID: #{warehouse.id}
             </Text>

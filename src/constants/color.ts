@@ -5,11 +5,9 @@ export const lightColors = {
   text: '#000000',
   border: '#cccccc',
   notification: '#ff6347',
-  icon: '#000000',    
-    accent: '#00bcd4',
-      subtext: '#777',
-
-
+  icon: '#000000',
+  accent: '#00bcd4',
+  subtext: '#777',
 };
 
 export const darkColors = {
@@ -19,9 +17,7 @@ export const darkColors = {
   text: '#ffffff',
   border: '#333333',
   notification: '#ff6347',
-  icon: 'orange',       
-    accent: '#00bcd4',
-      subtext: '#ccc',
-
-
+  icon: 'orange',
+  accent: '#00bcd4',
+  subtext: '#ccc',
 };

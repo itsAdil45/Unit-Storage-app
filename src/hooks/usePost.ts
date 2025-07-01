@@ -11,42 +11,45 @@ interface ApiResponse<T = any> {
 }
 
 export const usePost = () => {
-  const post = useCallback(async <T = any>(
-    endpoint: string,
-    payload: any,
-    token?: string
-  ): Promise<ApiResponse<T> | null> => {
-    try {
-      // If token not passed, try to fetch it from AsyncStorage
-      const authToken = token || await AsyncStorage.getItem('auth_token');
+  const post = useCallback(
+    async <T = any>(
+      endpoint: string,
+      payload: any,
+      token?: string,
+    ): Promise<ApiResponse<T> | null> => {
+      try {
+        // If token not passed, try to fetch it from AsyncStorage
+        const authToken = token || (await AsyncStorage.getItem('auth_token'));
 
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
 
-      if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
+        if (authToken) {
+          headers['Authorization'] = `Bearer ${authToken}`;
+        }
+
+        const response = await fetch(`${BASE_URL}${endpoint}`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('API Error:', data);
+          throw new Error(data.message || 'Unknown API error');
+        }
+
+        return data;
+      } catch (error) {
+        console.error('usePost error:', error);
+        return null;
       }
-
-      const response = await fetch(`${BASE_URL}${endpoint}`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error('API Error:', data);
-        throw new Error(data.message || 'Unknown API error');
-      }
-
-      return data;
-    } catch (error) {
-      console.error('usePost error:', error);
-      return null;
-    }
-  }, []);
+    },
+    [],
+  );
 
   return { post };
 };

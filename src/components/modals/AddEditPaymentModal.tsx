@@ -44,7 +44,8 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
     status: 'pending',
     remarks: '',
   });
-  const [paymentReceivedAttachment, setPaymentReceivedAttachment] = useState<any>(null);
+  const [paymentReceivedAttachment, setPaymentReceivedAttachment] =
+    useState<any>(null);
   const [invoiceAttachment, setInvoiceAttachment] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -85,7 +86,7 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
   }, [visible, payment, isEditMode]);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -176,7 +177,8 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
       if (paymentReceivedAttachment) {
         form.append('paymentReceivedAttachment', {
           uri: paymentReceivedAttachment.uri,
-          type: paymentReceivedAttachment.mimeType || 'application/octet-stream',
+          type:
+            paymentReceivedAttachment.mimeType || 'application/octet-stream',
           name: paymentReceivedAttachment.name || 'payment_receipt',
         } as any);
       }
@@ -199,7 +201,9 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
       if (response?.status === 'success') {
         Alert.alert(
           'Success',
-          isEditMode ? 'Payment updated successfully' : 'Payment record added successfully',
+          isEditMode
+            ? 'Payment updated successfully'
+            : 'Payment record added successfully',
           [
             {
               text: 'OK',
@@ -208,7 +212,7 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
                 onClose();
               },
             },
-          ]
+          ],
         );
       } else {
         Alert.alert('Error', response?.message || 'Failed to save payment');
@@ -222,7 +226,13 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
   };
 
   const statusOptions = ['pending', 'paid', 'overdue', 'cancelled'];
-  const paymentMethodOptions = ['cash', 'card', 'bank_transfer', 'check', 'online'];
+  const paymentMethodOptions = [
+    'cash',
+    'card',
+    'bank_transfer',
+    'check',
+    'online',
+  ];
 
   return (
     <Modal
@@ -244,12 +254,18 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Booking Info */}
-          <View style={[styles.bookingInfo, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.bookingInfo,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
             <Text style={[styles.bookingTitle, { color: colors.text }]}>
               Booking #{booking.id}
             </Text>
             <Text style={[styles.bookingSubtitle, { color: colors.subtext }]}>
-              {booking.customer.firstName} {booking.customer.lastName} - Unit {booking.storageUnit.unitNumber}
+              {booking.customer.firstName} {booking.customer.lastName} - Unit{' '}
+              {booking.storageUnit.unitNumber}
             </Text>
           </View>
 
@@ -257,32 +273,46 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
           <View style={styles.formContainer}>
             {/* Amount */}
             <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Amount *</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Amount *
+              </Text>
               <TextInput
                 value={formData.amount}
                 onChangeText={(value) => handleInputChange('amount', value)}
                 placeholder="Enter amount"
                 placeholderTextColor={colors.subtext}
-                style={[styles.textInput, { color: colors.text, borderColor: colors.border }]}
+                style={[
+                  styles.textInput,
+                  { color: colors.text, borderColor: colors.border },
+                ]}
                 keyboardType="numeric"
               />
             </View>
 
             {/* Payment Date */}
             <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Payment Date *</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Payment Date *
+              </Text>
               <TextInput
                 value={formData.paymentDate}
-                onChangeText={(value) => handleInputChange('paymentDate', value)}
+                onChangeText={(value) =>
+                  handleInputChange('paymentDate', value)
+                }
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor={colors.subtext}
-                style={[styles.textInput, { color: colors.text, borderColor: colors.border }]}
+                style={[
+                  styles.textInput,
+                  { color: colors.text, borderColor: colors.border },
+                ]}
               />
             </View>
 
             {/* Payment Method */}
             <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Payment Method</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Payment Method
+              </Text>
               <View style={styles.radioContainer}>
                 {paymentMethodOptions.map((method) => (
                   <TouchableOpacity
@@ -291,12 +321,21 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
                     style={styles.radioOption}
                   >
                     <MaterialIcons
-                      name={formData.paymentMethod === method ? 'radio-button-checked' : 'radio-button-unchecked'}
+                      name={
+                        formData.paymentMethod === method
+                          ? 'radio-button-checked'
+                          : 'radio-button-unchecked'
+                      }
                       size={20}
-                      color={formData.paymentMethod === method ? colors.primary : colors.subtext}
+                      color={
+                        formData.paymentMethod === method
+                          ? colors.primary
+                          : colors.subtext
+                      }
                     />
                     <Text style={[styles.radioText, { color: colors.text }]}>
-                      {method.charAt(0).toUpperCase() + method.slice(1).replace('_', ' ')}
+                      {method.charAt(0).toUpperCase() +
+                        method.slice(1).replace('_', ' ')}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -305,31 +344,43 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
 
             {/* Start Date */}
             <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Period Start Date *</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Period Start Date *
+              </Text>
               <TextInput
                 value={formData.startDate}
                 onChangeText={(value) => handleInputChange('startDate', value)}
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor={colors.subtext}
-                style={[styles.textInput, { color: colors.text, borderColor: colors.border }]}
+                style={[
+                  styles.textInput,
+                  { color: colors.text, borderColor: colors.border },
+                ]}
               />
             </View>
 
             {/* End Date */}
             <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Period End Date *</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Period End Date *
+              </Text>
               <TextInput
                 value={formData.endDate}
                 onChangeText={(value) => handleInputChange('endDate', value)}
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor={colors.subtext}
-                style={[styles.textInput, { color: colors.text, borderColor: colors.border }]}
+                style={[
+                  styles.textInput,
+                  { color: colors.text, borderColor: colors.border },
+                ]}
               />
             </View>
 
             {/* Status */}
             <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Status</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Status
+              </Text>
               <View style={styles.radioContainer}>
                 {statusOptions.map((status) => (
                   <TouchableOpacity
@@ -338,9 +389,17 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
                     style={styles.radioOption}
                   >
                     <MaterialIcons
-                      name={formData.status === status ? 'radio-button-checked' : 'radio-button-unchecked'}
+                      name={
+                        formData.status === status
+                          ? 'radio-button-checked'
+                          : 'radio-button-unchecked'
+                      }
                       size={20}
-                      color={formData.status === status ? colors.primary : colors.subtext}
+                      color={
+                        formData.status === status
+                          ? colors.primary
+                          : colors.subtext
+                      }
                     />
                     <Text style={[styles.radioText, { color: colors.text }]}>
                       {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -352,13 +411,18 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
 
             {/* Remarks */}
             <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Remarks</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Remarks
+              </Text>
               <TextInput
                 value={formData.remarks}
                 onChangeText={(value) => handleInputChange('remarks', value)}
                 placeholder="Add any remarks..."
                 placeholderTextColor={colors.subtext}
-                style={[styles.textArea, { color: colors.text, borderColor: colors.border }]}
+                style={[
+                  styles.textArea,
+                  { color: colors.text, borderColor: colors.border },
+                ]}
                 multiline
                 numberOfLines={3}
               />
@@ -366,24 +430,55 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
 
             {/* Attachments */}
             <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Payment Receipt</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Payment Receipt
+              </Text>
               {paymentReceivedAttachment ? (
-                <View style={[styles.attachmentContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <MaterialIcons name="attachment" size={20} color={colors.primary} />
-                  <Text style={[styles.attachmentName, { color: colors.text }]} numberOfLines={1}>
+                <View
+                  style={[
+                    styles.attachmentContainer,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <MaterialIcons
+                    name="attachment"
+                    size={20}
+                    color={colors.primary}
+                  />
+                  <Text
+                    style={[styles.attachmentName, { color: colors.text }]}
+                    numberOfLines={1}
+                  >
                     {paymentReceivedAttachment.name}
                   </Text>
-                  <TouchableOpacity onPress={() => removeAttachment('paymentReceived')}>
+                  <TouchableOpacity
+                    onPress={() => removeAttachment('paymentReceived')}
+                  >
                     <MaterialIcons name="close" size={20} color="#FF5722" />
                   </TouchableOpacity>
                 </View>
               ) : (
                 <TouchableOpacity
                   onPress={() => pickDocument('paymentReceived')}
-                  style={[styles.attachmentButton, { borderColor: colors.border }]}
+                  style={[
+                    styles.attachmentButton,
+                    { borderColor: colors.border },
+                  ]}
                 >
-                  <MaterialIcons name="attach-file" size={20} color={colors.primary} />
-                  <Text style={[styles.attachmentButtonText, { color: colors.primary }]}>
+                  <MaterialIcons
+                    name="attach-file"
+                    size={20}
+                    color={colors.primary}
+                  />
+                  <Text
+                    style={[
+                      styles.attachmentButtonText,
+                      { color: colors.primary },
+                    ]}
+                  >
                     Attach Payment Receipt
                   </Text>
                 </TouchableOpacity>
@@ -391,11 +486,28 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
             </View>
 
             <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Invoice</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Invoice
+              </Text>
               {invoiceAttachment ? (
-                <View style={[styles.attachmentContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <MaterialIcons name="attachment" size={20} color={colors.primary} />
-                  <Text style={[styles.attachmentName, { color: colors.text }]} numberOfLines={1}>
+                <View
+                  style={[
+                    styles.attachmentContainer,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <MaterialIcons
+                    name="attachment"
+                    size={20}
+                    color={colors.primary}
+                  />
+                  <Text
+                    style={[styles.attachmentName, { color: colors.text }]}
+                    numberOfLines={1}
+                  >
                     {invoiceAttachment.name}
                   </Text>
                   <TouchableOpacity onPress={() => removeAttachment('invoice')}>
@@ -405,10 +517,22 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
               ) : (
                 <TouchableOpacity
                   onPress={() => pickDocument('invoice')}
-                  style={[styles.attachmentButton, { borderColor: colors.border }]}
+                  style={[
+                    styles.attachmentButton,
+                    { borderColor: colors.border },
+                  ]}
                 >
-                  <MaterialIcons name="attach-file" size={20} color={colors.primary} />
-                  <Text style={[styles.attachmentButtonText, { color: colors.primary }]}>
+                  <MaterialIcons
+                    name="attach-file"
+                    size={20}
+                    color={colors.primary}
+                  />
+                  <Text
+                    style={[
+                      styles.attachmentButtonText,
+                      { color: colors.primary },
+                    ]}
+                  >
                     Attach Invoice
                   </Text>
                 </TouchableOpacity>

@@ -1,15 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   StatusBar,
   ActivityIndicator,
   FlatList,
   TextInput,
   Alert,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
@@ -18,10 +19,13 @@ import { lightColors, darkColors } from '../../constants/color';
 import { Booking, BookingFilterType, Payment } from '../../types/Bookings';
 import EditBookingModal from '../modals/EditBookingModal';
 import PaymentsModal from '../modals/PaymentsModal';
-import AddEditPaymentModal from '../modals/AddEditPaymentModal'; // Updated import
-import AnimatedDeleteWrapper, { useAnimatedDelete } from '../Reusable/AnimatedDeleteWrapper';
+import AddEditPaymentModal from '../modals/AddEditPaymentModal'; 
+import AnimatedDeleteWrapper, {
+  useAnimatedDelete,
+} from '../Reusable/AnimatedDeleteWrapper';
 import Pagination from '../Reusable/Pagination';
 import BookingItem from '../Items/BookingItem';
+import styles from './Styles/BookingList';
 
 const BookingsList: React.FC = () => {
   const { dark } = useTheme();
@@ -32,30 +36,29 @@ const BookingsList: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
-  const [selectedBookingForPayments, setSelectedBookingForPayments] = useState<Booking | null>(null);
-  
-  // Updated state for unified payment modal
+  const [selectedBookingForPayments, setSelectedBookingForPayments] =
+    useState<Booking | null>(null);
+
   const [paymentModalState, setPaymentModalState] = useState<{
     visible: boolean;
     booking: Booking | null;
-    payment?: Payment; // undefined for add mode, defined for edit mode
+    payment?: Payment;
   }>({
     visible: false,
     booking: null,
     payment: undefined,
   });
-  
+
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<BookingFilterType>('All');
   const [searchDebounced, setSearchDebounced] = useState('');
 
   const { get } = useGet();
   const { del: deleteRequest } = useDelete();
-  
-  // Use the custom hook for animated delete
+
   const { removingId, handleDelete } = useAnimatedDelete<Booking>(
     deleteRequest,
-    '/bookings'
+    '/bookings',
   );
 
   useEffect(() => {
@@ -75,10 +78,16 @@ const BookingsList: React.FC = () => {
     fetchBookings(page);
   }, [page, searchDebounced, statusFilter]);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchBookings(1);
+    }, []),
+  );
+
   const fetchBookings = async (pg: number) => {
     setLoading(true);
     setBookings([]);
-    
+
     try {
       const queryParams = new URLSearchParams({
         page: pg.toString(),
@@ -95,7 +104,7 @@ const BookingsList: React.FC = () => {
 
       const endpoint = `/bookings?${queryParams.toString()}`;
       const res = await get(endpoint);
-      
+
       if (res?.status === 'success') {
         setBookings(res.data.bookings || []);
         setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
@@ -105,7 +114,7 @@ const BookingsList: React.FC = () => {
       setBookings([]);
       setTotalPages(1);
     }
-    
+
     setLoading(false);
     if (initialLoad) {
       setInitialLoad(false);
@@ -120,21 +129,19 @@ const BookingsList: React.FC = () => {
     setSelectedBookingForPayments(booking);
   };
 
-  // Updated handler for adding payment
   const handleAddPayment = (booking: Booking) => {
     setPaymentModalState({
       visible: true,
       booking,
-      payment: undefined, // undefined indicates add mode
+      payment: undefined, 
     });
   };
 
-  // Updated handler for editing payment
   const handleEditPayment = (booking: Booking, payment: Payment) => {
     setPaymentModalState({
       visible: true,
       booking,
-      payment, // defined payment indicates edit mode
+      payment, 
     });
   };
 
@@ -142,23 +149,24 @@ const BookingsList: React.FC = () => {
     try {
       const res = await deleteRequest(`/payments/${payment.id}`);
       if (res?.status === 'success') {
-        // Update the bookings state to reflect the deleted payment
-        setBookings(prevBookings =>
-          prevBookings.map(booking => ({
+        setBookings((prevBookings) =>
+          prevBookings.map((booking) => ({
             ...booking,
-            payments: booking.payments.filter(p => p.id !== payment.id)
-          }))
+            payments: booking.payments.filter((p) => p.id !== payment.id),
+          })),
         );
-        
-        // Update the selected booking for payments modal if it's open
+
         if (selectedBookingForPayments) {
-          setSelectedBookingForPayments(prev => ({
+          setSelectedBookingForPayments((prev) => ({
             ...prev!,
-            payments: prev!.payments.filter(p => p.id !== payment.id)
+            payments: prev!.payments.filter((p) => p.id !== payment.id),
           }));
         }
-        
-        Alert.alert('Success', 'Payment deleted successfully');
+              Toast.show({
+                type: 'success',
+                text1: 'Deleted',
+                text2: `Payment deleted successfully`,
+              });
       }
     } catch (error) {
       console.error('Error deleting payment:', error);
@@ -168,24 +176,22 @@ const BookingsList: React.FC = () => {
 
   const updateBooking = (updated: Booking) => {
     setBookings((prev) =>
-      prev.map((booking) => (booking.id === updated.id ? { ...booking, ...updated } : booking))
+      prev.map((booking) =>
+        booking.id === updated.id ? { ...booking, ...updated } : booking,
+      ),
     );
   };
 
-  // Updated handler for payment modal success
   const handlePaymentModalSuccess = (updatedPayment: Payment) => {
     const bookingId = paymentModalState.booking?.id;
     if (!bookingId) return;
 
     if (paymentModalState.payment) {
-      // Edit mode - update existing payment
       updatePaymentInBooking(bookingId, updatedPayment);
     } else {
-      // Add mode - add new payment
       updateBookingWithPayment(bookingId, updatedPayment);
     }
 
-    // Close the modal
     setPaymentModalState({
       visible: false,
       booking: null,
@@ -194,36 +200,38 @@ const BookingsList: React.FC = () => {
   };
 
   const updateBookingWithPayment = (bookingId: number, newPayment: Payment) => {
-    setBookings(prevBookings =>
-      prevBookings.map(booking =>
+    setBookings((prevBookings) =>
+      prevBookings.map((booking) =>
         booking.id === bookingId
           ? { ...booking, payments: [...booking.payments, newPayment] }
-          : booking
-      )
+          : booking,
+      ),
     );
   };
 
-  const updatePaymentInBooking = (bookingId: number, updatedPayment: Payment) => {
-    setBookings(prevBookings =>
-      prevBookings.map(booking =>
+  const updatePaymentInBooking = (
+    bookingId: number,
+    updatedPayment: Payment,
+  ) => {
+    setBookings((prevBookings) =>
+      prevBookings.map((booking) =>
         booking.id === bookingId
           ? {
               ...booking,
-              payments: booking.payments.map(p =>
-                p.id === updatedPayment.id ? updatedPayment : p
-              )
+              payments: booking.payments.map((p) =>
+                p.id === updatedPayment.id ? updatedPayment : p,
+              ),
             }
-          : booking
-      )
+          : booking,
+      ),
     );
 
-    // Update the payments modal if it's open for the same booking
     if (selectedBookingForPayments?.id === bookingId) {
-      setSelectedBookingForPayments(prev => ({
+      setSelectedBookingForPayments((prev) => ({
         ...prev!,
-        payments: prev!.payments.map(p =>
-          p.id === updatedPayment.id ? updatedPayment : p
-        )
+        payments: prev!.payments.map((p) =>
+          p.id === updatedPayment.id ? updatedPayment : p,
+        ),
       }));
     }
   };
@@ -277,24 +285,35 @@ const BookingsList: React.FC = () => {
       style={[
         styles.filterChip,
         {
-          backgroundColor: statusFilter === value ? colors.primary : colors.card,
+          backgroundColor:
+            statusFilter === value ? colors.primary : colors.card,
           borderColor: colors.border,
         },
       ]}
     >
-      <Text style={[
-        styles.filterText,
-        { color: statusFilter === value ? '#fff' : colors.text }
-      ]}>
+      <Text
+        style={[
+          styles.filterText,
+          { color: statusFilter === value ? '#fff' : colors.text },
+        ]}
+      >
         {label}
       </Text>
       {getFilterColor(value) && statusFilter === value && (
-        <View style={[styles.colorDot, { backgroundColor: getFilterColor(value) }]} />
+        <View
+          style={[styles.colorDot, { backgroundColor: getFilterColor(value) }]}
+        />
       )}
     </TouchableOpacity>
   );
 
-  const renderBookingCard = ({ item, index }: { item: Booking; index: number }) => (
+  const renderBookingCard = ({
+    item,
+    index,
+  }: {
+    item: Booking;
+    index: number;
+  }) => (
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
@@ -310,7 +329,7 @@ const BookingsList: React.FC = () => {
         onEdit={handleEdit}
         onPayments={handlePayments}
         onAddPayment={handleAddPayment}
-        onDeletePress={() => {}} // This will be overridden by AnimatedDeleteWrapper
+        onDeletePress={() => {}} 
       />
     </AnimatedDeleteWrapper>
   );
@@ -322,7 +341,9 @@ const BookingsList: React.FC = () => {
         {searchDebounced ? 'No bookings found' : 'No bookings available'}
       </Text>
       <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
-        {searchDebounced ? 'Try adjusting your search or filters' : 'Create some bookings to get started'}
+        {searchDebounced
+          ? 'Try adjusting your search or filters'
+          : 'Create some bookings to get started'}
       </Text>
     </View>
   );
@@ -330,7 +351,10 @@ const BookingsList: React.FC = () => {
   if (initialLoad) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
+        <StatusBar
+          barStyle={dark ? 'light-content' : 'dark-content'}
+          backgroundColor={colors.card}
+        />
         <View style={styles.initialLoadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -343,10 +367,17 @@ const BookingsList: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
-      
-      {/* Search Bar */}
-      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <StatusBar
+        barStyle={dark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.card}
+      />
+
+      <View
+        style={[
+          styles.searchContainer,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
         <MaterialIcons name="search" size={20} color={colors.subtext} />
         <TextInput
           value={search}
@@ -362,7 +393,6 @@ const BookingsList: React.FC = () => {
         )}
       </View>
 
-      {/* Search Indicator */}
       {searchDebounced && (
         <View style={styles.searchIndicator}>
           <Text style={[styles.searchIndicatorText, { color: colors.subtext }]}>
@@ -371,9 +401,10 @@ const BookingsList: React.FC = () => {
         </View>
       )}
 
-      {/* Filter Chips */}
       <View style={styles.filtersContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Filter:</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Filter:
+        </Text>
         <View style={styles.chipsRow}>
           {renderFilterChip('All', 'All')}
           {renderFilterChip('Active', 'active')}
@@ -402,7 +433,6 @@ const BookingsList: React.FC = () => {
         </View>
       )}
 
-      {/* Pagination Component */}
       <Pagination
         currentPage={page}
         totalPages={totalPages}
@@ -412,7 +442,6 @@ const BookingsList: React.FC = () => {
         onNextPage={handleNextPage}
       />
 
-      {/* Edit Booking Modal */}
       {editingBooking && (
         <EditBookingModal
           visible={true}
@@ -427,7 +456,6 @@ const BookingsList: React.FC = () => {
         />
       )}
 
-      {/* Payments Modal */}
       {selectedBookingForPayments && (
         <PaymentsModal
           visible={true}
@@ -440,17 +468,18 @@ const BookingsList: React.FC = () => {
         />
       )}
 
-      {/* Unified Add/Edit Payment Modal */}
       {paymentModalState.visible && paymentModalState.booking && (
         <AddEditPaymentModal
           visible={paymentModalState.visible}
           booking={paymentModalState.booking}
-          payment={paymentModalState.payment} // undefined for add, defined for edit
-          onClose={() => setPaymentModalState({
-            visible: false,
-            booking: null,
-            payment: undefined,
-          })}
+          payment={paymentModalState.payment} 
+          onClose={() =>
+            setPaymentModalState({
+              visible: false,
+              booking: null,
+              payment: undefined,
+            })
+          }
           onSuccess={handlePaymentModalSuccess}
           colors={colors}
           dark={dark}
@@ -460,101 +489,6 @@ const BookingsList: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
-  },
-  searchIndicator: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  searchIndicatorText: {
-    fontSize: 12,
-    fontStyle: 'italic',
-  },
-  filtersContainer: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    marginRight: 8,
-    marginBottom: 4,
-  },
-  filterText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  colorDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginLeft: 6,
-  },
-  listContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 100,
-  },
-  initialLoadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingOverlay: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  loadingText: {
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    marginTop: 60,
-  },  
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 16,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-});
+
 
 export default BookingsList;

@@ -26,7 +26,7 @@ const AvailabilityCalendar: React.FC = () => {
   const daysInMonth = currentDate.daysInMonth();
   const startDay = currentDate.startOf('month').day();
   const monthDays = Array.from({ length: startDay + daysInMonth }, (_, i) =>
-    i < startDay ? null : i - startDay + 1
+    i < startDay ? null : i - startDay + 1,
   );
 
   const prevMonth = () => setCurrentDate(currentDate.subtract(1, 'month'));
@@ -91,12 +91,13 @@ const AvailabilityCalendar: React.FC = () => {
       <Text style={[styles.note, { color: dark ? '#aaa' : '#555' }]}>
         Tap on a date to view unit availability
       </Text>
-      {selectedDate && 
-      <UnitListModal
-        visible={isModalVisible}
-        selectedDate={selectedDate}
-        onClose={() => setModalVisible(false)}
-      /> }
+      {selectedDate && (
+        <UnitListModal
+          visible={isModalVisible}
+          selectedDate={selectedDate}
+          onClose={() => setModalVisible(false)}
+        />
+      )}
     </View>
   );
 };

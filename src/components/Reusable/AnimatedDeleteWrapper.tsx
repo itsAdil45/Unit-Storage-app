@@ -17,8 +17,6 @@ interface AnimatedDeleteWrapperProps {
   slideDistance?: number;
 }
 
-
-
 const AnimatedDeleteWrapper: React.FC<AnimatedDeleteWrapperProps> = ({
   children,
   itemId,
@@ -43,45 +41,46 @@ const AnimatedDeleteWrapper: React.FC<AnimatedDeleteWrapperProps> = ({
   }, [removingId, itemId, slideAnim, animationDuration, slideDistance]);
 
   const handleDeleteConfirmation = () => {
-    const message = itemName 
+    const message = itemName
       ? `Are you sure you want to delete "${itemName}"?`
       : deleteMessage;
 
-    Alert.alert(
-      deleteTitle,
-      message,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => onDelete(itemId) },
-      ]
-    );
+    Alert.alert(deleteTitle, message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => onDelete(itemId) },
+    ]);
   };
 
   return (
-  <Animated.View style={{ transform: [{ translateX: slideAnim }] }}>
-    {React.isValidElement(children)
-      ? React.cloneElement(children, { onDeletePress: handleDeleteConfirmation })
-      : children}
-  </Animated.View>
+    <Animated.View style={{ transform: [{ translateX: slideAnim }] }}>
+      {React.isValidElement(children)
+        ? React.cloneElement(children, {
+            onDeletePress: handleDeleteConfirmation,
+          })
+        : children}
+    </Animated.View>
   );
 };
 
 // Custom hook for managing delete state and operations
 export const useAnimatedDelete = <T extends { id: number }>(
   deleteRequest: (endpoint: string) => Promise<any>,
-  endpoint: string
+  endpoint: string,
 ) => {
   const [removingId, setRemovingId] = React.useState<number | null>(null);
 
-  const handleDelete = async (id: number, setItems: React.Dispatch<React.SetStateAction<T[]>>) => {
+  const handleDelete = async (
+    id: number,
+    setItems: React.Dispatch<React.SetStateAction<T[]>>,
+  ) => {
     setRemovingId(id);
-    
+
     // Wait for animation to start
     await new Promise((resolve) => setTimeout(resolve, 250));
-    
+
     // Remove from UI immediately
     setItems((prev) => prev.filter((item) => item.id !== id));
-    
+
     try {
       // Make API call
       await deleteRequest(`${endpoint}/${id}`);
@@ -90,7 +89,7 @@ export const useAnimatedDelete = <T extends { id: number }>(
       // Optionally restore item on failure
       // You could add error handling logic here
     }
-    
+
     setRemovingId(null);
   };
 

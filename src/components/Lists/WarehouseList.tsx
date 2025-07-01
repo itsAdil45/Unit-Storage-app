@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   FlatList,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 import { useTheme } from '@react-navigation/native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
@@ -15,43 +17,55 @@ import { useDelete } from '../../hooks/useDelete';
 import { lightColors, darkColors } from '../../constants/color';
 import AddWarehouseModal from '../modals/AddWarehouseModal';
 import EditWarehouseModal from '../modals/EditWarehouseModal';
-import AnimatedDeleteWrapper, { useAnimatedDelete } from '../Reusable/AnimatedDeleteWrapper';
+import AnimatedDeleteWrapper, {
+  useAnimatedDelete,
+} from '../Reusable/AnimatedDeleteWrapper';
 import Pagination from '../Reusable/Pagination';
 import WarehouseItem from '../Items/WarehouseItem';
-import {Warehouse } from '../../types/Warehouses';
-
+import { Warehouse } from '../../types/Warehouses';
+import styles from './Styles/WarehouseList';
 
 
 const WarehouseList: React.FC = () => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
-  
+
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
-  const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(null);
+  const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
+    null,
+  );
   const [showAddModal, setShowAddModal] = useState(false);
 
   const { get } = useGet();
   const { del: deleteRequest } = useDelete();
 
-  // Use the custom hook for animated delete
-  const { removingId, handleDelete } = useAnimatedDelete<Warehouse>(deleteRequest, '/warehouses');
+  const { removingId, handleDelete } = useAnimatedDelete<Warehouse>(
+    deleteRequest,
+    '/warehouses',
+  );
 
   useEffect(() => {
     fetchWarehouses(page);
   }, [page]);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchWarehouses(1);
+    }, []),
+  );
+
   const fetchWarehouses = async (pg: number) => {
     setLoading(true);
     setWarehouses([]);
-    
+
     try {
       const endpoint = `/warehouses?page=${pg}&limit=20`;
       const res = await get(endpoint);
-      
+
       if (res?.status === 'success') {
         const warehousesData = res.data?.warehouses || [];
         setWarehouses(Array.isArray(warehousesData) ? warehousesData : []);
@@ -62,7 +76,7 @@ const WarehouseList: React.FC = () => {
       setWarehouses([]);
       setTotalPages(1);
     }
-    
+
     setLoading(false);
     if (initialLoad) {
       setInitialLoad(false);
@@ -75,7 +89,9 @@ const WarehouseList: React.FC = () => {
 
   const updateWarehouse = (updated: Warehouse) => {
     setWarehouses((prev) =>
-      prev.map((warehouse) => (warehouse.id === updated.id ? { ...warehouse, ...updated } : warehouse))
+      prev.map((warehouse) =>
+        warehouse.id === updated.id ? { ...warehouse, ...updated } : warehouse,
+      ),
     );
   };
 
@@ -99,7 +115,13 @@ const WarehouseList: React.FC = () => {
     }
   };
 
-  const renderWarehouseCard = ({ item, index }: { item: Warehouse; index: number }) => (
+  const renderWarehouseCard = ({
+    item,
+    index,
+  }: {
+    item: Warehouse;
+    index: number;
+  }) => (
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
@@ -115,14 +137,18 @@ const WarehouseList: React.FC = () => {
         colors={colors}
         dark={dark}
         onEdit={handleEdit}
-        onDeletePress={() => {}} // This will be overridden by AnimatedDeleteWrapper
+        onDeletePress={() => {}} 
       />
     </AnimatedDeleteWrapper>
   );
 
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
-      <MaterialCommunityIcons name="warehouse" size={64} color={colors.subtext} />
+      <MaterialCommunityIcons
+        name="warehouse"
+        size={64}
+        color={colors.subtext}
+      />
       <Text style={[styles.emptyTitle, { color: colors.text }]}>
         No warehouses available
       </Text>
@@ -135,7 +161,10 @@ const WarehouseList: React.FC = () => {
   if (initialLoad) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
+        <StatusBar
+          barStyle={dark ? 'light-content' : 'dark-content'}
+          backgroundColor={colors.card}
+        />
         <View style={styles.initialLoadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -148,11 +177,20 @@ const WarehouseList: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
-      
-      {/* Header with Add Button */}
-      <View style={[styles.headerContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Warehouses</Text>
+      <StatusBar
+        barStyle={dark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.card}
+      />
+
+      <View
+        style={[
+          styles.headerContainer,
+          { backgroundColor: colors.card, borderBottomColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Warehouses
+        </Text>
         <TouchableOpacity
           style={[styles.addButton, { backgroundColor: colors.primary }]}
           onPress={() => setShowAddModal(true)}
@@ -162,7 +200,6 @@ const WarehouseList: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* List */}
       <FlatList
         data={displayWarehouses}
         renderItem={renderWarehouseCard}
@@ -182,7 +219,6 @@ const WarehouseList: React.FC = () => {
         </View>
       )}
 
-      {/* Pagination Component */}
       <Pagination
         currentPage={page}
         totalPages={totalPages}
@@ -192,7 +228,6 @@ const WarehouseList: React.FC = () => {
         onNextPage={handleNextPage}
       />
 
-      {/* Add Modal */}
       <AddWarehouseModal
         visible={showAddModal}
         onClose={() => setShowAddModal(false)}
@@ -202,7 +237,6 @@ const WarehouseList: React.FC = () => {
         }}
       />
 
-      {/* Edit Modal */}
       {editingWarehouse && (
         <EditWarehouseModal
           visible={true}
@@ -218,100 +252,5 @@ const WarehouseList: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  addButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  listContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 100,
-  },
-  warehouseCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statusIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-  },
-  initialLoadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingOverlay: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  loadingText: {
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    marginTop: 60,
-  },  
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 16,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-});
 
 export default WarehouseList;

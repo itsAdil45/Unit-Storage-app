@@ -14,6 +14,7 @@ import {
 import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
 import { usePost } from '../../hooks/usePost'; // Adjust path as needed
+import Toast from 'react-native-toast-message';
 
 interface AddCustomerModalProps {
   visible: boolean;
@@ -28,7 +29,11 @@ interface AddCustomerModalProps {
   }) => void;
 }
 
-const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ visible, onClose, onAdd }) => {
+const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
+  visible,
+  onClose,
+  onAdd,
+}) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
   const { post } = usePost();
@@ -58,34 +63,34 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ visible, onClose, o
       Alert.alert('Error', 'Please enter first name');
       return;
     }
-    
+
     if (!lastName.trim()) {
       Alert.alert('Error', 'Please enter last name');
       return;
     }
-    
+
     if (!email.trim()) {
       Alert.alert('Error', 'Please enter email');
       return;
     }
-    
+
     if (!validateEmail(email)) {
       Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
-    
+
     if (!phone.trim()) {
       Alert.alert('Error', 'Please enter phone number');
       return;
     }
-    
+
     if (!validatePhone(phone)) {
       Alert.alert('Error', 'Please enter a valid phone number');
       return;
     }
 
     setSubmitting(true);
-    
+
     try {
       const payload = {
         firstName: firstName.trim(),
@@ -93,26 +98,36 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ visible, onClose, o
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         address: address.trim(),
-        inquiry: inquiry.trim()
+        inquiry: inquiry.trim(),
       };
 
       const response = await post('/customers', payload);
-      
+
       if (response && response.status === 'success') {
-        Alert.alert('Success', 'Customer added successfully');
-        
-        // Call the onAdd callback with the customer data
+      Toast.show({
+        type: 'success',
+        text1: 'Added',
+        text2: `Customer added successfully`,
+      });
         onAdd(payload);
-        
+
         // Reset form
         resetForm();
         onClose();
       } else {
-        Alert.alert('Error', response?.message || 'Failed to add customer');
+        // Alert.alert('Error', response?.message || 'Failed to add customer');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Failed to add customer`,
+      });
       }
     } catch (error) {
-      console.error('Error adding customer:', error);
-      Alert.alert('Error', 'Failed to add customer. Please try again.');
+            Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Failed to add customer`,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -133,47 +148,47 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ visible, onClose, o
   };
 
   const inputFields = [
-    { 
-      label: 'First Name', 
-      value: firstName, 
-      setter: setFirstName, 
+    {
+      label: 'First Name',
+      value: firstName,
+      setter: setFirstName,
       required: true,
-      placeholder: 'Enter first name'
+      placeholder: 'Enter first name',
     },
-    { 
-      label: 'Last Name', 
-      value: lastName, 
-      setter: setLastName, 
+    {
+      label: 'Last Name',
+      value: lastName,
+      setter: setLastName,
       required: true,
-      placeholder: 'Enter last name'
+      placeholder: 'Enter last name',
     },
-    { 
-      label: 'Email', 
-      value: email, 
-      setter: setEmail, 
+    {
+      label: 'Email',
+      value: email,
+      setter: setEmail,
       keyboardType: 'email-address',
       required: true,
-      placeholder: 'Enter email address'
+      placeholder: 'Enter email address',
     },
-    { 
-      label: 'Phone', 
-      value: phone, 
-      setter: setPhone, 
+    {
+      label: 'Phone',
+      value: phone,
+      setter: setPhone,
       keyboardType: 'phone-pad',
       required: true,
-      placeholder: 'Enter phone number'
+      placeholder: 'Enter phone number',
     },
-    { 
-      label: 'Address', 
-      value: address, 
+    {
+      label: 'Address',
+      value: address,
       setter: setAddress,
-      placeholder: 'Enter address (optional)'
+      placeholder: 'Enter address (optional)',
     },
-    { 
-      label: 'Inquiry', 
-      value: inquiry, 
+    {
+      label: 'Inquiry',
+      value: inquiry,
       setter: setInquiry,
-      placeholder: 'Enter inquiry details (optional)'
+      placeholder: 'Enter inquiry details (optional)',
     },
   ];
 
@@ -187,38 +202,57 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({ visible, onClose, o
       <View style={styles.overlay}>
         <View style={[styles.modalContainer, { backgroundColor: colors.card }]}>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={[styles.title, { color: colors.text }]}>Add Customer</Text>
+            <Text style={[styles.title, { color: colors.text }]}>
+              Add Customer
+            </Text>
 
-            {inputFields.map(({ label, value, setter, keyboardType, required, placeholder }) => (
-              <View key={label} style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>
-                  {label}
-                  {required && <Text style={styles.required}> *</Text>}
-                </Text>
-                <TextInput
-                  value={value}
-                  onChangeText={setter}
-                  placeholder={placeholder}
-                  keyboardType={keyboardType as any}
-                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-                  placeholderTextColor={colors.border}
-                  editable={!submitting}
-                  autoCapitalize={keyboardType === 'email-address' ? 'none' : 'words'}
-                  autoCorrect={false}
-                />
-              </View>
-            ))}
+            {inputFields.map(
+              ({
+                label,
+                value,
+                setter,
+                keyboardType,
+                required,
+                placeholder,
+              }) => (
+                <View key={label} style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: colors.text }]}>
+                    {label}
+                    {required && <Text style={styles.required}> *</Text>}
+                  </Text>
+                  <TextInput
+                    value={value}
+                    onChangeText={setter}
+                    placeholder={placeholder}
+                    keyboardType={keyboardType as any}
+                    style={[
+                      styles.input,
+                      { color: colors.text, borderColor: colors.border },
+                    ]}
+                    placeholderTextColor={colors.border}
+                    editable={!submitting}
+                    autoCapitalize={
+                      keyboardType === 'email-address' ? 'none' : 'words'
+                    }
+                    autoCorrect={false}
+                  />
+                </View>
+              ),
+            )}
 
             <View style={styles.buttonRow}>
-              <TouchableOpacity 
-                style={[styles.closeButton, submitting && styles.disabledButton]} 
+              <TouchableOpacity
+                style={[
+                  styles.closeButton,
+                  submitting && styles.disabledButton,
+                ]}
                 onPress={handleClose}
                 disabled={submitting}
               >
                 <Text style={styles.buttonText}>Close</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.addButton, submitting && styles.disabledButton]} 
+              <TouchableOpacity
+                style={[styles.addButton, submitting && styles.disabledButton]}
                 onPress={handleAdd}
                 disabled={submitting}
               >

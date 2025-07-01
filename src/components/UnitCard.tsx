@@ -2,17 +2,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useTheme  } from '@react-navigation/native';
-import {lightColors,darkColors} from "../constants/color"
+import { useTheme } from '@react-navigation/native';
+import { lightColors, darkColors } from '../constants/color';
 import { Props } from '../types/Types';
 
-
 const UnitCard = ({ label, value, percent, iconColor = '#007aff' }: Props) => {
-      const { dark } = useTheme();
-      const backgroundColor = dark ? darkColors.card : lightColors.card;
-      const textColor = dark ? darkColors.text : lightColors.text;
+  const { dark } = useTheme();
+  const backgroundColor = dark ? darkColors.card : lightColors.card;
+  const textColor = dark ? darkColors.text : lightColors.text;
 
-  
   return (
     <View style={[styles.card, { backgroundColor }]}>
       <View>

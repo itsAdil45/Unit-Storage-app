@@ -58,7 +58,10 @@ const RecentExpenses: React.FC<Props> = ({ expenses, onAddExpense }) => {
         renderItem={({ item }) => (
           <View style={styles.expenseItem}>
             <View
-              style={[styles.iconWrapper, { backgroundColor: themeColors.accent }]}
+              style={[
+                styles.iconWrapper,
+                { backgroundColor: themeColors.accent },
+              ]}
             >
               <MaterialCommunityIcons
                 name="office-building"

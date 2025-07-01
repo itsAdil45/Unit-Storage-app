@@ -15,6 +15,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
 import { usePost } from '../../hooks/usePost';
+import Toast from 'react-native-toast-message';
 
 interface AddExpenseModalProps {
   visible: boolean;
@@ -89,31 +90,36 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     }
 
     setSubmitting(true);
-    
+
     try {
-      const selectedWarehouse = warehouses.find(w => w.value === warehouse);
+      const selectedWarehouse = warehouses.find((w) => w.value === warehouse);
       const payload = {
         description: name.trim(),
         amount: numericAmount,
         expenseType: expenseType,
         date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        warehouseId: selectedWarehouse?.id || 12
+        warehouseId: selectedWarehouse?.id || 12,
       };
 
       const response = await post('/expenses', payload); // Adjust endpoint as needed
-      
+
       if (response && response.status === 'success') {
-        Alert.alert('Success', 'Expense added successfully');
-        
+              Toast.show({
+        type: 'success',
+        text1: 'Added',
+        text2: `Expense added successfully `,
+      });
         // Call the onAdd callback
-        onAdd({ 
+        onAdd({
           name,
-          expenseType: expenseTypes.find(et => et.value === expenseType)?.label || expenseType,
+          expenseType:
+            expenseTypes.find((et) => et.value === expenseType)?.label ||
+            expenseType,
           amount,
           warehouse: selectedWarehouse?.label || warehouse,
-          date: date.toISOString().split('T')[0]
+          date: date.toISOString().split('T')[0],
         });
-        
+
         // Reset form
         resetForm();
         onClose();
@@ -151,7 +157,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -164,23 +170,34 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     >
       <View style={styles.overlay}>
         <View style={[styles.modalContainer, { backgroundColor: colors.card }]}>
-          <Text style={[styles.title, { color: colors.text }]}>Add Expense</Text>
+          <Text style={[styles.title, { color: colors.text }]}>
+            Add Expense
+          </Text>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Name/Description</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Name/Description
+            </Text>
             <TextInput
               value={name}
               onChangeText={setName}
               placeholder="Enter expense description"
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+              style={[
+                styles.input,
+                { color: colors.text, borderColor: colors.border },
+              ]}
               placeholderTextColor={colors.border}
               editable={!submitting}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Expense Type</Text>
-            <View style={[styles.pickerWrapper, { borderColor: colors.border }]}>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Expense Type
+            </Text>
+            <View
+              style={[styles.pickerWrapper, { borderColor: colors.border }]}
+            >
               <Picker
                 selectedValue={expenseType}
                 onValueChange={(itemValue) => setExpenseType(itemValue)}
@@ -189,10 +206,10 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               >
                 <Picker.Item label="Select Expense Type" value="" />
                 {expenseTypes.map((type) => (
-                  <Picker.Item 
-                    key={type.value} 
-                    label={type.label} 
-                    value={type.value} 
+                  <Picker.Item
+                    key={type.value}
+                    label={type.label}
+                    value={type.value}
                   />
                 ))}
               </Picker>
@@ -206,15 +223,22 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               onChangeText={setAmount}
               placeholder="Enter amount"
               keyboardType="numeric"
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+              style={[
+                styles.input,
+                { color: colors.text, borderColor: colors.border },
+              ]}
               placeholderTextColor={colors.border}
               editable={!submitting}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Warehouse</Text>
-            <View style={[styles.pickerWrapper, { borderColor: colors.border }]}>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Warehouse
+            </Text>
+            <View
+              style={[styles.pickerWrapper, { borderColor: colors.border }]}
+            >
               <Picker
                 selectedValue={warehouse}
                 onValueChange={(itemValue) => setWarehouse(itemValue)}
@@ -223,10 +247,10 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               >
                 <Picker.Item label="Select Warehouse" value="" />
                 {warehouses.map((wh, index) => (
-                  <Picker.Item 
-                    key={`${wh.value}_${index}`} 
-                    label={wh.label} 
-                    value={wh.value} 
+                  <Picker.Item
+                    key={`${wh.value}_${index}`}
+                    label={wh.label}
+                    value={wh.value}
                   />
                 ))}
               </Picker>
@@ -258,15 +282,15 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           )}
 
           <View style={styles.buttonRow}>
-            <TouchableOpacity 
-              style={[styles.closeButton, submitting && styles.disabledButton]} 
+            <TouchableOpacity
+              style={[styles.closeButton, submitting && styles.disabledButton]}
               onPress={handleClose}
               disabled={submitting}
             >
               <Text style={styles.buttonText}>Close</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.addButton, submitting && styles.disabledButton]} 
+            <TouchableOpacity
+              style={[styles.addButton, submitting && styles.disabledButton]}
               onPress={handleAdd}
               disabled={submitting}
             >

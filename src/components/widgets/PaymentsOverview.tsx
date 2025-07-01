@@ -10,7 +10,7 @@ import { PaymentOverviewData } from '../../types/Types'; // ⬅️ import type
 interface Props {
   overview: PaymentOverviewData | null;
 }
-const PaymentsOverview:React.FC<Props> = ({ overview }) => {
+const PaymentsOverview: React.FC<Props> = ({ overview }) => {
   const { dark } = useTheme();
   const themeColors = dark ? darkColors : lightColors;
 
@@ -42,9 +42,13 @@ const PaymentsOverview:React.FC<Props> = ({ overview }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: themeColors.card }]}>
-      <Text style={[styles.title, { color: themeColors.text }]}>Payment Overview</Text>
+      <Text style={[styles.title, { color: themeColors.text }]}>
+        Payment Overview
+      </Text>
 
-      <View style={[styles.chartWrapper, { backgroundColor: themeColors.card }]}>
+      <View
+        style={[styles.chartWrapper, { backgroundColor: themeColors.card }]}
+      >
         <PieChart
           data={chartData}
           width={screenWidth - 64}
@@ -63,8 +67,12 @@ const PaymentsOverview:React.FC<Props> = ({ overview }) => {
       </View>
 
       <View style={styles.centerTextWrapper}>
-        <Text style={[styles.centerTextTop, { color: themeColors.text }]}>Total Units</Text>
-        <Text style={[styles.centerTextBottom, { color: themeColors.text }]}>{total}</Text>
+        <Text style={[styles.centerTextTop, { color: themeColors.text }]}>
+          Total Units
+        </Text>
+        <Text style={[styles.centerTextBottom, { color: themeColors.text }]}>
+          {total}
+        </Text>
       </View>
     </View>
   );

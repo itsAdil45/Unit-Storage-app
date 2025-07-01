@@ -51,14 +51,14 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={!canGoPrevious}
         activeOpacity={0.7}
       >
-        <MaterialIcons 
-          name="chevron-left" 
-          size={20} 
-          color={canGoPrevious ? '#fff' : colors.subtext} 
+        <MaterialIcons
+          name="chevron-left"
+          size={20}
+          color={canGoPrevious ? '#fff' : colors.subtext}
         />
-        <Text 
+        <Text
           style={[
-            styles.navButtonText, 
+            styles.navButtonText,
             { color: canGoPrevious ? '#fff' : colors.subtext },
             textStyle,
           ]}
@@ -86,19 +86,19 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={!canGoNext}
         activeOpacity={0.7}
       >
-        <Text 
+        <Text
           style={[
-            styles.navButtonText, 
+            styles.navButtonText,
             { color: canGoNext ? '#fff' : colors.subtext },
             textStyle,
           ]}
         >
           Next
         </Text>
-        <MaterialIcons 
-          name="chevron-right" 
-          size={20} 
-          color={canGoNext ? '#fff' : colors.subtext} 
+        <MaterialIcons
+          name="chevron-right"
+          size={20}
+          color={canGoNext ? '#fff' : colors.subtext}
         />
       </TouchableOpacity>
     </View>

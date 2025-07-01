@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Pressable,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import {
   MaterialIcons,
   MaterialCommunityIcons,
@@ -50,22 +44,35 @@ const actions = [
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const renderIcon = (action: typeof actions[0]) => {
+const renderIcon = (action: (typeof actions)[0]) => {
   const size = 22;
   const color = 'white';
   switch (action.lib) {
     case 'MaterialIcons':
-      return <MaterialIcons name={action.icon as any} size={size} color={color} />;
+      return (
+        <MaterialIcons name={action.icon as any} size={size} color={color} />
+      );
     case 'MaterialCommunityIcons':
-      return <MaterialCommunityIcons name={action.icon as any} size={size} color={color} />;
+      return (
+        <MaterialCommunityIcons
+          name={action.icon as any}
+          size={size}
+          color={color}
+        />
+      );
     case 'FontAwesome5':
-      return <FontAwesome5 name={action.icon as any} size={size} color={color} />;
+      return (
+        <FontAwesome5 name={action.icon as any} size={size} color={color} />
+      );
     default:
       return null;
   }
 };
 
-const ActionItem: React.FC<{ item: typeof actions[0]; onPress?: () => void }> = ({ item, onPress }) => {
+const ActionItem: React.FC<{
+  item: (typeof actions)[0];
+  onPress?: () => void;
+}> = ({ item, onPress }) => {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -77,7 +84,11 @@ const ActionItem: React.FC<{ item: typeof actions[0]; onPress?: () => void }> = 
       onPressIn={() => (scale.value = withSpring(0.95))}
       onPressOut={() => (scale.value = withSpring(1))}
       onPress={onPress}
-      style={[styles.actionButton, { backgroundColor: item.color }, animatedStyle]}
+      style={[
+        styles.actionButton,
+        { backgroundColor: item.color },
+        animatedStyle,
+      ]}
     >
       {renderIcon(item)}
       <Text style={styles.actionText}>{item.title}</Text>
@@ -85,7 +96,9 @@ const ActionItem: React.FC<{ item: typeof actions[0]; onPress?: () => void }> = 
   );
 };
 
-const QuickActions: React.FC<{ onActionPress?: (action: typeof actions[0]) => void }> = ({ onActionPress }) => {
+const QuickActions: React.FC<{
+  onActionPress?: (action: (typeof actions)[0]) => void;
+}> = ({ onActionPress }) => {
   const { dark } = useTheme();
   const backgroundColor = dark ? darkColors.card : lightColors.card;
   const headerColor = dark ? darkColors.text : lightColors.text;
@@ -97,7 +110,9 @@ const QuickActions: React.FC<{ onActionPress?: (action: typeof actions[0]) => vo
         data={actions}
         horizontal
         keyExtractor={(item) => item.title}
-        renderItem={({ item }) => <ActionItem item={item} onPress={() => onActionPress?.(item)} />}
+        renderItem={({ item }) => (
+          <ActionItem item={item} onPress={() => onActionPress?.(item)} />
+        )}
         contentContainerStyle={styles.listContainer}
         showsHorizontalScrollIndicator={false}
       />

@@ -17,6 +17,7 @@ import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
 import { useGet } from '../../hooks/useGet';
 import { usePostFormData } from '../../hooks/usePostFormData';
+import Toast from 'react-native-toast-message';
 
 interface Customer {
   id: number;
@@ -38,7 +39,11 @@ interface AddBookingModalProps {
   onAdd: (booking: any) => void;
 }
 
-const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onAdd }) => {
+const AddBookingModal: React.FC<AddBookingModalProps> = ({
+  visible,
+  onClose,
+  onAdd,
+}) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
   const { get } = useGet();
@@ -52,7 +57,8 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [totalPrice, setTotalPrice] = useState('');
   const [spaceOccupied, setSpaceOccupied] = useState('');
-  const [packingList, setPackingList] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  const [packingList, setPackingList] =
+    useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const [customerSearch, setCustomerSearch] = useState('');
@@ -61,14 +67,18 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
   const [storageUnits, setStorageUnits] = useState<StorageUnit[]>([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [showStorageUnitDropdown, setShowStorageUnitDropdown] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [selectedStorageUnit, setSelectedStorageUnit] = useState<StorageUnit | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
+  const [selectedStorageUnit, setSelectedStorageUnit] =
+    useState<StorageUnit | null>(null);
 
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
       if (customerSearch.length > 0) {
         const response = await get('/customers', { search: customerSearch });
-        if (response?.status === 'success') setCustomers(response.data.customers);
+        if (response?.status === 'success')
+          setCustomers(response.data.customers);
       } else {
         setCustomers([]);
       }
@@ -79,8 +89,11 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
       if (storageUnitSearch.length > 0) {
-        const response = await get('/storage-units', { search: storageUnitSearch });
-        if (response?.status === 'success') setStorageUnits(response.data.units);
+        const response = await get('/storage-units', {
+          search: storageUnitSearch,
+        });
+        if (response?.status === 'success')
+          setStorageUnits(response.data.units);
       } else {
         setStorageUnits([]);
       }
@@ -107,7 +120,7 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
 
     try {
       const formData = new FormData();
-      
+
       // Add form fields
       formData.append('customerId', selectedCustomer.id.toString());
       formData.append('storageUnitId', selectedStorageUnit.id.toString());
@@ -131,8 +144,12 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
       if (response?.status === 'success') {
         // Call the onAdd callback with the created booking data
         onAdd(response.data);
-        
-        Alert.alert('Success', 'Booking created successfully!');
+
+      Toast.show({
+        type: 'success',
+        text1: 'Added',
+        text2: `Booking added successfully!`,
+      });
         onClose();
         resetForm();
       } else {
@@ -175,7 +192,9 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
   const selectCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
     setCustomer(customer.id.toString());
-    setCustomerSearch(`${customer.firstName} ${customer.lastName} (${customer.email})`);
+    setCustomerSearch(
+      `${customer.firstName} ${customer.lastName} (${customer.email})`,
+    );
     setShowCustomerDropdown(false);
   };
 
@@ -187,19 +206,30 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <View style={styles.overlay}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoidingView}
         >
-          <View style={[styles.modalContainer, { backgroundColor: colors.card }]}>
+          <View
+            style={[styles.modalContainer, { backgroundColor: colors.card }]}
+          >
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={[styles.title, { color: colors.text }]}>Add Booking</Text>
+              <Text style={[styles.title, { color: colors.text }]}>
+                Add Booking
+              </Text>
 
               {/* Customer Search */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Customer *</Text>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  Customer *
+                </Text>
                 <TextInput
                   value={customerSearch}
                   onChangeText={(text) => {
@@ -212,22 +242,46 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
                   }}
                   onFocus={() => setShowCustomerDropdown(true)}
                   placeholder="Search customers..."
-                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                  style={[
+                    styles.input,
+                    { color: colors.text, borderColor: colors.border },
+                  ]}
                   placeholderTextColor={colors.border}
                 />
                 {showCustomerDropdown && customers.length > 0 && (
-                  <View style={[styles.dropdown, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <View
+                    style={[
+                      styles.dropdown,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
                     <ScrollView style={styles.dropdownList} nestedScrollEnabled>
                       {customers.map((item) => (
                         <TouchableOpacity
                           key={item.id}
-                          style={[styles.dropdownItem, { borderBottomColor: colors.border }]}
+                          style={[
+                            styles.dropdownItem,
+                            { borderBottomColor: colors.border },
+                          ]}
                           onPress={() => selectCustomer(item)}
                         >
-                          <Text style={[styles.dropdownItemText, { color: colors.text }]}>
+                          <Text
+                            style={[
+                              styles.dropdownItemText,
+                              { color: colors.text },
+                            ]}
+                          >
                             {item.firstName} {item.lastName}
                           </Text>
-                          <Text style={[styles.dropdownItemSubtext, { color: colors.border }]}>
+                          <Text
+                            style={[
+                              styles.dropdownItemSubtext,
+                              { color: colors.border },
+                            ]}
+                          >
                             {item.email}
                           </Text>
                         </TouchableOpacity>
@@ -239,7 +293,9 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
 
               {/* Storage Unit Search */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Storage Unit *</Text>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  Storage Unit *
+                </Text>
                 <TextInput
                   value={storageUnitSearch}
                   onChangeText={(text) => {
@@ -252,22 +308,46 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
                   }}
                   onFocus={() => setShowStorageUnitDropdown(true)}
                   placeholder="Search storage units..."
-                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                  style={[
+                    styles.input,
+                    { color: colors.text, borderColor: colors.border },
+                  ]}
                   placeholderTextColor={colors.border}
                 />
                 {showStorageUnitDropdown && storageUnits.length > 0 && (
-                  <View style={[styles.dropdown, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <View
+                    style={[
+                      styles.dropdown,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
                     <ScrollView style={styles.dropdownList} nestedScrollEnabled>
                       {storageUnits.map((item) => (
                         <TouchableOpacity
                           key={item.id}
-                          style={[styles.dropdownItem, { borderBottomColor: colors.border }]}
+                          style={[
+                            styles.dropdownItem,
+                            { borderBottomColor: colors.border },
+                          ]}
                           onPress={() => selectStorageUnit(item)}
                         >
-                          <Text style={[styles.dropdownItemText, { color: colors.text }]}>
+                          <Text
+                            style={[
+                              styles.dropdownItemText,
+                              { color: colors.text },
+                            ]}
+                          >
                             {item.unitNumber} ({item.size} sq ft)
                           </Text>
-                          <Text style={[styles.dropdownItemSubtext, { color: colors.border }]}>
+                          <Text
+                            style={[
+                              styles.dropdownItemSubtext,
+                              { color: colors.border },
+                            ]}
+                          >
                             {item.warehouseName}
                           </Text>
                         </TouchableOpacity>
@@ -279,9 +359,16 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
 
               {/* Dates */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Start Date</Text>
-                <TouchableOpacity onPress={() => setShowStartPicker(true)} style={[styles.dateInput, { borderColor: colors.border }]}>
-                  <Text style={{ color: colors.text }}>{startDate.toDateString()}</Text>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  Start Date
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowStartPicker(true)}
+                  style={[styles.dateInput, { borderColor: colors.border }]}
+                >
+                  <Text style={{ color: colors.text }}>
+                    {startDate.toDateString()}
+                  </Text>
                 </TouchableOpacity>
                 {showStartPicker && (
                   <DateTimePicker
@@ -297,9 +384,16 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>End Date</Text>
-                <TouchableOpacity onPress={() => setShowEndPicker(true)} style={[styles.dateInput, { borderColor: colors.border }]}>
-                  <Text style={{ color: colors.text }}>{endDate.toDateString()}</Text>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  End Date
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowEndPicker(true)}
+                  style={[styles.dateInput, { borderColor: colors.border }]}
+                >
+                  <Text style={{ color: colors.text }}>
+                    {endDate.toDateString()}
+                  </Text>
                 </TouchableOpacity>
                 {showEndPicker && (
                   <DateTimePicker
@@ -316,52 +410,86 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({ visible, onClose, onA
 
               {/* Price */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Total Price *</Text>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  Total Price *
+                </Text>
                 <TextInput
                   value={totalPrice}
                   onChangeText={setTotalPrice}
                   placeholder="Enter price"
                   keyboardType="numeric"
-                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                  style={[
+                    styles.input,
+                    { color: colors.text, borderColor: colors.border },
+                  ]}
                   placeholderTextColor={colors.border}
                 />
               </View>
 
               {/* Space */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Space Occupied *</Text>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  Space Occupied *
+                </Text>
                 <TextInput
                   value={spaceOccupied}
                   onChangeText={setSpaceOccupied}
                   placeholder="Enter size"
                   keyboardType="numeric"
-                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                  style={[
+                    styles.input,
+                    { color: colors.text, borderColor: colors.border },
+                  ]}
                   placeholderTextColor={colors.border}
                 />
               </View>
 
               {/* Packing List */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Packing List (PDF)</Text>
-                <TouchableOpacity onPress={pickPackingList} style={styles.uploadButton}>
-                  <Text style={{ color: '#fff' }}>{packingList?.name || 'Upload PDF'}</Text>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  Packing List (PDF)
+                </Text>
+                <TouchableOpacity
+                  onPress={pickPackingList}
+                  style={styles.uploadButton}
+                >
+                  <Text style={{ color: '#fff' }}>
+                    {packingList?.name || 'Upload PDF'}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               {/* Buttons */}
               <View style={styles.buttonRow}>
-                <TouchableOpacity style={styles.closeButton} onPress={onClose} disabled={isLoading}>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={onClose}
+                  disabled={isLoading}
+                >
                   <Text style={styles.buttonText}>Close</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
-                    styles.addButton, 
-                    { 
-                      opacity: (!selectedCustomer || !selectedStorageUnit || !totalPrice || !spaceOccupied || isLoading) ? 0.5 : 1 
-                    }
+                    styles.addButton,
+                    {
+                      opacity:
+                        !selectedCustomer ||
+                        !selectedStorageUnit ||
+                        !totalPrice ||
+                        !spaceOccupied ||
+                        isLoading
+                          ? 0.5
+                          : 1,
+                    },
                   ]}
                   onPress={handleAdd}
-                  disabled={!selectedCustomer || !selectedStorageUnit || !totalPrice || !spaceOccupied || isLoading}
+                  disabled={
+                    !selectedCustomer ||
+                    !selectedStorageUnit ||
+                    !totalPrice ||
+                    !spaceOccupied ||
+                    isLoading
+                  }
                 >
                   <Text style={styles.buttonText}>
                     {isLoading ? 'Creating...' : 'Add Booking'}

@@ -16,6 +16,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { usePatch } from '../../hooks/usePatch';
 import { lightColors, darkColors } from '../../constants/color';
+import Toast from 'react-native-toast-message';
 
 interface Expense {
   id: number;
@@ -46,14 +47,12 @@ interface EditExpenseModalProps {
 const EXPENSE_TYPES = [
   { label: 'Rent', value: 'rent' },
   { label: 'Supplies', value: 'supplies' },
-  { label:'Utilities', value:'utilities'},
-  { label:'Maintenance', value:'maintenance'},
-  { label:'Salaries', value:'salaries'},
-  { label:'Insurance', value:'insurance'},
-  { label:'Marketing', value:'marketing'},
-  { label:'Other', value:'other'},
-
-
+  { label: 'Utilities', value: 'utilities' },
+  { label: 'Maintenance', value: 'maintenance' },
+  { label: 'Salaries', value: 'salaries' },
+  { label: 'Insurance', value: 'insurance' },
+  { label: 'Marketing', value: 'marketing' },
+  { label: 'Other', value: 'other' },
 ];
 
 const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
@@ -71,11 +70,11 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
   const [amount, setAmount] = useState(expense.amount);
   const [selectedDate, setSelectedDate] = useState(new Date(expense.date));
   const [expenseType, setExpenseType] = useState(expense.expenseType);
-  
+
   // UI state
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Reset form when expense changes
   useEffect(() => {
@@ -89,7 +88,7 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
   }, [expense]);
 
   const validateForm = (): boolean => {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
 
     if (!description.trim()) {
       newErrors.description = 'Description is required';
@@ -134,7 +133,11 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
         };
 
         onSaveSuccess(updatedExpense);
-        Alert.alert('Success', 'Expense updated successfully');
+      Toast.show({
+        type: 'success',
+        text1: 'Updated',
+        text2: `Expense updated successfully `,
+      });
       } else {
         Alert.alert('Error', 'Failed to update expense');
       }
@@ -162,18 +165,18 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
   const handleAmountChange = (text: string) => {
     // Allow only numbers and decimal point
     const numericText = text.replace(/[^0-9.]/g, '');
-    
+
     // Ensure only one decimal point
     const parts = numericText.split('.');
     if (parts.length > 2) {
       return;
     }
-    
+
     // Limit decimal places to 2
     if (parts[1] && parts[1].length > 2) {
       return;
     }
-    
+
     setAmount(numericText);
   };
 
@@ -182,23 +185,26 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
       key={item.value}
       style={[
         styles.dropdownItem,
-        { 
-          backgroundColor: expenseType === item.value ? colors.primary + '20' : colors.card,
+        {
+          backgroundColor:
+            expenseType === item.value ? colors.primary + '20' : colors.card,
           borderBottomColor: colors.border,
-        }
+        },
       ]}
       onPress={() => {
         setExpenseType(item.value);
         setShowTypeDropdown(false);
       }}
     >
-      <Text style={[
-        styles.dropdownItemText,
-        { 
-          color: expenseType === item.value ? colors.primary : colors.text,
-          fontWeight: expenseType === item.value ? '600' : 'normal',
-        }
-      ]}>
+      <Text
+        style={[
+          styles.dropdownItemText,
+          {
+            color: expenseType === item.value ? colors.primary : colors.text,
+            fontWeight: expenseType === item.value ? '600' : 'normal',
+          },
+        ]}
+      >
         {item.label}
       </Text>
       {expenseType === item.value && (
@@ -216,11 +222,18 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
     >
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Header */}
-        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View
+          style={[
+            styles.header,
+            { backgroundColor: colors.card, borderBottomColor: colors.border },
+          ]}
+        >
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <MaterialIcons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Expense</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
+            Edit Expense
+          </Text>
           <TouchableOpacity
             onPress={handleSave}
             style={[styles.saveButton, { backgroundColor: colors.primary }]}
@@ -237,7 +250,9 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Description Field */}
           <View style={styles.fieldContainer}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>Description *</Text>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Description *
+            </Text>
             <TextInput
               value={description}
               onChangeText={setDescription}
@@ -245,9 +260,11 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
                 styles.textInput,
                 {
                   backgroundColor: colors.card,
-                  borderColor: errors.description ? colors.notification : colors.border,
+                  borderColor: errors.description
+                    ? colors.notification
+                    : colors.border,
                   color: colors.text,
-                }
+                },
               ]}
               placeholder="Enter expense description"
               placeholderTextColor={colors.subtext}
@@ -263,9 +280,13 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
 
           {/* Amount Field */}
           <View style={styles.fieldContainer}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>Amount *</Text>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Amount *
+            </Text>
             <View style={styles.amountContainer}>
-              <Text style={[styles.currencySymbol, { color: colors.text }]}>$</Text>
+              <Text style={[styles.currencySymbol, { color: colors.text }]}>
+                $
+              </Text>
               <TextInput
                 value={amount}
                 onChangeText={handleAmountChange}
@@ -273,9 +294,11 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
                   styles.amountInput,
                   {
                     backgroundColor: colors.card,
-                    borderColor: errors.amount ? colors.notification : colors.border,
+                    borderColor: errors.amount
+                      ? colors.notification
+                      : colors.border,
                     color: colors.text,
-                  }
+                  },
                 ]}
                 placeholder="0"
                 placeholderTextColor={colors.subtext}
@@ -291,7 +314,9 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
 
           {/* Date Field */}
           <View style={styles.fieldContainer}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>Date *</Text>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Date *
+            </Text>
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}
               style={[
@@ -299,49 +324,73 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
                 {
                   backgroundColor: colors.card,
                   borderColor: colors.border,
-                }
+                },
               ]}
             >
-              <MaterialIcons name="date-range" size={20} color={colors.subtext} />
+              <MaterialIcons
+                name="date-range"
+                size={20}
+                color={colors.subtext}
+              />
               <Text style={[styles.dateButtonText, { color: colors.text }]}>
                 {formatDisplayDate(selectedDate)}
               </Text>
-              <MaterialIcons name="chevron-right" size={20} color={colors.subtext} />
+              <MaterialIcons
+                name="chevron-right"
+                size={20}
+                color={colors.subtext}
+              />
             </TouchableOpacity>
           </View>
 
           {/* Expense Type Field */}
           <View style={styles.fieldContainer}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>Expense Type *</Text>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Expense Type *
+            </Text>
             <TouchableOpacity
               onPress={() => setShowTypeDropdown(!showTypeDropdown)}
               style={[
                 styles.dropdownButton,
                 {
                   backgroundColor: colors.card,
-                  borderColor: errors.expenseType ? colors.notification : colors.border,
-                }
+                  borderColor: errors.expenseType
+                    ? colors.notification
+                    : colors.border,
+                },
               ]}
             >
-              <Text style={[
-                styles.dropdownButtonText,
-                { color: expenseType ? colors.text : colors.subtext }
-              ]}>
-                {expenseType ? EXPENSE_TYPES.find(type => type.value === expenseType)?.label : 'Select expense type'}
+              <Text
+                style={[
+                  styles.dropdownButtonText,
+                  { color: expenseType ? colors.text : colors.subtext },
+                ]}
+              >
+                {expenseType
+                  ? EXPENSE_TYPES.find((type) => type.value === expenseType)
+                      ?.label
+                  : 'Select expense type'}
               </Text>
-              <MaterialIcons 
-                name={showTypeDropdown ? "keyboard-arrow-up" : "keyboard-arrow-down"} 
-                size={24} 
-                color={colors.subtext} 
+              <MaterialIcons
+                name={
+                  showTypeDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'
+                }
+                size={24}
+                color={colors.subtext}
               />
             </TouchableOpacity>
-            
+
             {showTypeDropdown && (
-              <View style={[styles.dropdown, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View
+                style={[
+                  styles.dropdown,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
+              >
                 {EXPENSE_TYPES.map(renderDropdownItem)}
               </View>
             )}
-            
+
             {errors.expenseType && (
               <Text style={[styles.errorText, { color: colors.notification }]}>
                 {errors.expenseType}

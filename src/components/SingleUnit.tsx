@@ -1,7 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from 'react-native';
 import { UnitData } from '../types/Types';
-
 
 interface UnitItemProps {
   item: UnitData;
@@ -12,7 +17,13 @@ interface UnitItemProps {
 }
 
 // Separate component for each unit item
-const SingleUnit: React.FC<UnitItemProps> = ({ item, removingId, theme, onEdit, onDelete }) => {
+const SingleUnit: React.FC<UnitItemProps> = ({
+  item,
+  removingId,
+  theme,
+  onEdit,
+  onDelete,
+}) => {
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -27,10 +38,14 @@ const SingleUnit: React.FC<UnitItemProps> = ({ item, removingId, theme, onEdit, 
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available': return '#10b981';
-      case 'maintenance': return '#f59e0b';
-      case 'occupied': return '#ef4444';
-      default: return theme.subtext;
+      case 'available':
+        return '#10b981';
+      case 'maintenance':
+        return '#f59e0b';
+      case 'occupied':
+        return '#ef4444';
+      default:
+        return theme.subtext;
     }
   };
 
@@ -49,21 +64,36 @@ const SingleUnit: React.FC<UnitItemProps> = ({ item, removingId, theme, onEdit, 
           {item.unitNumber}
         </Text>
         <View
-          style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}
+          style={[
+            styles.statusBadge,
+            { backgroundColor: getStatusColor(item.status) + '20' },
+          ]}
         >
           <View
-            style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]}
+            style={[
+              styles.statusDot,
+              { backgroundColor: getStatusColor(item.status) },
+            ]}
           />
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+          <Text
+            style={[styles.statusText, { color: getStatusColor(item.status) }]}
+          >
             {item.status}
           </Text>
         </View>
       </View>
 
       <View style={styles.unitDetails}>
-        <Text style={{ color: theme.subtext }}>Floor: <Text style={{ color: theme.text }}>{item.floor}</Text></Text>
-        <Text style={{ color: theme.subtext }}>Size: <Text style={{ color: theme.text }}>{item.size} sq ft</Text></Text>
-        <Text style={{ color: theme.subtext }}>Warehouse: <Text style={{ color: theme.text }}>{item.warehouseName}</Text></Text>
+        <Text style={{ color: theme.subtext }}>
+          Floor: <Text style={{ color: theme.text }}>{item.floor}</Text>
+        </Text>
+        <Text style={{ color: theme.subtext }}>
+          Size: <Text style={{ color: theme.text }}>{item.size} sq ft</Text>
+        </Text>
+        <Text style={{ color: theme.subtext }}>
+          Warehouse:{' '}
+          <Text style={{ color: theme.text }}>{item.warehouseName}</Text>
+        </Text>
       </View>
 
       <View style={styles.actions}>

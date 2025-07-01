@@ -8,6 +8,7 @@ import {
   FlatList,
   ScrollView,
   Alert,
+  Linking,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Booking, Payment } from '../../types/Bookings';
@@ -43,7 +44,6 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
   const formatCurrency = (amount: string) => {
     return `$${parseFloat(amount).toFixed(2)}`;
   };
-
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'paid':
@@ -77,19 +77,85 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
           style: 'destructive',
           onPress: () => onDeletePayment(payment),
         },
-      ]
+      ],
     );
   };
 
-  const renderPaymentItem = ({ item, index }: { item: Payment; index: number }) => (
-    <View style={[styles.paymentItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
+  const handleViewInvoice = async (item: Payment) => {
+    if (!item.invoiceAttachment) {
+      Alert.alert(
+        'No Document',
+        'No invoice document available for this booking',
+      );
+      return;
+    }
+    try {
+      const supported = await Linking.canOpenURL(item.invoiceAttachment);
+      if (supported) {
+        await Linking.openURL(item.invoiceAttachment);
+      } else {
+        Alert.alert('Error', 'Cannot open invoice document');
+      }
+    } catch (error) {
+      console.error('Error opening invoice:', error);
+      Alert.alert('Error', 'Failed to open invoice document');
+    }
+  };
+
+  const handleViewPaymentReceivedAttachment = async (item: Payment) => {
+    if (!item.paymentReceivedAttachment) {
+      Alert.alert(
+        'No Document',
+        'No invoice document available for this booking',
+      );
+      return;
+    }
+
+    try {
+      const supported = await Linking.canOpenURL(
+        item.paymentReceivedAttachment,
+      );
+      if (supported) {
+        await Linking.openURL(item.paymentReceivedAttachment);
+      } else {
+        Alert.alert('Error', 'Cannot open invoice document');
+      }
+    } catch (error) {
+      console.error('Error opening invoice:', error);
+      Alert.alert('Error', 'Failed to open invoice document');
+    }
+  };
+
+  const renderPaymentItem = ({
+    item,
+    index,
+  }: {
+    item: Payment;
+    index: number;
+  }) => (
+    <View
+      style={[
+        styles.paymentItem,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <View style={styles.paymentHeader}>
         <View style={styles.paymentHeaderLeft}>
           <Text style={[styles.paymentId, { color: colors.text }]}>
             Payment #{item.id}
           </Text>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusColor(item.status) + '20' },
+            ]}
+          >
+            <Text
+              style={[
+                styles.statusText,
+                { color: getStatusColor(item.status) },
+              ]}
+            >
               {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
             </Text>
           </View>
@@ -102,28 +168,36 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
       <View style={styles.paymentDetails}>
         <View style={styles.detailRow}>
           <View style={styles.detailItem}>
-            <Text style={[styles.detailLabel, { color: colors.subtext }]}>Payment Date</Text>
+            <Text style={[styles.detailLabel, { color: colors.subtext }]}>
+              Payment Date
+            </Text>
             <Text style={[styles.detailValue, { color: colors.text }]}>
               {formatDate(item.paymentDate)}
             </Text>
           </View>
           <View style={styles.detailItem}>
-            <Text style={[styles.detailLabel, { color: colors.subtext }]}>Method</Text>
+            <Text style={[styles.detailLabel, { color: colors.subtext }]}>
+              Method
+            </Text>
             <Text style={[styles.detailValue, { color: colors.text }]}>
               {item.paymentMethod || 'Not specified'}
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.detailRow}>
           <View style={styles.detailItem}>
-            <Text style={[styles.detailLabel, { color: colors.subtext }]}>Period Start</Text>
+            <Text style={[styles.detailLabel, { color: colors.subtext }]}>
+              Period Start
+            </Text>
             <Text style={[styles.detailValue, { color: colors.text }]}>
               {formatDate(item.startDate)}
             </Text>
           </View>
           <View style={styles.detailItem}>
-            <Text style={[styles.detailLabel, { color: colors.subtext }]}>Period End</Text>
+            <Text style={[styles.detailLabel, { color: colors.subtext }]}>
+              Period End
+            </Text>
             <Text style={[styles.detailValue, { color: colors.text }]}>
               {formatDate(item.endDate)}
             </Text>
@@ -132,7 +206,9 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
 
         {item.remarks && (
           <View style={styles.remarksContainer}>
-            <Text style={[styles.detailLabel, { color: colors.subtext }]}>Remarks</Text>
+            <Text style={[styles.detailLabel, { color: colors.subtext }]}>
+              Remarks
+            </Text>
             <Text style={[styles.remarksText, { color: colors.text }]}>
               {item.remarks}
             </Text>
@@ -140,15 +216,79 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
         )}
       </View>
 
+      <View
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          marginVertical: 10,
+        }}
+      >
+        <TouchableOpacity
+          style={[
+            styles.invoiceAttachmentBtn,
+            {
+              backgroundColor: item.paymentReceivedAttachment
+                ? 'red'
+                : colors.border,
+              opacity: item.paymentReceivedAttachment ? 1 : 0.5,
+            },
+          ]}
+          onPress={() => handleViewPaymentReceivedAttachment(item)}
+          disabled={!item.paymentReceivedAttachment}
+        >
+          <MaterialIcons
+            name={
+              item.paymentReceivedAttachment
+                ? 'document-scanner'
+                : 'document-scanner'
+            }
+            size={14}
+            color="white"
+          />
+          <Text style={styles.invoiceAttachmentText}>
+            {item.paymentReceivedAttachment ? 'Receipt' : 'No Receipt'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.invoiceAttachmentBtn,
+            {
+              backgroundColor: item.invoiceAttachment ? 'green' : colors.border,
+              opacity: item.invoiceAttachment ? 1 : 0.5,
+            },
+          ]}
+          onPress={() => handleViewInvoice(item)}
+          disabled={!item.invoiceAttachment}
+        >
+          <MaterialIcons
+            name={
+              item.invoiceAttachment ? 'document-scanner' : 'document-scanner'
+            }
+            size={14}
+            color="white"
+          />
+          <Text style={styles.invoiceAttachmentText}>
+            {item.invoiceAttachment ? 'Invoice' : 'No Invoice'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.paymentActions}>
         <TouchableOpacity
           onPress={() => handleEditPayment(item)}
-          style={[styles.actionButton, { backgroundColor: colors.secondary + '15' }]}
+          style={[
+            styles.actionButton,
+            { backgroundColor: colors.secondary + '15' },
+          ]}
         >
           <MaterialIcons name="edit" size={16} color={colors.secondary} />
-          <Text style={[styles.actionText, { color: colors.secondary }]}>Edit</Text>
+          <Text style={[styles.actionText, { color: colors.secondary }]}>
+            Edit
+          </Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           onPress={() => handleDeletePayment(item)}
           style={[styles.actionButton, { backgroundColor: '#FF5722' + '15' }]}
@@ -160,9 +300,12 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
     </View>
   );
 
-  const totalAmount = booking.payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+  const totalAmount = booking.payments.reduce(
+    (sum, payment) => sum + parseFloat(payment.amount),
+    0,
+  );
   const paidAmount = booking.payments
-    .filter(p => p.status === 'paid')
+    .filter((p) => p.status === 'paid')
     .reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
   const pendingAmount = totalAmount - paidAmount;
 
@@ -185,7 +328,12 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
         </View>
 
         {/* Summary Card */}
-        <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.summaryCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
           <View style={styles.summaryHeader}>
             <Text style={[styles.summaryTitle, { color: colors.text }]}>
               {booking.customer.firstName} {booking.customer.lastName}
@@ -194,22 +342,28 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
               Unit: {booking.storageUnit.unitNumber}
             </Text>
           </View>
-          
+
           <View style={styles.summaryStats}>
             <View style={styles.statItem}>
-              <Text style={[styles.statLabel, { color: colors.subtext }]}>Total</Text>
+              <Text style={[styles.statLabel, { color: colors.subtext }]}>
+                Total
+              </Text>
               <Text style={[styles.statValue, { color: colors.text }]}>
                 {formatCurrency(totalAmount.toString())}
               </Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={[styles.statLabel, { color: colors.subtext }]}>Paid</Text>
+              <Text style={[styles.statLabel, { color: colors.subtext }]}>
+                Paid
+              </Text>
               <Text style={[styles.statValue, { color: '#4CAF50' }]}>
                 {formatCurrency(paidAmount.toString())}
               </Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={[styles.statLabel, { color: colors.subtext }]}>Pending</Text>
+              <Text style={[styles.statLabel, { color: colors.subtext }]}>
+                Pending
+              </Text>
               <Text style={[styles.statValue, { color: '#FF9800' }]}>
                 {formatCurrency(pendingAmount.toString())}
               </Text>
@@ -222,7 +376,7 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
           <Text style={[styles.paymentsTitle, { color: colors.text }]}>
             Payment History ({booking.payments.length})
           </Text>
-          
+
           <FlatList
             data={booking.payments}
             renderItem={renderPaymentItem}
@@ -388,6 +542,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 4,
+  },
+
+  invoiceAttachmentBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 2,
+    width: 70,
+    height: 30,
+  },
+  invoiceAttachmentText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: '600',
+    marginLeft: 3,
   },
 });
 

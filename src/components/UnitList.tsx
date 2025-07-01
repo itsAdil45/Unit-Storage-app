@@ -8,32 +8,36 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { useTheme } from '@react-navigation/native';
-import { lightColors, darkColors } from "../constants/color"
+import { lightColors, darkColors } from '../constants/color';
 import { UnitData } from '../types/Types';
 import { warehouses } from '../Utils/Filters';
 import { useGet } from '../hooks/useGet';
 import { useDelete } from '../hooks/useDelete';
-import AnimatedDeleteWrapper, { useAnimatedDelete } from './Reusable/AnimatedDeleteWrapper';
+import AnimatedDeleteWrapper, {
+  useAnimatedDelete,
+} from './Reusable/AnimatedDeleteWrapper';
 import EditUnitModal from './modals/EditUnitModal';
 import Pagination from './Reusable/Pagination';
 
 // Updated StorageUnit type to match API response
 export type StorageUnit = {
-  id: number;              
-  warehouseId: number;     
-  warehouseName: string;   
-  unitNumber: string;      
-  size: number;           
-  floor: string;          
-  status: 'available' | 'maintenance'; 
+  id: number;
+  warehouseId: number;
+  warehouseName: string;
+  unitNumber: string;
+  size: number;
+  floor: string;
+  status: 'available' | 'maintenance';
   pricePerDay: number | null;
   totalSpaceOccupied: number;
-  bookings: any[];        // Array of bookings
-  percentage: number;     // Calculated occupancy percentage
-  customers: number;      // Calculated number of customers
+  bookings: any[]; // Array of bookings
+  percentage: number; // Calculated occupancy percentage
+  customers: number; // Calculated number of customers
 };
 
 // Type for grouped warehouse data
@@ -43,67 +47,75 @@ type WarehouseGroup = {
 
 const UnitList = () => {
   const [selectedWarehouse, setSelectedWarehouse] = useState('All');
-  const [sortBy, setSortBy] = useState<'unitNumber' | 'percentage' | 'customers'>('unitNumber');
+  const [sortBy, setSortBy] = useState<
+    'unitNumber' | 'percentage' | 'customers'
+  >('unitNumber');
   const [sortDirection, setSortDirection] = useState('asc');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<StorageUnit | null>(null);
-  
+
   // Changed to store all units and grouped data
   const [allUnits, setAllUnits] = useState<StorageUnit[]>([]);
   const [warehouseGroups, setWarehouseGroups] = useState<WarehouseGroup>({});
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [editingUnit, setEditingUnit] = useState<UnitData | null>(null);
-  
+
   // Pagination states - now for client-side pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-  
+
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
-  
+
   const { get } = useGet();
   const { del: deleteRequest } = useDelete();
-  
-  // Use the custom hook for animated delete
-  const { removingId, handleDelete: baseHandleDelete } = useAnimatedDelete<StorageUnit>(
-    deleteRequest,
-    '/storage-units'
-  );
 
-  useEffect(() => {
-    fetchAllUnits();
-  }, []);
+  const { removingId, handleDelete: baseHandleDelete } =
+    useAnimatedDelete<StorageUnit>(deleteRequest, '/storage-units');
 
-  // Reset to page 1 when warehouse filter changes
+  // useEffect(() => {
+  //   fetchAllUnits();
+  // }, []);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedWarehouse]);
 
+  useFocusEffect(
+  useCallback(() => {
+    fetchAllUnits();
+  }, [])
+);
   const fetchAllUnits = async () => {
     setLoading(true);
     try {
       // Fetch all units at once - modify this endpoint as needed
       const endpoint = `/storage-units?limit=1000`; // or `/storage-units?limit=1000` if you need to specify a large limit
       const res = await get(endpoint);
-      
+
       if (res?.status === 'success') {
         // Process units directly from API response
-        const processedUnits = res.data.units.map((apiUnit: any): StorageUnit => {
-          const totalBookings = apiUnit.bookings?.length || 0;
-          const totalCustomers = new Set(apiUnit.bookings?.map((b: any) => b.customerId) || []).size;
-          const occupancyPercentage = apiUnit.totalSpaceOccupied ? 
-            Math.round((apiUnit.totalSpaceOccupied / apiUnit.size) * 100) : 0;
+        const processedUnits = res.data.units.map(
+          (apiUnit: any): StorageUnit => {
+            const totalBookings = apiUnit.bookings?.length || 0;
+            const totalCustomers = new Set(
+              apiUnit.bookings?.map((b: any) => b.customerId) || [],
+            ).size;
+            const occupancyPercentage = apiUnit.totalSpaceOccupied
+              ? Math.round((apiUnit.totalSpaceOccupied / apiUnit.size) * 100)
+              : 0;
 
-          return {
-            ...apiUnit,
-            percentage: occupancyPercentage,
-            customers: totalCustomers,
-          };
-        });
-        
+            return {
+              ...apiUnit,
+              percentage: occupancyPercentage,
+              customers: totalCustomers,
+            };
+          },
+        );
+
         setAllUnits(processedUnits);
-        
+
         // Group units by warehouse
         const grouped = groupUnitsByWarehouse(processedUnits);
         setWarehouseGroups(grouped);
@@ -113,14 +125,13 @@ const UnitList = () => {
       setAllUnits([]);
       setWarehouseGroups({});
     }
-    
+
     setLoading(false);
     if (initialLoad) {
       setInitialLoad(false);
     }
   };
 
-  // Helper function to group units by warehouse
   const groupUnitsByWarehouse = (units: StorageUnit[]): WarehouseGroup => {
     return units.reduce((groups, unit) => {
       const warehouseName = unit.warehouseName;
@@ -132,11 +143,10 @@ const UnitList = () => {
     }, {} as WarehouseGroup);
   };
 
-  // Get filtered and sorted units with client-side pagination
   const { paginatedUnits, totalPages, totalUnits } = useMemo(() => {
     // Get units based on selected warehouse
     let unitsToDisplay: StorageUnit[] = [];
-    
+
     if (selectedWarehouse === 'All') {
       unitsToDisplay = allUnits;
     } else {
@@ -147,7 +157,7 @@ const UnitList = () => {
     const sorted = [...unitsToDisplay].sort((a, b) => {
       let aValue: any = a[sortBy];
       let bValue: any = b[sortBy];
-      
+
       if (sortDirection === 'asc') {
         return aValue > bValue ? 1 : -1;
       } else {
@@ -165,15 +175,23 @@ const UnitList = () => {
     return {
       paginatedUnits: paginated,
       totalPages: pages,
-      totalUnits: total
+      totalUnits: total,
     };
-  }, [allUnits, warehouseGroups, selectedWarehouse, sortBy, sortDirection, currentPage, itemsPerPage]);
+  }, [
+    allUnits,
+    warehouseGroups,
+    selectedWarehouse,
+    sortBy,
+    sortDirection,
+    currentPage,
+    itemsPerPage,
+  ]);
 
   const getStatusColor = (percentage: number) => {
-    if (percentage >= 100) return '#FF3B30'; // Red - Full
-    if (percentage >= 80) return '#FF9500'; // Orange - High
-    if (percentage >= 50) return '#FFCC00'; // Yellow - Moderate
-    return '#34C759'; // Green - Available
+    if (percentage >= 100) return '#FF3B30'; 
+    if (percentage >= 80) return '#FF9500'; 
+    if (percentage >= 50) return '#FFCC00';
+    return '#34C759';
   };
 
   const getStatusText = (percentage: number) => {
@@ -184,7 +202,6 @@ const UnitList = () => {
   };
 
   const handleEdit = (unit: StorageUnit) => {
-    // Transform StorageUnit to UnitData for the modal
     const unitData: UnitData = {
       id: unit.id,
       unitNumber: unit.unitNumber,
@@ -202,31 +219,33 @@ const UnitList = () => {
   const updateUnit = (updatedUnit: UnitData) => {
     // Update in allUnits
     setAllUnits((prev) =>
-      prev.map((unit) => 
-        unit.id === updatedUnit.id 
-          ? { ...unit, 
+      prev.map((unit) =>
+        unit.id === updatedUnit.id
+          ? {
+              ...unit,
               unitNumber: updatedUnit.unitNumber,
               size: updatedUnit.size,
               floor: updatedUnit.floor,
-              status: updatedUnit.status 
+              status: updatedUnit.status,
             }
-          : unit
-      )
+          : unit,
+      ),
     );
-    
+
     // Update warehouse groups
     setWarehouseGroups((prev) => {
       const newGroups = { ...prev };
-      Object.keys(newGroups).forEach(warehouseName => {
-        newGroups[warehouseName] = newGroups[warehouseName].map(unit =>
-          unit.id === updatedUnit.id 
-            ? { ...unit, 
+      Object.keys(newGroups).forEach((warehouseName) => {
+        newGroups[warehouseName] = newGroups[warehouseName].map((unit) =>
+          unit.id === updatedUnit.id
+            ? {
+                ...unit,
                 unitNumber: updatedUnit.unitNumber,
                 size: updatedUnit.size,
                 floor: updatedUnit.floor,
-                status: updatedUnit.status 
+                status: updatedUnit.status,
               }
-            : unit
+            : unit,
         );
       });
       return newGroups;
@@ -235,11 +254,13 @@ const UnitList = () => {
 
   // Custom delete handler that updates both allUnits and warehouseGroups
   const handleUnitDelete = (unitId: number) => {
-    setAllUnits(prev => prev.filter(unit => unit.id !== unitId));
-    setWarehouseGroups(prev => {
+    setAllUnits((prev) => prev.filter((unit) => unit.id !== unitId));
+    setWarehouseGroups((prev) => {
       const newGroups = { ...prev };
-      Object.keys(newGroups).forEach(warehouseName => {
-        newGroups[warehouseName] = newGroups[warehouseName].filter(unit => unit.id !== unitId);
+      Object.keys(newGroups).forEach((warehouseName) => {
+        newGroups[warehouseName] = newGroups[warehouseName].filter(
+          (unit) => unit.id !== unitId,
+        );
       });
       return newGroups;
     });
@@ -258,10 +279,15 @@ const UnitList = () => {
     }
   };
 
-  const renderFilterChip = (label: string, isSelected: boolean, onPress: () => void) => {
+  const renderFilterChip = (
+    label: string,
+    isSelected: boolean,
+    onPress: () => void,
+  ) => {
     // Show count for each warehouse
-    const count = label === 'All' ? allUnits.length : (warehouseGroups[label]?.length || 0);
-    
+    const count =
+      label === 'All' ? allUnits.length : warehouseGroups[label]?.length || 0;
+
     return (
       <TouchableOpacity
         key={label}
@@ -269,17 +295,23 @@ const UnitList = () => {
         style={[
           styles.filterChip,
           {
-            backgroundColor: isSelected ? colors.primary : (dark ? colors.border : '#F2F2F7'),
-            borderColor: isSelected ? colors.primary : colors.border
-          }
+            backgroundColor: isSelected
+              ? colors.primary
+              : dark
+                ? colors.border
+                : '#F2F2F7',
+            borderColor: isSelected ? colors.primary : colors.border,
+          },
         ]}
       >
-        <Text style={[
-          styles.filterChipText,
-          {
-            color: isSelected ? '#FFFFFF' : colors.text
-          }
-        ]}>
+        <Text
+          style={[
+            styles.filterChipText,
+            {
+              color: isSelected ? '#FFFFFF' : colors.text,
+            },
+          ]}
+        >
           {label} ({count})
         </Text>
       </TouchableOpacity>
@@ -287,11 +319,13 @@ const UnitList = () => {
   };
 
   const handleDelete = async (id: number) => {
-  await baseHandleDelete(id, setAllUnits);
-  handleUnitDelete(id);
-};
+    await baseHandleDelete(id, setAllUnits);
+    handleUnitDelete(id);
+  };
   const renderRightActions = (item: StorageUnit, close: () => void) => (
-    <View style={[styles.actionsContainer, { backgroundColor: colors.background }]}>
+    <View
+      style={[styles.actionsContainer, { backgroundColor: colors.background }]}
+    >
       <TouchableOpacity
         style={[styles.actionButton, styles.editButton]}
         onPress={() => {
@@ -305,7 +339,7 @@ const UnitList = () => {
         style={[styles.actionButton, styles.deleteButton]}
         onPress={() => {
           close();
-  handleDelete(item.id); // Remove the second parameter
+          handleDelete(item.id); // Remove the second parameter
         }}
       >
         <Text style={styles.actionText}>Delete</Text>
@@ -313,12 +347,16 @@ const UnitList = () => {
     </View>
   );
 
-
-  const renderStorageUnit = ({ item, index }: { item: StorageUnit; index: number }) => {
+  const renderStorageUnit = ({
+    item,
+    index,
+  }: {
+    item: StorageUnit;
+    index: number;
+  }) => {
     let swipeableRow: Swipeable | null;
     const closeSwipe = () => swipeableRow?.close();
 
-    
     return (
       <AnimatedDeleteWrapper
         itemId={item.id}
@@ -327,8 +365,10 @@ const UnitList = () => {
         deleteTitle="Delete Storage Unit"
         itemName={item.unitNumber}
       >
-        <Swipeable 
-          ref={(ref) => { swipeableRow = ref; }}
+        <Swipeable
+          ref={(ref) => {
+            swipeableRow = ref;
+          }}
           renderRightActions={() => renderRightActions(item, closeSwipe)}
           overshootRight={false}
         >
@@ -337,27 +377,43 @@ const UnitList = () => {
             exiting={FadeOutLeft}
           >
             <TouchableOpacity
-              onPress={() => setSelectedUnit(selectedUnit?.id === item.id ? null : item)}
+              onPress={() =>
+                setSelectedUnit(selectedUnit?.id === item.id ? null : item)
+              }
               style={[
                 styles.unitCard,
                 {
                   backgroundColor: colors.card,
-                  borderColor: selectedUnit?.id === item.id ? colors.primary : 'transparent',
-                  shadowColor: dark ? '#000' : '#000'
+                  borderColor:
+                    selectedUnit?.id === item.id
+                      ? colors.primary
+                      : 'transparent',
+                  shadowColor: dark ? '#000' : '#000',
                 },
-                selectedUnit?.id === item.id && styles.unitCardSelected
+                selectedUnit?.id === item.id && styles.unitCardSelected,
               ]}
             >
               <View style={styles.unitCardLeft}>
-                <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(item.percentage) }]} />
+                <View
+                  style={[
+                    styles.statusIndicator,
+                    { backgroundColor: getStatusColor(item.percentage) },
+                  ]}
+                />
                 <View style={styles.unitInfo}>
-                  <Text style={[styles.unitId, { color: colors.text }]}>{item.unitNumber}</Text>
-                  <Text style={[styles.unitLocation, { color: colors.subtext }]}>
+                  <Text style={[styles.unitId, { color: colors.text }]}>
+                    {item.unitNumber}
+                  </Text>
+                  <Text
+                    style={[styles.unitLocation, { color: colors.subtext }]}
+                  >
                     {item.warehouseName} • {item.floor} Floor • {item.size} sqft
                   </Text>
                   <View style={styles.customerInfo}>
                     <Text style={styles.customerIcon}>👥</Text>
-                    <Text style={[styles.customerText, { color: colors.subtext }]}>
+                    <Text
+                      style={[styles.customerText, { color: colors.subtext }]}
+                    >
                       {item.customers} Customer{item.customers !== 1 ? 's' : ''}
                     </Text>
                   </View>
@@ -366,22 +422,37 @@ const UnitList = () => {
 
               <View style={styles.unitCardRight}>
                 <View style={styles.percentageContainer}>
-                  <Text style={[styles.percentageText, { color: getStatusColor(item.percentage) }]}>
+                  <Text
+                    style={[
+                      styles.percentageText,
+                      { color: getStatusColor(item.percentage) },
+                    ]}
+                  >
                     {item.percentage}%
                   </Text>
-                  <Text style={[styles.statusText, { color: getStatusColor(item.percentage) }]}>
+                  <Text
+                    style={[
+                      styles.statusText,
+                      { color: getStatusColor(item.percentage) },
+                    ]}
+                  >
                     {getStatusText(item.percentage)}
                   </Text>
                 </View>
                 <View style={styles.progressBarContainer}>
-                  <View style={[styles.progressBarBackground, { backgroundColor: colors.border }]}>
+                  <View
+                    style={[
+                      styles.progressBarBackground,
+                      { backgroundColor: colors.border },
+                    ]}
+                  >
                     <View
                       style={[
                         styles.progressBarFill,
                         {
                           width: `${item.percentage}%`,
-                          backgroundColor: getStatusColor(item.percentage)
-                        }
+                          backgroundColor: getStatusColor(item.percentage),
+                        },
                       ]}
                     />
                   </View>
@@ -398,20 +469,18 @@ const UnitList = () => {
     <View style={[styles.headerContainer, { backgroundColor: colors.card }]}>
       {/* Warehouse Filter */}
       <View style={styles.filterContainer}>
-        <Text style={[styles.filterSectionTitle, { color: colors.text }]}>Warehouse</Text>
+        <Text style={[styles.filterSectionTitle, { color: colors.text }]}>
+          Warehouse
+        </Text>
         <View style={styles.filterChipsContainer}>
           {/* Add 'All' option */}
-          {renderFilterChip(
-            'All',
-            selectedWarehouse === 'All',
-            () => setSelectedWarehouse('All')
+          {renderFilterChip('All', selectedWarehouse === 'All', () =>
+            setSelectedWarehouse('All'),
           )}
           {warehouses.map((warehouse) =>
-            renderFilterChip(
-              warehouse,
-              selectedWarehouse === warehouse,
-              () => setSelectedWarehouse(warehouse)
-            )
+            renderFilterChip(warehouse, selectedWarehouse === warehouse, () =>
+              setSelectedWarehouse(warehouse),
+            ),
           )}
         </View>
       </View>
@@ -430,22 +499,34 @@ const UnitList = () => {
       {showFilters && (
         <View style={styles.advancedFiltersContainer}>
           <View style={styles.filterRow}>
-            <Text style={[styles.filterLabel, { color: colors.text }]}>Sort by:</Text>
+            <Text style={[styles.filterLabel, { color: colors.text }]}>
+              Sort by:
+            </Text>
             <View style={styles.sortContainer}>
               <TouchableOpacity
                 onPress={() => setSortBy('unitNumber')}
                 style={[
                   styles.sortButton,
                   {
-                    backgroundColor: sortBy === 'unitNumber' ? colors.primary : (dark ? colors.border : '#F2F2F7'),
-                    borderColor: sortBy === 'unitNumber' ? colors.primary : colors.border
-                  }
+                    backgroundColor:
+                      sortBy === 'unitNumber'
+                        ? colors.primary
+                        : dark
+                          ? colors.border
+                          : '#F2F2F7',
+                    borderColor:
+                      sortBy === 'unitNumber' ? colors.primary : colors.border,
+                  },
                 ]}
               >
-                <Text style={[
-                  styles.sortButtonText,
-                  { color: sortBy === 'unitNumber' ? '#FFFFFF' : colors.text }
-                ]}>
+                <Text
+                  style={[
+                    styles.sortButtonText,
+                    {
+                      color: sortBy === 'unitNumber' ? '#FFFFFF' : colors.text,
+                    },
+                  ]}
+                >
                   Unit Number
                 </Text>
               </TouchableOpacity>
@@ -454,15 +535,25 @@ const UnitList = () => {
                 style={[
                   styles.sortButton,
                   {
-                    backgroundColor: sortBy === 'percentage' ? colors.primary : (dark ? colors.border : '#F2F2F7'),
-                    borderColor: sortBy === 'percentage' ? colors.primary : colors.border
-                  }
+                    backgroundColor:
+                      sortBy === 'percentage'
+                        ? colors.primary
+                        : dark
+                          ? colors.border
+                          : '#F2F2F7',
+                    borderColor:
+                      sortBy === 'percentage' ? colors.primary : colors.border,
+                  },
                 ]}
               >
-                <Text style={[
-                  styles.sortButtonText,
-                  { color: sortBy === 'percentage' ? '#FFFFFF' : colors.text }
-                ]}>
+                <Text
+                  style={[
+                    styles.sortButtonText,
+                    {
+                      color: sortBy === 'percentage' ? '#FFFFFF' : colors.text,
+                    },
+                  ]}
+                >
                   Occupancy
                 </Text>
               </TouchableOpacity>
@@ -471,15 +562,23 @@ const UnitList = () => {
                 style={[
                   styles.sortButton,
                   {
-                    backgroundColor: sortBy === 'customers' ? colors.primary : (dark ? colors.border : '#F2F2F7'),
-                    borderColor: sortBy === 'customers' ? colors.primary : colors.border
-                  }
+                    backgroundColor:
+                      sortBy === 'customers'
+                        ? colors.primary
+                        : dark
+                          ? colors.border
+                          : '#F2F2F7',
+                    borderColor:
+                      sortBy === 'customers' ? colors.primary : colors.border,
+                  },
                 ]}
               >
-                <Text style={[
-                  styles.sortButtonText,
-                  { color: sortBy === 'customers' ? '#FFFFFF' : colors.text }
-                ]}>
+                <Text
+                  style={[
+                    styles.sortButtonText,
+                    { color: sortBy === 'customers' ? '#FFFFFF' : colors.text },
+                  ]}
+                >
                   Customers
                 </Text>
               </TouchableOpacity>
@@ -487,10 +586,17 @@ const UnitList = () => {
           </View>
 
           <View style={styles.filterRow}>
-            <Text style={[styles.filterLabel, { color: colors.text }]}>Direction:</Text>
+            <Text style={[styles.filterLabel, { color: colors.text }]}>
+              Direction:
+            </Text>
             <TouchableOpacity
-              onPress={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-              style={[styles.sortDirectionButton, { backgroundColor: colors.primary }]}
+              onPress={() =>
+                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+              }
+              style={[
+                styles.sortDirectionButton,
+                { backgroundColor: colors.primary },
+              ]}
             >
               <Text style={styles.sortDirectionText}>
                 {sortDirection === 'asc' ? 'up' : 'down'}
@@ -511,9 +617,18 @@ const UnitList = () => {
 
   if (initialLoad) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <View style={[styles.appHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-          <Text style={[styles.appTitle, { color: colors.text }]}>Storage Units</Text>
+      <SafeAreaView
+        style={[styles.safeArea, { backgroundColor: colors.background }]}
+      >
+        <View
+          style={[
+            styles.appHeader,
+            { backgroundColor: colors.card, borderBottomColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.appTitle, { color: colors.text }]}>
+            Storage Units
+          </Text>
         </View>
         <View style={styles.initialLoadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -526,9 +641,18 @@ const UnitList = () => {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <View style={[styles.appHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.appTitle, { color: colors.text }]}>Storage Units</Text>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    >
+      <View
+        style={[
+          styles.appHeader,
+          { backgroundColor: colors.card, borderBottomColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.appTitle, { color: colors.text }]}>
+          Storage Units
+        </Text>
       </View>
 
       <FlatList
@@ -543,7 +667,9 @@ const UnitList = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📦</Text>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No units found</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              No units found
+            </Text>
             <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
               Try adjusting your filters or search criteria
             </Text>
@@ -662,7 +788,7 @@ const styles = StyleSheet.create({
   sortContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap:'wrap',
+    flexWrap: 'wrap',
     gap: 8,
     flex: 2,
   },

@@ -14,6 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { usePatchFormData } from '../../hooks/usePatchFormData';
 import { Booking } from '../../types/Bookings';
 import * as DocumentPicker from 'expo-document-picker';
+import Toast from 'react-native-toast-message';
 
 interface EditBookingModalProps {
   visible: boolean;
@@ -91,7 +92,10 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
 
     // Validate totalPrice and spaceOccupied are numbers
     if (isNaN(parseFloat(totalPrice)) || isNaN(parseFloat(spaceOccupied))) {
-      Alert.alert('Error', 'Total price and space occupied must be valid numbers');
+      Alert.alert(
+        'Error',
+        'Total price and space occupied must be valid numbers',
+      );
       return;
     }
 
@@ -123,10 +127,15 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
           endDate,
           totalPrice,
           spaceOccupied,
-          pdfDocumentUrl: response.data?.pdfDocumentUrl || booking.pdfDocumentUrl,
+          pdfDocumentUrl:
+            response.data?.pdfDocumentUrl || booking.pdfDocumentUrl,
         };
         onSaveSuccess(updatedBooking);
-        Alert.alert('Success', 'Booking updated successfully');
+              Toast.show({
+                type: 'success',
+                text1: 'Updated',
+                text2: `Booking updated successfully `,
+              });
       } else {
         Alert.alert('Error', response?.message || 'Failed to update booking');
       }
@@ -152,7 +161,9 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <MaterialIcons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>Edit Booking</Text>
+          <Text style={[styles.title, { color: colors.text }]}>
+            Edit Booking
+          </Text>
           <TouchableOpacity
             onPress={handleSave}
             disabled={loading}
@@ -178,7 +189,8 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
                   style={[
                     styles.statusOption,
                     {
-                      backgroundColor: status === option ? colors.primary : colors.card,
+                      backgroundColor:
+                        status === option ? colors.primary : colors.card,
                       borderColor: colors.border,
                     },
                   ]}
@@ -198,7 +210,9 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
 
           {/* Start Date */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Start Date *</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Start Date *
+            </Text>
             <TextInput
               value={startDate}
               onChangeText={setStartDate}
@@ -206,7 +220,11 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
               placeholderTextColor={colors.subtext}
               style={[
                 styles.input,
-                { backgroundColor: colors.card, borderColor: colors.border, color: colors.text },
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
               ]}
             />
             <Text style={[styles.helperText, { color: colors.subtext }]}>
@@ -216,7 +234,9 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
 
           {/* End Date */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>End Date *</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              End Date *
+            </Text>
             <TextInput
               value={endDate}
               onChangeText={setEndDate}
@@ -224,7 +244,11 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
               placeholderTextColor={colors.subtext}
               style={[
                 styles.input,
-                { backgroundColor: colors.card, borderColor: colors.border, color: colors.text },
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
               ]}
             />
             <Text style={[styles.helperText, { color: colors.subtext }]}>
@@ -234,7 +258,9 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
 
           {/* Total Price */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Total Price *</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Total Price *
+            </Text>
             <TextInput
               value={totalPrice}
               onChangeText={setTotalPrice}
@@ -243,7 +269,11 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
               keyboardType="decimal-pad"
               style={[
                 styles.input,
-                { backgroundColor: colors.card, borderColor: colors.border, color: colors.text },
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
               ]}
             />
             <Text style={[styles.helperText, { color: colors.subtext }]}>
@@ -253,7 +283,9 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
 
           {/* Space Occupied */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Space Occupied *</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Space Occupied *
+            </Text>
             <TextInput
               value={spaceOccupied}
               onChangeText={setSpaceOccupied}
@@ -262,7 +294,11 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
               keyboardType="decimal-pad"
               style={[
                 styles.input,
-                { backgroundColor: colors.card, borderColor: colors.border, color: colors.text },
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
               ]}
             />
             <Text style={[styles.helperText, { color: colors.subtext }]}>
@@ -272,7 +308,9 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
 
           {/* PDF Document */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>PDF Document</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              PDF Document
+            </Text>
             <TouchableOpacity
               onPress={pickDocument}
               style={[
@@ -280,7 +318,11 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
-              <MaterialIcons name="attach-file" size={20} color={colors.subtext} />
+              <MaterialIcons
+                name="attach-file"
+                size={20}
+                color={colors.subtext}
+              />
               <Text style={[styles.documentText, { color: colors.text }]}>
                 {pdfDocument ? pdfDocument.name : 'Select PDF Document'}
               </Text>
@@ -291,7 +333,9 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
                 style={styles.removeDocument}
               >
                 <MaterialIcons name="close" size={16} color={colors.error} />
-                <Text style={[styles.removeText, { color: colors.error }]}>Remove</Text>
+                <Text style={[styles.removeText, { color: colors.error }]}>
+                  Remove
+                </Text>
               </TouchableOpacity>
             )}
           </View>

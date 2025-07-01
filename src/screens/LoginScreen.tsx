@@ -54,7 +54,7 @@ const LoginScreen = () => {
         withTiming(10, { duration: 50 }),
         withTiming(-10, { duration: 50 }),
         withTiming(10, { duration: 50 }),
-        withTiming(0, { duration: 50 })
+        withTiming(0, { duration: 50 }),
       );
       Toast.show({
         type: 'error',
@@ -90,7 +90,10 @@ const LoginScreen = () => {
   }));
 
   const formAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: formTranslateY.value }, { translateX: shakeX.value }],
+    transform: [
+      { translateY: formTranslateY.value },
+      { translateX: shakeX.value },
+    ],
     opacity: formOpacity.value,
   }));
 
@@ -215,7 +218,11 @@ const LoginScreen = () => {
                     ) : (
                       <>
                         <Text style={styles.loginButtonText}>Sign In</Text>
-                        <MaterialIcons name="arrow-forward" size={20} color="#fff" />
+                        <MaterialIcons
+                          name="arrow-forward"
+                          size={20}
+                          color="#fff"
+                        />
                       </>
                     )}
                   </TouchableOpacity>

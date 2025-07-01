@@ -3,14 +3,17 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   StatusBar,
   ActivityIndicator,
   FlatList,
   TextInput,
 } from 'react-native';
 import Pagination from './../Reusable/Pagination';
-import AnimatedDeleteWrapper, { useAnimatedDelete } from './../Reusable/AnimatedDeleteWrapper';
+import AnimatedDeleteWrapper, {
+  useAnimatedDelete,
+} from './../Reusable/AnimatedDeleteWrapper';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 import { useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
@@ -18,12 +21,14 @@ import { useDelete } from '../../hooks/useDelete';
 import { lightColors, darkColors } from '../../constants/color';
 import EditExpenseModal from './../modals/EditExpenseModal';
 import ExpenseItem from './../Items/ExpenseItem';
-import {Expense} from '../../types/Expenses';
+import { Expense } from '../../types/Expenses';
+import styles from './Styles/ExpenseList';
 
-  const ExpenseList: React.FC = () => {
+
+const ExpenseList: React.FC = () => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
-  
+
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -36,8 +41,10 @@ import {Expense} from '../../types/Expenses';
   const { get } = useGet();
   const { del: deleteRequest } = useDelete();
 
-  // Use the custom hook for animated delete
-  const { removingId, handleDelete } = useAnimatedDelete<Expense>(deleteRequest, '/expenses');
+  const { removingId, handleDelete } = useAnimatedDelete<Expense>(
+    deleteRequest,
+    '/expenses',
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -56,10 +63,15 @@ import {Expense} from '../../types/Expenses';
     fetchExpenses(page);
   }, [page, searchDebounced]);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchExpenses(1);
+    }, []),
+  );
   const fetchExpenses = async (pg: number) => {
     setLoading(true);
     setExpenses([]);
-    
+
     try {
       const queryParams = new URLSearchParams({
         page: pg.toString(),
@@ -72,7 +84,7 @@ import {Expense} from '../../types/Expenses';
 
       const endpoint = `/expenses?${queryParams.toString()}`;
       const res = await get(endpoint);
-      
+
       if (res?.status === 'success') {
         setExpenses(res.data.expenses || []);
         setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
@@ -82,7 +94,7 @@ import {Expense} from '../../types/Expenses';
       setExpenses([]);
       setTotalPages(1);
     }
-    
+
     setLoading(false);
     if (initialLoad) {
       setInitialLoad(false);
@@ -95,7 +107,9 @@ import {Expense} from '../../types/Expenses';
 
   const updateExpense = (updated: Expense) => {
     setExpenses((prev) =>
-      prev.map((expense) => (expense.id === updated.id ? { ...expense, ...updated } : expense))
+      prev.map((expense) =>
+        expense.id === updated.id ? { ...expense, ...updated } : expense,
+      ),
     );
   };
 
@@ -124,7 +138,13 @@ import {Expense} from '../../types/Expenses';
     setSearchDebounced('');
   };
 
-  const renderExpenseCard = ({ item, index }: { item: Expense; index: number }) => (
+  const renderExpenseCard = ({
+    item,
+    index,
+  }: {
+    item: Expense;
+    index: number;
+  }) => (
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
@@ -140,7 +160,7 @@ import {Expense} from '../../types/Expenses';
         colors={colors}
         dark={dark}
         onEdit={handleEdit}
-        onDeletePress={() => {}} 
+        onDeletePress={() => {}}
       />
     </AnimatedDeleteWrapper>
   );
@@ -152,7 +172,9 @@ import {Expense} from '../../types/Expenses';
         {searchDebounced ? 'No expenses found' : 'No expenses available'}
       </Text>
       <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
-        {searchDebounced ? 'Try adjusting your search' : 'Add some expenses to get started'}
+        {searchDebounced
+          ? 'Try adjusting your search'
+          : 'Add some expenses to get started'}
       </Text>
     </View>
   );
@@ -160,7 +182,10 @@ import {Expense} from '../../types/Expenses';
   if (initialLoad) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
+        <StatusBar
+          barStyle={dark ? 'light-content' : 'dark-content'}
+          backgroundColor={colors.card}
+        />
         <View style={styles.initialLoadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -173,10 +198,17 @@ import {Expense} from '../../types/Expenses';
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
-      
-      {/* Search Bar */}
-      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <StatusBar
+        barStyle={dark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.card}
+      />
+
+      <View
+        style={[
+          styles.searchContainer,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
         <MaterialIcons name="search" size={20} color={colors.subtext} />
         <TextInput
           value={search}
@@ -192,7 +224,6 @@ import {Expense} from '../../types/Expenses';
         )}
       </View>
 
-      {/* Search Indicator */}
       {searchDebounced && (
         <View style={styles.searchIndicator}>
           <Text style={[styles.searchIndicatorText, { color: colors.subtext }]}>
@@ -201,7 +232,6 @@ import {Expense} from '../../types/Expenses';
         </View>
       )}
 
-      {/* List */}
       <FlatList
         data={displayExpenses}
         renderItem={renderExpenseCard}
@@ -221,7 +251,6 @@ import {Expense} from '../../types/Expenses';
         </View>
       )}
 
-      {/* Pagination Component */}
       <Pagination
         currentPage={page}
         totalPages={totalPages}
@@ -231,7 +260,6 @@ import {Expense} from '../../types/Expenses';
         onNextPage={handleNextPage}
       />
 
-      {/* Edit Modal */}
       {editingExpense && (
         <EditExpenseModal
           visible={true}
@@ -247,68 +275,5 @@ import {Expense} from '../../types/Expenses';
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
-  },
-  searchIndicator: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  searchIndicatorText: {
-    fontSize: 12,
-    fontStyle: 'italic',
-  },
-  listContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 100,
-  },
-  initialLoadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingOverlay: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  loadingText: {
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    marginTop: 60,
-  },  
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 16,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-});
 
 export default ExpenseList;

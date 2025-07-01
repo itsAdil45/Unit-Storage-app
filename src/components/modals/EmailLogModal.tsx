@@ -27,8 +27,6 @@ interface Customer {
   deleted: 0 | 1;
 }
 
-
-
 interface Email {
   id: number;
   recipientEmail: string;
@@ -49,7 +47,11 @@ interface EmailModalProps {
   onClose: () => void;
 }
 
-const EmailLogModal: React.FC<EmailModalProps> = ({ visible, userId, onClose }) => {
+const EmailLogModal: React.FC<EmailModalProps> = ({
+  visible,
+  userId,
+  onClose,
+}) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
   const slideAnim = useRef(new Animated.Value(screenHeight)).current;
@@ -95,19 +97,34 @@ const EmailLogModal: React.FC<EmailModalProps> = ({ visible, userId, onClose }) 
   };
 
   const renderEmail = ({ item }: { item: Email }) => (
-    <View style={[styles.emailItem, { backgroundColor: colors.background, borderColor: colors.border }]}>
+    <View
+      style={[
+        styles.emailItem,
+        { backgroundColor: colors.background, borderColor: colors.border },
+      ]}
+    >
       <View style={styles.emailHeader}>
-        <Text style={[styles.emailSubject, { color: colors.text }]} numberOfLines={1}>
+        <Text
+          style={[styles.emailSubject, { color: colors.text }]}
+          numberOfLines={1}
+        >
           {item.subject}
         </Text>
-        <View style={[
-          styles.statusBadge, 
-          { backgroundColor: item.status === 'sent' ? '#4CAF50' : '#FF9800' + '20' }
-        ]}>
-          <Text style={[
-            styles.statusText, 
-            { color: item.status === 'sent' ? '#4CAF50' : '#FF9800' }
-          ]}>
+        <View
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor:
+                item.status === 'sent' ? '#4CAF50' : '#FF9800' + '20',
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.statusText,
+              { color: item.status === 'sent' ? '#4CAF50' : '#FF9800' },
+            ]}
+          >
             {item.status}
           </Text>
         </View>
@@ -125,29 +142,49 @@ const EmailLogModal: React.FC<EmailModalProps> = ({ visible, userId, onClose }) 
   );
 
   return (
-    <Modal visible={visible} animationType="fade" transparent statusBarTranslucent>
-      <StatusBar backgroundColor="rgba(0,0,0,0.6)" barStyle={dark ? 'light-content' : 'dark-content'} />
+    <Modal
+      visible={visible}
+      animationType="fade"
+      transparent
+      statusBarTranslucent
+    >
+      <StatusBar
+        backgroundColor="rgba(0,0,0,0.6)"
+        barStyle={dark ? 'light-content' : 'dark-content'}
+      />
       <View style={styles.overlay}>
         <Animated.View
           style={[
             styles.emailModal,
-            { backgroundColor: colors.card, transform: [{ translateY: slideAnim }] },
+            {
+              backgroundColor: colors.card,
+              transform: [{ translateY: slideAnim }],
+            },
           ]}
         >
           <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Email History</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Email History
+            </Text>
             <TouchableOpacity
-              style={[styles.closeButton, { backgroundColor: colors.background }]}
+              style={[
+                styles.closeButton,
+                { backgroundColor: colors.background },
+              ]}
               onPress={handleClose}
             >
-              <Text style={[styles.closeButtonText, { color: colors.text }]}>✕</Text>
+              <Text style={[styles.closeButtonText, { color: colors.text }]}>
+                ✕
+              </Text>
             </TouchableOpacity>
           </View>
 
           {loading ? (
             <View style={styles.emailLoadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={[styles.loadingText, { color: colors.text }]}>Loading emails...</Text>
+              <Text style={[styles.loadingText, { color: colors.text }]}>
+                Loading emails...
+              </Text>
             </View>
           ) : (
             <FlatList
@@ -158,7 +195,9 @@ const EmailLogModal: React.FC<EmailModalProps> = ({ visible, userId, onClose }) 
               ListEmptyComponent={
                 <View style={styles.emptyEmailContainer}>
                   {/* <MaterialIcons name="email-outline" size={48} color={colors.subtext} /> */}
-                  <Text style={[styles.emptyTitle, { color: colors.text }]}>No emails found</Text>
+                  <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                    No emails found
+                  </Text>
                 </View>
               }
             />
@@ -169,18 +208,20 @@ const EmailLogModal: React.FC<EmailModalProps> = ({ visible, userId, onClose }) 
               <TouchableOpacity
                 style={[
                   styles.emailNavButton,
-                  { 
+                  {
                     backgroundColor: page > 1 ? colors.primary : colors.border,
-                    borderColor: colors.border 
-                  }
+                    borderColor: colors.border,
+                  },
                 ]}
                 onPress={() => fetchEmails(page - 1)}
                 disabled={page <= 1 || loading}
               >
-                <Text style={[
-                  styles.emailNavButtonText, 
-                  { color: page > 1 ? '#fff' : colors.subtext }
-                ]}>
+                <Text
+                  style={[
+                    styles.emailNavButtonText,
+                    { color: page > 1 ? '#fff' : colors.subtext },
+                  ]}
+                >
                   Previous
                 </Text>
               </TouchableOpacity>
@@ -192,18 +233,21 @@ const EmailLogModal: React.FC<EmailModalProps> = ({ visible, userId, onClose }) 
               <TouchableOpacity
                 style={[
                   styles.emailNavButton,
-                  { 
-                    backgroundColor: page < totalPages ? colors.primary : colors.border,
-                    borderColor: colors.border 
-                  }
+                  {
+                    backgroundColor:
+                      page < totalPages ? colors.primary : colors.border,
+                    borderColor: colors.border,
+                  },
                 ]}
                 onPress={() => fetchEmails(page + 1)}
                 disabled={page >= totalPages || loading}
               >
-                <Text style={[
-                  styles.emailNavButtonText, 
-                  { color: page < totalPages ? '#fff' : colors.subtext }
-                ]}>
+                <Text
+                  style={[
+                    styles.emailNavButtonText,
+                    { color: page < totalPages ? '#fff' : colors.subtext },
+                  ]}
+                >
                   Next
                 </Text>
               </TouchableOpacity>
@@ -216,108 +260,108 @@ const EmailLogModal: React.FC<EmailModalProps> = ({ visible, userId, onClose }) 
 };
 
 const styles = StyleSheet.create({
-    modalTitle: {
-  fontSize: 20,
-  fontWeight: 'bold',
-},
-closeButton: {
-  width: 32,
-  height: 32,
-  borderRadius: 16,
-  alignItems: 'center',
-  justifyContent: 'center',
-},
-closeButtonText: {
-  fontSize: 18,
-  fontWeight: 'bold',
-},
-    emailModal: {
-  maxHeight: '80%',
-  borderTopLeftRadius: 20,
-  borderTopRightRadius: 20,
-  paddingTop: 20,
-  paddingBottom: 20,
-},
-emailList: {
-  paddingHorizontal: 20,
-  paddingBottom: 20,
-},
-modalHeader: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingHorizontal: 20,
-  marginBottom: 20,
-},
-overlay: {
-  flex: 1,
-  backgroundColor: 'rgba(0,0,0,0.6)',
-  justifyContent: 'flex-end',
-},
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  emailModal: {
+    maxHeight: '80%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+  },
+  emailList: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+  },
 
-emailItem: {
-  padding: 16,
-  borderRadius: 12,
-  marginBottom: 12,
-  borderWidth: 1,
-},
-emailHeader: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'flex-start',
-  marginBottom: 8,
-},
-emailSubject: {
-  fontSize: 16,
-  fontWeight: '600',
-  flex: 1,
-  marginRight: 8,
-},
-emailType: {
-  fontSize: 12,
-  marginBottom: 4,
-  textTransform: 'capitalize',
-},
-emailDate: {
-  fontSize: 12,
-  marginBottom: 4,
-},
-emailRecipient: {
-  fontSize: 12,
-},
-emailLoadingContainer: {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-  paddingVertical: 40,
-},
-emptyEmailContainer: {
-  alignItems: 'center',
-  paddingVertical: 40,
-},
-emailPaginationContainer: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingHorizontal: 20,
-  paddingTop: 16,
-},
-emailNavButton: {
-  paddingHorizontal: 16,
-  paddingVertical: 8,
-  borderRadius: 6,
-  borderWidth: 1,
-  minWidth: 80,
-  alignItems: 'center',
-},
-emailNavButtonText: {
-  fontSize: 14,
-  fontWeight: '600',
-},
-emailPageText: {
-  fontSize: 14,
-  fontWeight: '500',
-},
+  emailItem: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  emailHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  emailSubject: {
+    fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
+    marginRight: 8,
+  },
+  emailType: {
+    fontSize: 12,
+    marginBottom: 4,
+    textTransform: 'capitalize',
+  },
+  emailDate: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  emailRecipient: {
+    fontSize: 12,
+  },
+  emailLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyEmailContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emailPaginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  emailNavButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  emailNavButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emailPageText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
   loadingText: {
     fontSize: 14,
     marginLeft: 8,
@@ -325,7 +369,7 @@ emailPageText: {
   emptyContainer: {
     alignItems: 'center',
     marginTop: 60,
-  },  
+  },
   emptyTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -335,7 +379,7 @@ emailPageText: {
     fontSize: 14,
     marginTop: 4,
   },
-    statusBadge: {
+  statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -344,6 +388,6 @@ emailPageText: {
     fontSize: 11,
     fontWeight: '600',
   },
-})
+});
 
 export default EmailLogModal;

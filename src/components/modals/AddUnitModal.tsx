@@ -15,6 +15,7 @@ import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
 import { useGet } from '../../hooks/useGet'; // Adjust path as needed
 import { usePost } from '../../hooks/usePost'; // Adjust path as needed
+import Toast from 'react-native-toast-message';
 
 interface AddUnitModalProps {
   visible: boolean;
@@ -65,7 +66,11 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
   const fetchWarehouses = async () => {
     try {
       const response = await get('/warehouses');
-      if (response && response.status === 'success' && response.data?.warehouses) {
+      if (
+        response &&
+        response.status === 'success' &&
+        response.data?.warehouses
+      ) {
         setWarehouses(response.data.warehouses);
       } else {
         Alert.alert('Error', 'Failed to fetch warehouses');
@@ -84,35 +89,40 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
     }
 
     setSubmitting(true);
-    
+
     try {
       const payload = {
         warehouseId: parseInt(warehouse),
         unitNumber: unitNumber.trim(),
         size: parseInt(size),
         floor: floor.trim(),
-        status: 'available'
+        status: 'available',
       };
 
       const response = await post('/storage-units', payload); // Adjust endpoint as needed
-      
+
       if (response && response.status === 'success') {
-        Alert.alert('Success', 'Unit added successfully');
-        
+              Toast.show({
+        type: 'success',
+        text1: 'Added',
+        text2: `Unit added successfully `,
+      });
         // Call the onAdd callback with the original format
-        onAdd({ 
-          warehouse: warehouses.find(w => w.id.toString() === warehouse)?.name || warehouse,
-          unitNumber, 
-          size, 
-          floor 
+        onAdd({
+          warehouse:
+            warehouses.find((w) => w.id.toString() === warehouse)?.name ||
+            warehouse,
+          unitNumber,
+          size,
+          floor,
         });
-        
+
         // Reset form
         setWarehouse('');
         setUnitNumber('');
         setSize('');
         setFloor('');
-        
+
         onClose();
       } else {
         Alert.alert('Error', response?.message || 'Failed to add unit');
@@ -146,12 +156,18 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
           <Text style={[styles.title, { color: colors.text }]}>Add Unit</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Warehouse</Text>
-            <View style={[styles.pickerWrapper, { borderColor: colors.border }]}>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Warehouse
+            </Text>
+            <View
+              style={[styles.pickerWrapper, { borderColor: colors.border }]}
+            >
               {getLoading ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color={colors.text} />
-                  <Text style={[styles.loadingText, { color: colors.text }]}>Loading warehouses...</Text>
+                  <Text style={[styles.loadingText, { color: colors.text }]}>
+                    Loading warehouses...
+                  </Text>
                 </View>
               ) : (
                 <Picker
@@ -161,10 +177,10 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
                 >
                   <Picker.Item label="Select Warehouse" value="" />
                   {warehouses.map((wh) => (
-                    <Picker.Item 
-                      key={wh.id} 
-                      label={wh.name} 
-                      value={wh.id.toString()} 
+                    <Picker.Item
+                      key={wh.id}
+                      label={wh.name}
+                      value={wh.id.toString()}
                     />
                   ))}
                 </Picker>
@@ -173,25 +189,35 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Unit Number</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Unit Number
+            </Text>
             <TextInput
               value={unitNumber}
               onChangeText={setUnitNumber}
               placeholder="e.g. 101"
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+              style={[
+                styles.input,
+                { color: colors.text, borderColor: colors.border },
+              ]}
               placeholderTextColor={colors.border}
               editable={!submitting}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Size (sq ft)</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Size (sq ft)
+            </Text>
             <TextInput
               value={size}
               onChangeText={setSize}
               placeholder="e.g. 200"
               keyboardType="numeric"
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+              style={[
+                styles.input,
+                { color: colors.text, borderColor: colors.border },
+              ]}
               placeholderTextColor={colors.border}
               editable={!submitting}
             />
@@ -203,22 +229,25 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
               value={floor}
               onChangeText={setFloor}
               placeholder="e.g. Ground"
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+              style={[
+                styles.input,
+                { color: colors.text, borderColor: colors.border },
+              ]}
               placeholderTextColor={colors.border}
               editable={!submitting}
             />
           </View>
 
           <View style={styles.buttonRow}>
-            <TouchableOpacity 
-              style={[styles.closeButton, submitting && styles.disabledButton]} 
+            <TouchableOpacity
+              style={[styles.closeButton, submitting && styles.disabledButton]}
               onPress={handleClose}
               disabled={submitting}
             >
               <Text style={styles.buttonText}>Close</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.addButton, submitting && styles.disabledButton]} 
+            <TouchableOpacity
+              style={[styles.addButton, submitting && styles.disabledButton]}
               onPress={handleAdd}
               disabled={submitting}
             >

@@ -19,7 +19,11 @@ import AddBookingModal from '../components/modals/AddBookingModal';
 import AddExpenseModal from '../components/modals/AddExpenseModal';
 
 import { useGet } from '../hooks/useGet';
-import { StorageOverviewData, PaymentOverviewData, ExpenseData } from '../types/Types';
+import {
+  StorageOverviewData,
+  PaymentOverviewData,
+  ExpenseData,
+} from '../types/Types';
 
 const LoadingSpinner = () => {
   const scale = useSharedValue(0.8);
@@ -36,16 +40,25 @@ const LoadingSpinner = () => {
   );
 };
 
-const DashboardContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const DashboardContent: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const opacity = useSharedValue(0.85);
   useEffect(() => {
     opacity.value = withTiming(1, { duration: 600 });
   }, []);
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
-  return <Animated.View style={[styles.contentContainer, animatedStyle]}>{children}</Animated.View>;
+  return (
+    <Animated.View style={[styles.contentContainer, animatedStyle]}>
+      {children}
+    </Animated.View>
+  );
 };
 
-const AnimatedWidget: React.FC<{ children: React.ReactNode; delay: number }> = ({ children, delay }) => {
+const AnimatedWidget: React.FC<{
+  children: React.ReactNode;
+  delay: number;
+}> = ({ children, delay }) => {
   const opacity = useSharedValue(0.9);
   const translateY = useSharedValue(3);
   useEffect(() => {
@@ -69,8 +82,10 @@ const Dashboard = () => {
   const [showAddBookingModal, setShowAddBookingModal] = useState(false);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
 
-  const [paymentOverview, setPaymentOverview] = useState<PaymentOverviewData | null>(null);
-  const [storageOverview, setStorageOverview] = useState<StorageOverviewData | null>(null);
+  const [paymentOverview, setPaymentOverview] =
+    useState<PaymentOverviewData | null>(null);
+  const [storageOverview, setStorageOverview] =
+    useState<StorageOverviewData | null>(null);
   const [expenses, setExpenses] = useState<ExpenseData[] | null>(null);
 
   const { get } = useGet();
@@ -88,12 +103,11 @@ const Dashboard = () => {
         setPaymentOverview(custRes?.data || null);
         setStorageOverview(storRes?.data || null);
         setExpenses(expRes?.data.expenses || null);
-
       } catch (err) {
         console.error('Dashboard fetch error:', err);
       } finally {
         loadingOpacity.value = withTiming(0, { duration: 400 }, () =>
-          runOnJS(setIsLoading)(false)
+          runOnJS(setIsLoading)(false),
         );
       }
     };
@@ -126,8 +140,10 @@ const Dashboard = () => {
               <QuickActions
                 onActionPress={(action) => {
                   if (action.title === 'Add Unit') setShowAddUnitModal(true);
-                  else if (action.title === 'Customer') setShowAddCustomerModal(true);
-                  else if (action.title === 'Booking') setShowAddBookingModal(true);
+                  else if (action.title === 'Customer')
+                    setShowAddCustomerModal(true);
+                  else if (action.title === 'Booking')
+                    setShowAddBookingModal(true);
                 }}
               />
             </AnimatedWidget>
@@ -137,9 +153,9 @@ const Dashboard = () => {
             </AnimatedWidget>
 
             <AnimatedWidget delay={150}>
-              <RecentExpenses expenses={expenses}
+              <RecentExpenses
+                expenses={expenses}
                 onAddExpense={() => setShowAddExpenseModal(true)}
-
               />
             </AnimatedWidget>
 
@@ -154,10 +170,26 @@ const Dashboard = () => {
         )}
       />
 
-      <AddUnitModal visible={showAddUnitModal} onClose={() => setShowAddUnitModal(false)} onAdd={(unit) => console.log('Added unit:', unit)} />
-      <AddCustomerModal visible={showAddCustomerModal} onClose={() => setShowAddCustomerModal(false)} onAdd={(c) => console.log('New customer:', c)} />
-      <AddBookingModal visible={showAddBookingModal} onClose={() => setShowAddBookingModal(false)} onAdd={(b) => console.log('Booking added:', b)} />
-      <AddExpenseModal visible={showAddExpenseModal} onClose={() => setShowAddExpenseModal(false)} onAdd={(b) => console.log('Expense added:', b)} />
+      <AddUnitModal
+        visible={showAddUnitModal}
+        onClose={() => setShowAddUnitModal(false)}
+        onAdd={(unit) => console.log('Added unit:', unit)}
+      />
+      <AddCustomerModal
+        visible={showAddCustomerModal}
+        onClose={() => setShowAddCustomerModal(false)}
+        onAdd={(c) => console.log('New customer:', c)}
+      />
+      <AddBookingModal
+        visible={showAddBookingModal}
+        onClose={() => setShowAddBookingModal(false)}
+        onAdd={(b) => console.log('Booking added:', b)}
+      />
+      <AddExpenseModal
+        visible={showAddExpenseModal}
+        onClose={() => setShowAddExpenseModal(false)}
+        onAdd={(b) => console.log('Expense added:', b)}
+      />
     </>
   );
 };

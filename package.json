@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -39,6 +40,7 @@
     "@babel/core": "^7.25.2",
     "@types/d3-shape": "^3.1.7",
     "@types/react": "~19.0.10",
+    "prettier": "^3.6.2",
     "typescript": "~5.8.3"
   },
   "private": true
