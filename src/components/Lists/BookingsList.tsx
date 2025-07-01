@@ -8,15 +8,17 @@ import {
   ActivityIndicator,
   FlatList,
   TextInput,
+  Alert,
 } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
 import { useDelete } from '../../hooks/useDelete';
 import { lightColors, darkColors } from '../../constants/color';
-import { Booking, BookingFilterType } from '../../types/Bookings';
+import { Booking, BookingFilterType, Payment } from '../../types/Bookings';
 import EditBookingModal from '../modals/EditBookingModal';
 import PaymentsModal from '../modals/PaymentsModal';
+import AddEditPaymentModal from '../modals/AddEditPaymentModal'; // Updated import
 import AnimatedDeleteWrapper, { useAnimatedDelete } from '../Reusable/AnimatedDeleteWrapper';
 import Pagination from '../Reusable/Pagination';
 import BookingItem from '../Items/BookingItem';
@@ -31,6 +33,18 @@ const BookingsList: React.FC = () => {
   const [initialLoad, setInitialLoad] = useState(true);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [selectedBookingForPayments, setSelectedBookingForPayments] = useState<Booking | null>(null);
+  
+  // Updated state for unified payment modal
+  const [paymentModalState, setPaymentModalState] = useState<{
+    visible: boolean;
+    booking: Booking | null;
+    payment?: Payment; // undefined for add mode, defined for edit mode
+  }>({
+    visible: false,
+    booking: null,
+    payment: undefined,
+  });
+  
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<BookingFilterType>('All');
   const [searchDebounced, setSearchDebounced] = useState('');
@@ -106,10 +120,112 @@ const BookingsList: React.FC = () => {
     setSelectedBookingForPayments(booking);
   };
 
+  // Updated handler for adding payment
+  const handleAddPayment = (booking: Booking) => {
+    setPaymentModalState({
+      visible: true,
+      booking,
+      payment: undefined, // undefined indicates add mode
+    });
+  };
+
+  // Updated handler for editing payment
+  const handleEditPayment = (booking: Booking, payment: Payment) => {
+    setPaymentModalState({
+      visible: true,
+      booking,
+      payment, // defined payment indicates edit mode
+    });
+  };
+
+  const handleDeletePayment = async (payment: Payment) => {
+    try {
+      const res = await deleteRequest(`/payments/${payment.id}`);
+      if (res?.status === 'success') {
+        // Update the bookings state to reflect the deleted payment
+        setBookings(prevBookings =>
+          prevBookings.map(booking => ({
+            ...booking,
+            payments: booking.payments.filter(p => p.id !== payment.id)
+          }))
+        );
+        
+        // Update the selected booking for payments modal if it's open
+        if (selectedBookingForPayments) {
+          setSelectedBookingForPayments(prev => ({
+            ...prev!,
+            payments: prev!.payments.filter(p => p.id !== payment.id)
+          }));
+        }
+        
+        Alert.alert('Success', 'Payment deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      Alert.alert('Error', 'Failed to delete payment');
+    }
+  };
+
   const updateBooking = (updated: Booking) => {
     setBookings((prev) =>
       prev.map((booking) => (booking.id === updated.id ? { ...booking, ...updated } : booking))
     );
+  };
+
+  // Updated handler for payment modal success
+  const handlePaymentModalSuccess = (updatedPayment: Payment) => {
+    const bookingId = paymentModalState.booking?.id;
+    if (!bookingId) return;
+
+    if (paymentModalState.payment) {
+      // Edit mode - update existing payment
+      updatePaymentInBooking(bookingId, updatedPayment);
+    } else {
+      // Add mode - add new payment
+      updateBookingWithPayment(bookingId, updatedPayment);
+    }
+
+    // Close the modal
+    setPaymentModalState({
+      visible: false,
+      booking: null,
+      payment: undefined,
+    });
+  };
+
+  const updateBookingWithPayment = (bookingId: number, newPayment: Payment) => {
+    setBookings(prevBookings =>
+      prevBookings.map(booking =>
+        booking.id === bookingId
+          ? { ...booking, payments: [...booking.payments, newPayment] }
+          : booking
+      )
+    );
+  };
+
+  const updatePaymentInBooking = (bookingId: number, updatedPayment: Payment) => {
+    setBookings(prevBookings =>
+      prevBookings.map(booking =>
+        booking.id === bookingId
+          ? {
+              ...booking,
+              payments: booking.payments.map(p =>
+                p.id === updatedPayment.id ? updatedPayment : p
+              )
+            }
+          : booking
+      )
+    );
+
+    // Update the payments modal if it's open for the same booking
+    if (selectedBookingForPayments?.id === bookingId) {
+      setSelectedBookingForPayments(prev => ({
+        ...prev!,
+        payments: prev!.payments.map(p =>
+          p.id === updatedPayment.id ? updatedPayment : p
+        )
+      }));
+    }
   };
 
   const displayBookings = useMemo(() => {
@@ -193,6 +309,7 @@ const BookingsList: React.FC = () => {
         dark={dark}
         onEdit={handleEdit}
         onPayments={handlePayments}
+        onAddPayment={handleAddPayment}
         onDeletePress={() => {}} // This will be overridden by AnimatedDeleteWrapper
       />
     </AnimatedDeleteWrapper>
@@ -295,7 +412,7 @@ const BookingsList: React.FC = () => {
         onNextPage={handleNextPage}
       />
 
-      {/* Edit Modal */}
+      {/* Edit Booking Modal */}
       {editingBooking && (
         <EditBookingModal
           visible={true}
@@ -316,6 +433,25 @@ const BookingsList: React.FC = () => {
           visible={true}
           booking={selectedBookingForPayments}
           onClose={() => setSelectedBookingForPayments(null)}
+          onEditPayment={handleEditPayment}
+          onDeletePayment={handleDeletePayment}
+          colors={colors}
+          dark={dark}
+        />
+      )}
+
+      {/* Unified Add/Edit Payment Modal */}
+      {paymentModalState.visible && paymentModalState.booking && (
+        <AddEditPaymentModal
+          visible={paymentModalState.visible}
+          booking={paymentModalState.booking}
+          payment={paymentModalState.payment} // undefined for add, defined for edit
+          onClose={() => setPaymentModalState({
+            visible: false,
+            booking: null,
+            payment: undefined,
+          })}
+          onSuccess={handlePaymentModalSuccess}
           colors={colors}
           dark={dark}
         />

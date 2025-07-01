@@ -7,6 +7,7 @@ import {
   StyleSheet,
   FlatList,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Booking, Payment } from '../../types/Bookings';
@@ -15,6 +16,8 @@ interface PaymentsModalProps {
   visible: boolean;
   booking: Booking;
   onClose: () => void;
+  onEditPayment: (booking: Booking, payment: Payment) => void; // New prop for edit
+  onDeletePayment: (payment: Payment) => void; // New prop for delete
   colors: any;
   dark: boolean;
 }
@@ -23,6 +26,8 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
   visible,
   booking,
   onClose,
+  onEditPayment, // New prop
+  onDeletePayment, // New prop
   colors,
   dark,
 }) => {
@@ -55,13 +60,25 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
   };
 
   const handleEditPayment = (payment: Payment) => {
-    // TODO: Implement edit payment functionality
-    console.log('Edit payment:', payment.id);
+    onEditPayment(booking, payment);
   };
 
   const handleDeletePayment = (payment: Payment) => {
-    // TODO: Implement delete payment functionality
-    console.log('Delete payment:', payment.id);
+    Alert.alert(
+      'Delete Payment',
+      `Are you sure you want to delete Payment #${payment.id}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => onDeletePayment(payment),
+        },
+      ]
+    );
   };
 
   const renderPaymentItem = ({ item, index }: { item: Payment; index: number }) => (

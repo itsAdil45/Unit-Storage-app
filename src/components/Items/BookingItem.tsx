@@ -10,6 +10,7 @@ interface BookingItemProps {
   dark: boolean;
   onEdit: (booking: Booking) => void;
   onPayments: (booking: Booking) => void;
+  onAddPayment: (booking: Booking) => void; // New prop for add payment
   onDeletePress: () => void;
 }
 
@@ -20,6 +21,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
   dark,
   onEdit,
   onPayments,
+  onAddPayment, // New prop
   onDeletePress,
 }) => {
   const getStatusColor = (status: string) => {
@@ -189,8 +191,16 @@ const BookingItem: React.FC<BookingItemProps> = ({
         </View>
       </View>
 
-      {/* Action Buttons */}
+      {/* Action Buttons - Updated to include Add Payment */}
       <View style={[styles.actionsContainer, { borderTopColor: colors.border }]}>
+        <TouchableOpacity
+          onPress={() => onAddPayment(item)}
+          style={[styles.actionButton, { backgroundColor: '#4CAF50' + '15' }]}
+        >
+          <MaterialIcons name="add" size={16} color="#4CAF50" />
+          <Text style={[styles.actionText, { color: '#4CAF50' }]}>Add Pay</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           onPress={() => onPayments(item)}
           style={[styles.actionButton, { backgroundColor: colors.primary + '15' }]}
@@ -352,15 +362,15 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 8,
     flex: 1,
-    marginHorizontal: 2,
+    marginHorizontal: 1,
     justifyContent: 'center',
   },
   actionText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     marginLeft: 4,
   },
