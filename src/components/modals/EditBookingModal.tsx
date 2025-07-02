@@ -9,8 +9,10 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { usePatchFormData } from '../../hooks/usePatchFormData';
 import { Booking } from '../../types/Bookings';
 import * as DocumentPicker from 'expo-document-picker';
@@ -34,8 +36,10 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
   dark,
 }) => {
   const [status, setStatus] = useState(booking.status);
-  const [startDate, setStartDate] = useState(booking.startDate);
-  const [endDate, setEndDate] = useState(booking.endDate);
+  const [startDate, setStartDate] = useState(new Date(booking.startDate));
+  const [endDate, setEndDate] = useState(new Date(booking.endDate));
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [totalPrice, setTotalPrice] = useState(booking.totalPrice);
   const [spaceOccupied, setSpaceOccupied] = useState(booking.spaceOccupied);
   const [pdfDocument, setPdfDocument] = useState<any>(null);
@@ -47,13 +51,33 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
     if (visible) {
       // Reset form when modal opens
       setStatus(booking.status);
-      setStartDate(booking.startDate);
-      setEndDate(booking.endDate);
+      setStartDate(new Date(booking.startDate));
+      setEndDate(new Date(booking.endDate));
       setTotalPrice(booking.totalPrice);
       setSpaceOccupied(booking.spaceOccupied);
       setPdfDocument(null);
     }
   }, [visible, booking]);
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const onStartDateChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || startDate;
+    setShowStartDatePicker(Platform.OS === 'ios');
+    setStartDate(currentDate);
+  };
+
+  const onEndDateChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || endDate;
+    setShowEndDatePicker(Platform.OS === 'ios');
+    setEndDate(currentDate);
+  };
 
   const pickDocument = async () => {
     try {
@@ -72,20 +96,13 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
   };
 
   const handleSave = async () => {
-    if (!status || !startDate || !endDate || !totalPrice || !spaceOccupied) {
+    if (!status || !totalPrice || !spaceOccupied) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    // Validate date format (YYYY-MM-DD)
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
-      Alert.alert('Error', 'Please enter dates in YYYY-MM-DD format');
-      return;
-    }
-
     // Validate start date is before end date
-    if (new Date(startDate) >= new Date(endDate)) {
+    if (startDate >= endDate) {
       Alert.alert('Error', 'Start date must be before end date');
       return;
     }
@@ -104,8 +121,8 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
     try {
       const formData = new FormData();
       formData.append('status', status);
-      formData.append('startDate', startDate);
-      formData.append('endDate', endDate);
+      formData.append('startDate', startDate.toISOString().split('T')[0]);
+      formData.append('endDate', endDate.toISOString().split('T')[0]);
       formData.append('totalPrice', totalPrice);
       formData.append('spaceOccupied', spaceOccupied);
 
@@ -123,19 +140,19 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
         const updatedBooking = {
           ...booking,
           status,
-          startDate,
-          endDate,
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
           totalPrice,
           spaceOccupied,
           pdfDocumentUrl:
             response.data?.pdfDocumentUrl || booking.pdfDocumentUrl,
         };
         onSaveSuccess(updatedBooking);
-              Toast.show({
-                type: 'success',
-                text1: 'Updated',
-                text2: `Booking updated successfully `,
-              });
+        Toast.show({
+          type: 'success',
+          text1: 'Updated',
+          text2: `Booking updated successfully `,
+        });
       } else {
         Alert.alert('Error', response?.message || 'Failed to update booking');
       }
@@ -213,48 +230,54 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
             <Text style={[styles.label, { color: colors.text }]}>
               Start Date *
             </Text>
-            <TextInput
-              value={startDate}
-              onChangeText={setStartDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.subtext}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-            />
-            <Text style={[styles.helperText, { color: colors.subtext }]}>
-              Format: YYYY-MM-DD (e.g., 2025-06-03)
-            </Text>
+            <TouchableOpacity
+              style={[styles.dateButton, { borderColor: colors.border }]}
+              onPress={() => setShowStartDatePicker(true)}
+              disabled={loading}
+            >
+              <Text style={[styles.dateText, { color: colors.text }]}>
+                {formatDate(startDate)}
+              </Text>
+            </TouchableOpacity>
           </View>
+
+          {showStartDatePicker && (
+            <DateTimePicker
+              testID="startDateTimePicker"
+              value={startDate}
+              mode="date"
+              is24Hour={true}
+              display="default"
+              onChange={onStartDateChange}
+            />
+          )}
 
           {/* End Date */}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.text }]}>
               End Date *
             </Text>
-            <TextInput
-              value={endDate}
-              onChangeText={setEndDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.subtext}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-            />
-            <Text style={[styles.helperText, { color: colors.subtext }]}>
-              Format: YYYY-MM-DD (e.g., 2025-06-23)
-            </Text>
+            <TouchableOpacity
+              style={[styles.dateButton, { borderColor: colors.border }]}
+              onPress={() => setShowEndDatePicker(true)}
+              disabled={loading}
+            >
+              <Text style={[styles.dateText, { color: colors.text }]}>
+                {formatDate(endDate)}
+              </Text>
+            </TouchableOpacity>
           </View>
+
+          {showEndDatePicker && (
+            <DateTimePicker
+              testID="endDateTimePicker"
+              value={endDate}
+              mode="date"
+              is24Hour={true}
+              display="default"
+              onChange={onEndDateChange}
+            />
+          )}
 
           {/* Total Price */}
           <View style={styles.inputGroup}>
@@ -414,6 +437,16 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  dateButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: Platform.OS === 'ios' ? 12 : 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateText: {
+    fontSize: 16,
   },
   documentPicker: {
     flexDirection: 'row',

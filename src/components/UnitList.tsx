@@ -24,7 +24,6 @@ import AnimatedDeleteWrapper, {
 import EditUnitModal from './modals/EditUnitModal';
 import Pagination from './Reusable/Pagination';
 
-// Updated StorageUnit type to match API response
 export type StorageUnit = {
   id: number;
   warehouseId: number;
@@ -35,12 +34,11 @@ export type StorageUnit = {
   status: 'available' | 'maintenance';
   pricePerDay: number | null;
   totalSpaceOccupied: number;
-  bookings: any[]; // Array of bookings
-  percentage: number; // Calculated occupancy percentage
-  customers: number; // Calculated number of customers
+  bookings: any[]; 
+  percentage: number; 
+  customers: number; 
 };
 
-// Type for grouped warehouse data
 type WarehouseGroup = {
   [warehouseName: string]: StorageUnit[];
 };
@@ -54,14 +52,12 @@ const UnitList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<StorageUnit | null>(null);
 
-  // Changed to store all units and grouped data
   const [allUnits, setAllUnits] = useState<StorageUnit[]>([]);
   const [warehouseGroups, setWarehouseGroups] = useState<WarehouseGroup>({});
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [editingUnit, setEditingUnit] = useState<UnitData | null>(null);
 
-  // Pagination states - now for client-side pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
@@ -194,13 +190,6 @@ const UnitList = () => {
     return '#34C759';
   };
 
-  const getStatusText = (percentage: number) => {
-    if (percentage >= 100) return 'FULL';
-    if (percentage >= 80) return 'HIGH';
-    if (percentage >= 50) return 'MODERATE';
-    return 'AVAILABLE';
-  };
-
   const handleEdit = (unit: StorageUnit) => {
     const unitData: UnitData = {
       id: unit.id,
@@ -217,7 +206,6 @@ const UnitList = () => {
   };
 
   const updateUnit = (updatedUnit: UnitData) => {
-    // Update in allUnits
     setAllUnits((prev) =>
       prev.map((unit) =>
         unit.id === updatedUnit.id
@@ -252,7 +240,6 @@ const UnitList = () => {
     });
   };
 
-  // Custom delete handler that updates both allUnits and warehouseGroups
   const handleUnitDelete = (unitId: number) => {
     setAllUnits((prev) => prev.filter((unit) => unit.id !== unitId));
     setWarehouseGroups((prev) => {
@@ -266,7 +253,6 @@ const UnitList = () => {
     });
   };
 
-  // Pagination handlers
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -433,10 +419,9 @@ const UnitList = () => {
                   <Text
                     style={[
                       styles.statusText,
-                      { color: getStatusColor(item.percentage) },
                     ]}
                   >
-                    {getStatusText(item.percentage)}
+                    {(item.status).toUpperCase()}
                   </Text>
                 </View>
                 <View style={styles.progressBarContainer}>

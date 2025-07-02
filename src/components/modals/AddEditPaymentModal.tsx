@@ -9,8 +9,10 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Booking, Payment } from '../../types/Bookings';
 import { usePostFormData } from '../../hooks/usePostFormData';
 import { usePatchFormData } from '../../hooks/usePatchFormData';
@@ -37,13 +39,16 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     amount: '',
-    paymentDate: '',
     paymentMethod: '',
-    startDate: '',
-    endDate: '',
     status: 'pending',
     remarks: '',
   });
+  const [paymentDate, setPaymentDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [showPaymentDatePicker, setShowPaymentDatePicker] = useState(false);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [paymentReceivedAttachment, setPaymentReceivedAttachment] =
     useState<any>(null);
   const [invoiceAttachment, setInvoiceAttachment] = useState<any>(null);
@@ -60,30 +65,56 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
         // Pre-fill form for edit mode
         setFormData({
           amount: payment.amount,
-          paymentDate: payment.paymentDate.split('T')[0], // Format for date input
           paymentMethod: payment.paymentMethod || '',
-          startDate: payment.startDate.split('T')[0],
-          endDate: payment.endDate.split('T')[0],
           status: payment.status,
           remarks: payment.remarks || '',
         });
+        setPaymentDate(new Date(payment.paymentDate));
+        setStartDate(new Date(payment.startDate));
+        setEndDate(new Date(payment.endDate));
       } else {
         // Reset form for add mode
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date();
         setFormData({
           amount: '',
-          paymentDate: today,
           paymentMethod: 'cash',
-          startDate: today,
-          endDate: today,
           status: 'pending',
           remarks: '',
         });
+        setPaymentDate(today);
+        setStartDate(today);
+        setEndDate(today);
       }
       setPaymentReceivedAttachment(null);
       setInvoiceAttachment(null);
     }
   }, [visible, payment, isEditMode]);
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const onPaymentDateChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || paymentDate;
+    setShowPaymentDatePicker(Platform.OS === 'ios');
+    setPaymentDate(currentDate);
+  };
+
+  const onStartDateChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || startDate;
+    setShowStartDatePicker(Platform.OS === 'ios');
+    setStartDate(currentDate);
+  };
+
+  const onEndDateChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || endDate;
+    setShowEndDatePicker(Platform.OS === 'ios');
+    setEndDate(currentDate);
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -126,20 +157,8 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
       Alert.alert('Error', 'Please enter a valid amount');
       return false;
     }
-    if (!formData.paymentDate) {
-      Alert.alert('Error', 'Please select a payment date');
-      return false;
-    }
-    if (!formData.startDate) {
-      Alert.alert('Error', 'Please select a start date');
-      return false;
-    }
-    if (!formData.endDate) {
-      Alert.alert('Error', 'Please select an end date');
-      return false;
-    }
-    if (new Date(formData.startDate) > new Date(formData.endDate)) {
-      Alert.alert('Error', 'Start date cannot be after end date');
+    if (startDate >= endDate) {
+      Alert.alert('Error', 'Start date must be before end date');
       return false;
     }
     return true;
@@ -155,20 +174,20 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
       if (isEditMode) {
         // Edit mode - only include fields that can be updated
         form.append('amount', formData.amount);
-        form.append('paymentDate', formData.paymentDate);
+        form.append('paymentDate', paymentDate.toISOString().split('T')[0]);
         form.append('paymentMethod', formData.paymentMethod);
-        form.append('startDate', formData.startDate);
-        form.append('endDate', formData.endDate);
+        form.append('startDate', startDate.toISOString().split('T')[0]);
+        form.append('endDate', endDate.toISOString().split('T')[0]);
         form.append('status', formData.status);
         form.append('remarks', formData.remarks);
       } else {
         // Add mode - include bookingId
         form.append('bookingId', booking.id.toString());
         form.append('amount', formData.amount);
-        form.append('paymentDate', formData.paymentDate);
+        form.append('paymentDate', paymentDate.toISOString().split('T')[0]);
         form.append('paymentMethod', formData.paymentMethod);
-        form.append('startDate', formData.startDate);
-        form.append('endDate', formData.endDate);
+        form.append('startDate', startDate.toISOString().split('T')[0]);
+        form.append('endDate', endDate.toISOString().split('T')[0]);
         form.append('status', formData.status);
         form.append('remarks', formData.remarks);
       }
@@ -294,19 +313,27 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
               <Text style={[styles.fieldLabel, { color: colors.text }]}>
                 Payment Date *
               </Text>
-              <TextInput
-                value={formData.paymentDate}
-                onChangeText={(value) =>
-                  handleInputChange('paymentDate', value)
-                }
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.subtext}
-                style={[
-                  styles.textInput,
-                  { color: colors.text, borderColor: colors.border },
-                ]}
-              />
+              <TouchableOpacity
+                style={[styles.dateButton, { borderColor: colors.border }]}
+                onPress={() => setShowPaymentDatePicker(true)}
+                disabled={loading}
+              >
+                <Text style={[styles.dateText, { color: colors.text }]}>
+                  {formatDate(paymentDate)}
+                </Text>
+              </TouchableOpacity>
             </View>
+
+            {showPaymentDatePicker && (
+              <DateTimePicker
+                testID="paymentDateTimePicker"
+                value={paymentDate}
+                mode="date"
+                is24Hour={true}
+                display="default"
+                onChange={onPaymentDateChange}
+              />
+            )}
 
             {/* Payment Method */}
             <View style={styles.fieldContainer}>
@@ -347,34 +374,54 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
               <Text style={[styles.fieldLabel, { color: colors.text }]}>
                 Period Start Date *
               </Text>
-              <TextInput
-                value={formData.startDate}
-                onChangeText={(value) => handleInputChange('startDate', value)}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.subtext}
-                style={[
-                  styles.textInput,
-                  { color: colors.text, borderColor: colors.border },
-                ]}
-              />
+              <TouchableOpacity
+                style={[styles.dateButton, { borderColor: colors.border }]}
+                onPress={() => setShowStartDatePicker(true)}
+                disabled={loading}
+              >
+                <Text style={[styles.dateText, { color: colors.text }]}>
+                  {formatDate(startDate)}
+                </Text>
+              </TouchableOpacity>
             </View>
+
+            {showStartDatePicker && (
+              <DateTimePicker
+                testID="startDateTimePicker"
+                value={startDate}
+                mode="date"
+                is24Hour={true}
+                display="default"
+                onChange={onStartDateChange}
+              />
+            )}
 
             {/* End Date */}
             <View style={styles.fieldContainer}>
               <Text style={[styles.fieldLabel, { color: colors.text }]}>
                 Period End Date *
               </Text>
-              <TextInput
-                value={formData.endDate}
-                onChangeText={(value) => handleInputChange('endDate', value)}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.subtext}
-                style={[
-                  styles.textInput,
-                  { color: colors.text, borderColor: colors.border },
-                ]}
-              />
+              <TouchableOpacity
+                style={[styles.dateButton, { borderColor: colors.border }]}
+                onPress={() => setShowEndDatePicker(true)}
+                disabled={loading}
+              >
+                <Text style={[styles.dateText, { color: colors.text }]}>
+                  {formatDate(endDate)}
+                </Text>
+              </TouchableOpacity>
             </View>
+
+            {showEndDatePicker && (
+              <DateTimePicker
+                testID="endDateTimePicker"
+                value={endDate}
+                mode="date"
+                is24Hour={true}
+                display="default"
+                onChange={onEndDateChange}
+              />
+            )}
 
             {/* Status */}
             <View style={styles.fieldContainer}>
@@ -633,6 +680,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlignVertical: 'top',
     minHeight: 80,
+  },
+  dateButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: Platform.OS === 'ios' ? 12 : 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateText: {
+    fontSize: 16,
   },
   radioContainer: {
     flexDirection: 'row',

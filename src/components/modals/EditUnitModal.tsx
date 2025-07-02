@@ -17,7 +17,7 @@ interface Props {
   visible: boolean;
   unit: UnitData;
   onClose: () => void;
-  onSaveSuccess: (updatedUnit: UnitData) => void; // <-- Pass updated unit
+  onSaveSuccess: (updatedUnit: UnitData) => void;
 }
 
 const EditUnitModal: React.FC<Props> = ({
@@ -51,8 +51,8 @@ const EditUnitModal: React.FC<Props> = ({
     const res = await patch(`/storage-units/${unit.id}`, payload);
 
     if (res?.status === 'success') {
-      onClose(); // Close modal
-      onSaveSuccess(res.data); // ✅ Pass updated unit back to parent
+      onClose();
+      onSaveSuccess(res.data); 
     }
   };
 
