@@ -62,6 +62,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
+    zIndex:999
   },
   title: {
     fontWeight: 'bold',

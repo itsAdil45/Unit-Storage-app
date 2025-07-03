@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, FlatList } from 'react-native';
-import UnitList from '../components/UnitList';
-import UnitCard from '../components/UnitCard';
+import UnitList from '../components/Lists/UnitList';
+import UnitStatsCards from '../components/UnitStatsCards';
 import { useGet } from '../hooks/useGet';
 
 export default function Units() {
@@ -77,7 +77,7 @@ export default function Units() {
             horizontal
             keyExtractor={(item) => item.title}
             renderItem={({ item }) => (
-              <UnitCard
+              <UnitStatsCards
                 label={item.title}
                 value={item.value}
                 iconColor={item.iconColor}

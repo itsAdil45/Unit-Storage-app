@@ -17,7 +17,7 @@ import { lightColors, darkColors } from '../../constants/color';
 import EditUnitModal from './EditUnitModal';
 import { useGet } from '../../hooks/useGet';
 import { useDelete } from '../../hooks/useDelete';
-import SingleUnit from '../SingleUnit';
+import ModalUnitItem from '../Items/ModalUnitItem';
 
 interface Props {
   visible: boolean;
@@ -105,7 +105,7 @@ const UnitListModal: React.FC<Props> = ({ visible, onClose, selectedDate }) => {
   };
 
   const renderUnitItem = ({ item }: { item: UnitData }) => (
-    <SingleUnit
+    <ModalUnitItem
       item={item}
       removingId={removingId}
       theme={theme}

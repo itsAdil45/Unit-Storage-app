@@ -4,41 +4,22 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  StyleSheet,
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
-import { Swipeable } from 'react-native-gesture-handler';
-import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { useTheme } from '@react-navigation/native';
-import { lightColors, darkColors } from '../constants/color';
-import { UnitData } from '../types/Types';
-import { warehouses } from '../Utils/Filters';
-import { useGet } from '../hooks/useGet';
-import { useDelete } from '../hooks/useDelete';
-import AnimatedDeleteWrapper, {
-  useAnimatedDelete,
-} from './Reusable/AnimatedDeleteWrapper';
-import EditUnitModal from './modals/EditUnitModal';
-import Pagination from './Reusable/Pagination';
-
-export type StorageUnit = {
-  id: number;
-  warehouseId: number;
-  warehouseName: string;
-  unitNumber: string;
-  size: number;
-  floor: string;
-  status: 'available' | 'maintenance';
-  pricePerDay: number | null;
-  totalSpaceOccupied: number;
-  bookings: any[]; 
-  percentage: number; 
-  customers: number; 
-};
-
+import { lightColors, darkColors } from '../../constants/color';
+import { UnitData } from '../../types/Types';
+import { warehouses } from '../../Utils/Filters';
+import { useGet } from '../../hooks/useGet';
+import { useDelete } from '../../hooks/useDelete';
+import { useAnimatedDelete } from '../Reusable/AnimatedDeleteWrapper';
+import EditUnitModal from '../modals/EditUnitModal';
+import Pagination from '../Reusable/Pagination';
+import UnitItem, { StorageUnit } from '../Items/UnitItem';
+import styles from './Styles/UnitList';
 type WarehouseGroup = {
   [warehouseName: string]: StorageUnit[];
 };
@@ -70,28 +51,23 @@ const UnitList = () => {
   const { removingId, handleDelete: baseHandleDelete } =
     useAnimatedDelete<StorageUnit>(deleteRequest, '/storage-units');
 
-  // useEffect(() => {
-  //   fetchAllUnits();
-  // }, []);
-
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedWarehouse]);
 
   useFocusEffect(
-  useCallback(() => {
-    fetchAllUnits();
-  }, [])
-);
+    useCallback(() => {
+      fetchAllUnits();
+    }, [])
+  );
+
   const fetchAllUnits = async () => {
     setLoading(true);
     try {
-      // Fetch all units at once - modify this endpoint as needed
-      const endpoint = `/storage-units?limit=1000`; // or `/storage-units?limit=1000` if you need to specify a large limit
+      const endpoint = `/storage-units?limit=1000`;
       const res = await get(endpoint);
 
       if (res?.status === 'success') {
-        // Process units directly from API response
         const processedUnits = res.data.units.map(
           (apiUnit: any): StorageUnit => {
             const totalBookings = apiUnit.bookings?.length || 0;
@@ -112,7 +88,6 @@ const UnitList = () => {
 
         setAllUnits(processedUnits);
 
-        // Group units by warehouse
         const grouped = groupUnitsByWarehouse(processedUnits);
         setWarehouseGroups(grouped);
       }
@@ -140,7 +115,6 @@ const UnitList = () => {
   };
 
   const { paginatedUnits, totalPages, totalUnits } = useMemo(() => {
-    // Get units based on selected warehouse
     let unitsToDisplay: StorageUnit[] = [];
 
     if (selectedWarehouse === 'All') {
@@ -149,7 +123,6 @@ const UnitList = () => {
       unitsToDisplay = warehouseGroups[selectedWarehouse] || [];
     }
 
-    // Sort the units
     const sorted = [...unitsToDisplay].sort((a, b) => {
       let aValue: any = a[sortBy];
       let bValue: any = b[sortBy];
@@ -161,7 +134,6 @@ const UnitList = () => {
       }
     });
 
-    // Calculate pagination
     const total = sorted.length;
     const pages = Math.ceil(total / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -182,13 +154,6 @@ const UnitList = () => {
     currentPage,
     itemsPerPage,
   ]);
-
-  const getStatusColor = (percentage: number) => {
-    if (percentage >= 100) return '#FF3B30'; 
-    if (percentage >= 80) return '#FF9500'; 
-    if (percentage >= 50) return '#FFCC00';
-    return '#34C759';
-  };
 
   const handleEdit = (unit: StorageUnit) => {
     const unitData: UnitData = {
@@ -220,7 +185,6 @@ const UnitList = () => {
       ),
     );
 
-    // Update warehouse groups
     setWarehouseGroups((prev) => {
       const newGroups = { ...prev };
       Object.keys(newGroups).forEach((warehouseName) => {
@@ -270,7 +234,6 @@ const UnitList = () => {
     isSelected: boolean,
     onPress: () => void,
   ) => {
-    // Show count for each warehouse
     const count =
       label === 'All' ? allUnits.length : warehouseGroups[label]?.length || 0;
 
@@ -308,30 +271,10 @@ const UnitList = () => {
     await baseHandleDelete(id, setAllUnits);
     handleUnitDelete(id);
   };
-  const renderRightActions = (item: StorageUnit, close: () => void) => (
-    <View
-      style={[styles.actionsContainer, { backgroundColor: colors.background }]}
-    >
-      <TouchableOpacity
-        style={[styles.actionButton, styles.editButton]}
-        onPress={() => {
-          close();
-          handleEdit(item);
-        }}
-      >
-        <Text style={styles.actionText}>Edit</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.actionButton, styles.deleteButton]}
-        onPress={() => {
-          close();
-          handleDelete(item.id); // Remove the second parameter
-        }}
-      >
-        <Text style={styles.actionText}>Delete</Text>
-      </TouchableOpacity>
-    </View>
-  );
+
+  const handleUnitPress = (unit: StorageUnit) => {
+    setSelectedUnit(selectedUnit?.id === unit.id ? null : unit);
+  };
 
   const renderStorageUnit = ({
     item,
@@ -339,126 +282,27 @@ const UnitList = () => {
   }: {
     item: StorageUnit;
     index: number;
-  }) => {
-    let swipeableRow: Swipeable | null;
-    const closeSwipe = () => swipeableRow?.close();
-
-    return (
-      <AnimatedDeleteWrapper
-        itemId={item.id}
-        removingId={removingId}
-        onDelete={(id) => handleDelete(id)}
-        deleteTitle="Delete Storage Unit"
-        itemName={item.unitNumber}
-      >
-        <Swipeable
-          ref={(ref) => {
-            swipeableRow = ref;
-          }}
-          renderRightActions={() => renderRightActions(item, closeSwipe)}
-          overshootRight={false}
-        >
-          <Animated.View
-            entering={FadeInRight.delay(index * 50)}
-            exiting={FadeOutLeft}
-          >
-            <TouchableOpacity
-              onPress={() =>
-                setSelectedUnit(selectedUnit?.id === item.id ? null : item)
-              }
-              style={[
-                styles.unitCard,
-                {
-                  backgroundColor: colors.card,
-                  borderColor:
-                    selectedUnit?.id === item.id
-                      ? colors.primary
-                      : 'transparent',
-                  shadowColor: dark ? '#000' : '#000',
-                },
-                selectedUnit?.id === item.id && styles.unitCardSelected,
-              ]}
-            >
-              <View style={styles.unitCardLeft}>
-                <View
-                  style={[
-                    styles.statusIndicator,
-                    { backgroundColor: getStatusColor(item.percentage) },
-                  ]}
-                />
-                <View style={styles.unitInfo}>
-                  <Text style={[styles.unitId, { color: colors.text }]}>
-                    {item.unitNumber}
-                  </Text>
-                  <Text
-                    style={[styles.unitLocation, { color: colors.subtext }]}
-                  >
-                    {item.warehouseName} • {item.floor} Floor • {item.size} sqft
-                  </Text>
-                  <View style={styles.customerInfo}>
-                    <Text style={styles.customerIcon}>👥</Text>
-                    <Text
-                      style={[styles.customerText, { color: colors.subtext }]}
-                    >
-                      {item.customers} Customer{item.customers !== 1 ? 's' : ''}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.unitCardRight}>
-                <View style={styles.percentageContainer}>
-                  <Text
-                    style={[
-                      styles.percentageText,
-                      { color: getStatusColor(item.percentage) },
-                    ]}
-                  >
-                    {item.percentage}%
-                  </Text>
-                  <Text
-                    style={[
-                      styles.statusText,
-                    ]}
-                  >
-                    {(item.status).toUpperCase()}
-                  </Text>
-                </View>
-                <View style={styles.progressBarContainer}>
-                  <View
-                    style={[
-                      styles.progressBarBackground,
-                      { backgroundColor: colors.border },
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.progressBarFill,
-                        {
-                          width: `${item.percentage}%`,
-                          backgroundColor: getStatusColor(item.percentage),
-                        },
-                      ]}
-                    />
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </Animated.View>
-        </Swipeable>
-      </AnimatedDeleteWrapper>
-    );
-  };
+  }) => (
+    <UnitItem
+      item={item}
+      index={index}
+      colors={colors}
+      dark={dark}
+      selectedUnit={selectedUnit}
+      removingId={removingId}
+      onUnitPress={handleUnitPress}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+    />
+  );
 
   const renderHeader = () => (
     <View style={[styles.headerContainer, { backgroundColor: colors.card }]}>
-      {/* Warehouse Filter */}
       <View style={styles.filterContainer}>
         <Text style={[styles.filterSectionTitle, { color: colors.text }]}>
           Warehouse
         </Text>
         <View style={styles.filterChipsContainer}>
-          {/* Add 'All' option */}
           {renderFilterChip('All', selectedWarehouse === 'All', () =>
             setSelectedWarehouse('All'),
           )}
@@ -470,7 +314,6 @@ const UnitList = () => {
         </View>
       </View>
 
-      {/* Advanced Filters Toggle */}
       <TouchableOpacity
         onPress={() => setShowFilters(!showFilters)}
         style={styles.advancedFiltersToggle}
@@ -480,7 +323,6 @@ const UnitList = () => {
         </Text>
       </TouchableOpacity>
 
-      {/* Sort Options */}
       {showFilters && (
         <View style={styles.advancedFiltersContainer}>
           <View style={styles.filterRow}>
@@ -591,7 +433,6 @@ const UnitList = () => {
         </View>
       )}
 
-      {/* Results Summary */}
       <View style={[styles.resultsSummary, { borderTopColor: colors.border }]}>
         <Text style={[styles.resultsText, { color: colors.subtext }]}>
           {totalUnits} total units • Page {currentPage} of {totalPages}
@@ -681,7 +522,6 @@ const UnitList = () => {
         </View>
       )}
 
-      {/* Edit Modal */}
       {editingUnit && (
         <EditUnitModal
           visible={true}
@@ -697,259 +537,5 @@ const UnitList = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  appHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  appTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  flatList: {
-    flex: 1,
-  },
-  flatListContent: {
-    paddingBottom: 20,
-  },
-  headerContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-    marginBottom: 8,
-  },
-  filterContainer: {
-    marginBottom: 16,
-  },
-  filterSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  filterChipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  filterChipText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  advancedFiltersToggle: {
-    paddingVertical: 8,
-    marginBottom: 8,
-  },
-  advancedFiltersText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  advancedFiltersContainer: {
-    marginBottom: 16,
-  },
-  filterRow: {
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  filterLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    flex: 1,
-  },
-  sortContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    flex: 2,
-  },
-  sortButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  sortButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  sortDirectionButton: {
-    width: 50,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sortDirectionText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  resultsSummary: {
-    paddingTop: 8,
-    borderTopWidth: 1,
-  },
-  resultsText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  unitCard: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderRadius: 12,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    borderWidth: 2,
-  },
-  unitCardSelected: {
-    shadowOpacity: 0.2,
-  },
-  unitCardLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusIndicator: {
-    width: 8,
-    height: 40,
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  unitInfo: {
-    flex: 1,
-  },
-  unitId: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  unitLocation: {
-    fontSize: 14,
-    marginBottom: 6,
-  },
-  customerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  customerIcon: {
-    fontSize: 12,
-    marginRight: 4,
-  },
-  customerText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  unitCardRight: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    minWidth: 80,
-  },
-  percentageContainer: {
-    alignItems: 'flex-end',
-    marginBottom: 8,
-  },
-  percentageText: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  progressBarContainer: {
-    width: 60,
-  },
-  progressBarBackground: {
-    height: 4,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  separator: {
-    height: 8,
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 40,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 10,
-  },
-  actionButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginHorizontal: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  editButton: {
-    backgroundColor: '#4CD964',
-  },
-  deleteButton: {
-    backgroundColor: '#FF3B30',
-  },
-  actionText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  initialLoadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingOverlay: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  loadingText: {
-    fontSize: 14,
-    marginLeft: 8,
-  },
-});
 
 export default UnitList;

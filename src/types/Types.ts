@@ -1,15 +1,15 @@
-export type StorageUnit = {
-  id: number; // Unit number (display ID)
-  dbId: number; // Database ID for operations
-  percentage: number; // Occupancy percentage
-  customers: number; // Number of customers
-  warehouse: string; // Warehouse name
-  floor: string; // Floor identifier
-  size: number; // Size in square feet
-  status: string; // Unit status (e.g., 'available', 'maintenance')
-  warehouseId: number; // Warehouse ID for operations
-  bookings: any[]; // Array of bookings (you may want to define a Booking type)
-};
+// export type StorageUnit = {
+//   id: number; // Unit number (display ID)
+//   dbId: number; // Database ID for operations
+//   percentage: number; // Occupancy percentage
+//   customers: number; // Number of customers
+//   warehouse: string; // Warehouse name
+//   floor: string; // Floor identifier
+//   size: number; // Size in square feet
+//   status: string; // Unit status (e.g., 'available', 'maintenance')
+//   warehouseId: number; // Warehouse ID for operations
+//   bookings: any[]; // Array of bookings (you may want to define a Booking type)
+// };
 
 // types/Unit.ts
 export interface UnitData {
@@ -24,11 +24,11 @@ export interface UnitData {
   totalSpaceOccupied: number;
 }
 
-export type Item = {
-  id: number;
-  percentage: number;
-  customers: number;
-};
+// export type Item = {
+//   id: number;
+//   percentage: number;
+//   customers: number;
+// };
 
 export type Props = {
   label: string;
@@ -38,7 +38,7 @@ export type Props = {
 };
 
 export type FilterType = 'All' | 'Active' | 'Inactive';
-export type SortType = 'name' | 'recent' | 'status';
+// export type SortType = 'name' | 'recent' | 'status';
 
 export interface PaymentOverviewData {
   overduePayments: number;
