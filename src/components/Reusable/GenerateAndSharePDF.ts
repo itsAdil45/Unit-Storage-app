@@ -27,7 +27,7 @@ export const generateAndSharePDF = <T>({
 
       try {
         const htmlContent = generateHTML(data);
-        const { uri } = await Print.printToFileAsync({ html: htmlContent, base64: false });
+        const { uri } = await Print.printToFileAsync({ html: htmlContent });
 
         if (await Sharing.isAvailableAsync()) {
           await Sharing.shareAsync(uri, {

@@ -14,7 +14,7 @@ import { CustomerReportData } from "../../../types/CustomerReport";
       day: 'numeric',
     });
   };
-  const generateCustomerPDFContent = (customers: CustomerReportData[]) => {
+  const generateCustomerPDFContent = (customers: CustomerReportData[] ) => {
     const currentDate = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',

@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Dashboard from '../screens/Dashboard';
 import Units from '../screens/Units';
-import About from '../screens/About';
+import Reports from '../screens/Reports';
 import { MaterialIcons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 import {
@@ -71,8 +71,8 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="About"
-        component={About}
+        name="Reports"
+        component={Reports}
         options={{
           tabBarIcon: ({ size }) => (
             <MaterialIcons name="info" color={iconColor} size={size} />
