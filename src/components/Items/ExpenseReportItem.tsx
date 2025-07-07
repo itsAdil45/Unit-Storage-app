@@ -1,19 +1,16 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import styles from '../Reports/Styles/CustomerReport';
-import { RevenueReportData } from '../../types/RevenueReport'; 
+import { ExpenseReportData } from '../../types/ExpenseReport';
 import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
 
 interface Props {
-  item: RevenueReportData;
-  formatCurrency: (amount: number | string) => string;
+  item: ExpenseReportData;
 }
 
-const RevenueReportItem: React.FC<Props> = ({
+const ExpenseReportItem: React.FC<Props> = ({
   item,
-  formatCurrency,
-
 }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
@@ -21,27 +18,7 @@ const RevenueReportItem: React.FC<Props> = ({
     //   const isPaymentExpanded = expandedPayments[paymentKey];
 
       
-  const renderCustomerDetailItem = () => {
-    return item.customerDetails.map((customer, key) => {
-return(
-    <View key={key} style={[styles.paymentItem, { backgroundColor: colors.background }]}>
-      <View style={styles.paymentHeader}>
-        <Text style={[styles.paymentId, { color: colors.primary }]}>
-        {customer.customerName}
-        </Text>
-      </View>
-      <View style={styles.paymentDetails}>
-        <Text style={[styles.paymentDetail, { color: colors.text }]}>
-          Amount: {formatCurrency(customer.amount)}
-        </Text>
-        <Text style={[styles.paymentDetail, { color: colors.subtext }]}>
-         Unit # {customer.unitNumber}
-        </Text>
-      </View>
-    </View>
-     ) } )
-
-}    
+  
 
   return (
     <View style={[styles.customerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -57,28 +34,21 @@ return(
       <View style={styles.summaryGrid}>
         <View style={styles.summaryItem}>
           <Text style={[styles.summaryValue, { color: colors.primary }]}>
-            {item.totalRevenue}
+            {item.total}
           </Text>
           <Text style={[styles.summaryLabel, { color: colors.subtext }]}>
-            Total Revenue
+            Amount
           </Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={[styles.summaryValue, { color: '#4CAF50' }]}>
-            {item.totalExpenses}
+            {item.description}
           </Text>
           <Text style={[styles.summaryLabel, { color: colors.subtext }]}>
-            Total Expenses
+            Description
           </Text>
         </View>
-        <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: '#2196F3' }]}>
-            {item.netRevenue}
-          </Text>
-          <Text style={[styles.summaryLabel, { color: colors.subtext }]}>
-            Net Revenue
-          </Text>
-        </View>
+
       </View>
 
       {/* <View style={styles.paymentSummary}>
@@ -110,13 +80,12 @@ return(
 
       <View style={styles.bookingsList}>
         <Text style={[styles.bookingsTitle, { color: colors.text }]}>
-          Customer Details ({item.customerDetails.length})
+          Expense Details ({item.expenseType})
         </Text>
-            {renderCustomerDetailItem()}
 
       </View>
     </View>
   );
 };
 
-export default RevenueReportItem;
+export default ExpenseReportItem;

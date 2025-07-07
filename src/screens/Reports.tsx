@@ -11,7 +11,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import CustomerReport from '../components/Reports/CustomerReport';
 import RevenueReport from '../components/Reports/RevenueReport';
-
+import ExpenseReport from '../components/Reports/ExpenseReport';
+import OccupancyReport from '../components/Reports/OccupancyReport';
 const { width } = Dimensions.get('window');
 
 interface ReportType {
@@ -38,13 +39,21 @@ const reportTypes: ReportType[] = [
     component: RevenueReport,
   },
   // Add more report types here as needed
-  // {
-  //   id: 'inventory',
-  //   label: 'Inventory Report',
-  //   icon: 'cube-outline',
-  //   description: 'Track warehouse inventory and space utilization',
-  //   component: InventoryReport,
-  // },
+  {
+    id: 'Expense',
+    label: 'Expense Report',
+    icon: 'cube-outline',
+    description: 'Track Expense utilization',
+    component: ExpenseReport,
+  },
+    {
+    id: 'occupancy',
+    label: 'occupancy Report',
+    icon: 'people-outline',
+    description: 'View occupancy bookings and unit details',
+    component: OccupancyReport,
+  },
+  
 ];
 
 export default function Reports() {

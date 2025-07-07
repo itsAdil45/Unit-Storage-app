@@ -15,18 +15,19 @@ import { useGet } from '../../hooks/useGet';
 import { lightColors, darkColors } from '../../constants/color';
 import Pagination from '../Reusable/Pagination';
 import styles from './Styles/CustomerReport';
-import generateRevenueReportContent from './PdfStructures/revenueReportContent';
-import { generateRevenueExcelWorkbook } from './ExcelStructures/revenueExcelWorkbook';
+
+import { generateExpenseExcelWorkbook } from './ExcelStructures/expenseExcelWorkbook';
+import generateExpenseReportContent from './PdfStructures/expenseReportContent';
 import { generateAndSharePDF } from '../Reusable/GenerateAndSharePDF';
 import { generateAndShareExcel } from '../Reusable/GenerateAndShareExcel';
-import { RevenueReportData, ApiResponse } from '../../types/RevenueReport';
-import RevenueReportItem from '../Items/RevenueReportItem';
+import { ExpenseReportData, ApiResponse } from '../../types/ExpenseReport';
+import ExpenseReportItem from '../Items/ExpenseReportItem';
 
-const RevenueReport: React.FC = () => {
+const ExpenseReport: React.FC = () => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
 
-  const [reportData, setReportData] = useState<RevenueReportData[]>([]);
+  const [reportData, setReportData] = useState<ExpenseReportData[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [page, setPage] = useState(1);
@@ -46,7 +47,7 @@ const RevenueReport: React.FC = () => {
   const fetchReportData = async () => {
     setLoading(true);
     try {
-      const res: ApiResponse = await get('/reports/revenue');
+      const res: ApiResponse = await get('/reports/expense');
       if (res?.status === 'success') {
         setReportData(res.data.reportDataResult || []);
       }
@@ -78,7 +79,7 @@ const RevenueReport: React.FC = () => {
   const handleGeneratePDF = () => {
     generateAndSharePDF({
       data: reportData,
-      generateHTML: generateRevenueReportContent,
+      generateHTML: generateExpenseReportContent,
       setLoading: setGeneratingPDF,
       title: 'Customer Report',
     });
@@ -86,7 +87,7 @@ const RevenueReport: React.FC = () => {
 
   const handleGenerateExcel = () => {
     generateAndShareExcel({
-      generateWorkbook: () => generateRevenueExcelWorkbook(reportData),
+      generateWorkbook: () => generateExpenseExcelWorkbook(reportData),
       setLoading: setGeneratingExcel,
       title: 'Customer Report Excel',
       filenamePrefix: 'customer_report',
@@ -168,9 +169,8 @@ const RevenueReport: React.FC = () => {
       <FlatList
         data={displayData}
         renderItem={({ item }) => (
-          <RevenueReportItem
+          <ExpenseReportItem
             item={item}
-            formatCurrency={formatCurrency}
           />
         )}
         keyExtractor={(item, index) => `${index}}`}
@@ -202,4 +202,4 @@ const RevenueReport: React.FC = () => {
   );
 };
 
-export default RevenueReport;
+export default ExpenseReport

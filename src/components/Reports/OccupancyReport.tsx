@@ -15,24 +15,26 @@ import { useGet } from '../../hooks/useGet';
 import { lightColors, darkColors } from '../../constants/color';
 import Pagination from '../Reusable/Pagination';
 import styles from './Styles/CustomerReport';
-import generateRevenueReportContent from './PdfStructures/revenueReportContent';
-import { generateRevenueExcelWorkbook } from './ExcelStructures/revenueExcelWorkbook';
+import OccupancyReportItem from '../Items/OccupancyReportItem';
+import generateOccupancyPDFContent from './PdfStructures/OccupancyReportContent';
 import { generateAndSharePDF } from '../Reusable/GenerateAndSharePDF';
 import { generateAndShareExcel } from '../Reusable/GenerateAndShareExcel';
-import { RevenueReportData, ApiResponse } from '../../types/RevenueReport';
-import RevenueReportItem from '../Items/RevenueReportItem';
+import { generateOccupancyExcelWorkbook } from './ExcelStructures/occupancyExcelWorkbook';
+import { OccupancyReportData, OccupancyReportResponse } from '../../types/OccupancyReport';
 
-const RevenueReport: React.FC = () => {
+const OccupancyReport: React.FC = () => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
 
-  const [reportData, setReportData] = useState<RevenueReportData[]>([]);
+  const [reportData, setReportData] = useState<OccupancyReportData[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [page, setPage] = useState(1);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [generatingExcel, setGeneratingExcel] = useState(false);
-
+  const [expandedUnits, setExpandedUnits] = useState<{ [key: string]: boolean }>({});
+  const [expandedBookings, setExpandedBookings] = useState<{ [key: string]: boolean }>({});
+  const [expandedPayments, setExpandedPayments] = useState<{ [key: string]: boolean }>({});
 
   const { get } = useGet();
   const itemsPerPage = 5;
@@ -46,13 +48,13 @@ const RevenueReport: React.FC = () => {
   const fetchReportData = async () => {
     setLoading(true);
     try {
-      const res: ApiResponse = await get('/reports/revenue');
+      const res: OccupancyReportResponse = await get('/reports/occupancy');
       if (res?.status === 'success') {
-        setReportData(res.data.reportDataResult || []);
+        setReportData(res.data.reportData || []);
       }
     } catch (error) {
-      console.error('Error fetching customer report:', error);
-      Alert.alert('Error', 'Failed to fetch customer report');
+      console.error('Error fetching occupancy report:', error);
+      Alert.alert('Error', 'Failed to fetch occupancy report');
       setReportData([]);
     }
     setLoading(false);
@@ -74,31 +76,69 @@ const RevenueReport: React.FC = () => {
     return `AED ${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
   };
 
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return '#4CAF50';
+      case 'completed': return '#2196F3';
+      case 'cancelled': return '#FF5722';
+      case 'paid': return '#4CAF50';
+      case 'pending': return '#FF9800';
+      case 'available': return '#4CAF50';
+      case 'occupied': return '#2196F3';
+      case 'maintenance': return '#FF9800';
+      default: return colors.subtext;
+    }
+  };
+
+  const getPaymentMethodDisplay = (method: string | null) =>
+    method ? method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified';
+
+  const toggleUnitExpansion = (unitId: number) => {
+    const key = `${unitId}`;
+    setExpandedUnits(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const toggleBookingExpansion = (unitId: number, bookingId: number) => {
+    const key = `${unitId}-${bookingId}`;
+    setExpandedBookings(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const togglePaymentExpansion = (unitId: number, bookingId: number) => {
+    const key = `${unitId}-${bookingId}-payments`;
+    setExpandedPayments(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const handleGeneratePDF = () => {
     generateAndSharePDF({
       data: reportData,
-      generateHTML: generateRevenueReportContent,
+      generateHTML: generateOccupancyPDFContent,
       setLoading: setGeneratingPDF,
-      title: 'Customer Report',
+      title: 'Occupancy Report',
     });
   };
 
   const handleGenerateExcel = () => {
     generateAndShareExcel({
-      generateWorkbook: () => generateRevenueExcelWorkbook(reportData),
+      generateWorkbook: () => generateOccupancyExcelWorkbook(reportData),
       setLoading: setGeneratingExcel,
-      title: 'Customer Report Excel',
-      filenamePrefix: 'customer_report',
+      title: 'Occupancy Report Excel',
+      filenamePrefix: 'occupancy_report',
     });
   };
 
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
-      <MaterialIcons name="assessment" size={64} color={colors.subtext} />
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>No customer reports available</Text>
+      <MaterialIcons name="domain" size={64} color={colors.subtext} />
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>No occupancy reports available</Text>
       <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
-        Customer reports will appear here once data is available
+        Occupancy reports will appear here once data is available
       </Text>
     </View>
   );
@@ -131,12 +171,29 @@ const RevenueReport: React.FC = () => {
     </Modal>
   );
 
+  // Calculate overall statistics from all report data
+  const overallStats = useMemo(() => {
+    if (reportData.length === 0) return null;
+    
+    const totalUnits = reportData.reduce((sum, report) => sum + report.totalUnits, 0);
+    const totalOccupied = reportData.reduce((sum, report) => sum + report.occupiedUnits, 0);
+    const totalAvailable = reportData.reduce((sum, report) => sum + report.availableUnits, 0);
+    const avgOccupancyRate = reportData.reduce((sum, report) => sum + report.occupancyRate, 0) / reportData.length;
+    
+    return {
+      totalUnits,
+      totalOccupied,
+      totalAvailable,
+      avgOccupancyRate
+    };
+  }, [reportData]);
+
   return initialLoad ? (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
       <View style={styles.initialLoadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.text }]}>Loading Revenue reports...</Text>
+        <Text style={[styles.loadingText, { color: colors.text }]}>Loading occupancy reports...</Text>
       </View>
     </View>
   ) : (
@@ -144,7 +201,7 @@ const RevenueReport: React.FC = () => {
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
 
       <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Revenue Reports</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Occupancy Reports</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity
             style={[styles.exportButton, { backgroundColor: '#4CAF50' }]}
@@ -165,15 +222,62 @@ const RevenueReport: React.FC = () => {
         </View>
       </View>
 
+      {/* Overall Statistics Summary */}
+      {overallStats && (
+        <View style={[styles.customerCard, { backgroundColor: colors.card, borderColor: colors.border, margin: 16 }]}>
+          <View style={styles.customerHeader}>
+            <Text style={[styles.customerName, { color: colors.text }]}>Overall Statistics</Text>
+            <Text style={[styles.customerInfo, { color: colors.subtext }]}>
+              Average Occupancy Rate: {overallStats.avgOccupancyRate.toFixed(2)}%
+            </Text>
+          </View>
+          <View style={styles.summaryGrid}>
+            <View style={styles.summaryItem}>
+              <Text style={[styles.summaryValue, { color: colors.primary }]}>
+                {overallStats.totalUnits}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: colors.subtext }]}>
+                Total Units
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={[styles.summaryValue, { color: '#4CAF50' }]}>
+                {overallStats.totalOccupied}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: colors.subtext }]}>
+                Occupied
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={[styles.summaryValue, { color: '#FF9800' }]}>
+                {overallStats.totalAvailable}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: colors.subtext }]}>
+                Available
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+
       <FlatList
         data={displayData}
         renderItem={({ item }) => (
-          <RevenueReportItem
+          <OccupancyReportItem
             item={item}
             formatCurrency={formatCurrency}
+            formatDate={formatDate}
+            getStatusColor={getStatusColor}
+            getPaymentMethodDisplay={getPaymentMethodDisplay}
+            expandedUnits={expandedUnits}
+            expandedBookings={expandedBookings}
+            expandedPayments={expandedPayments}
+            toggleUnitExpansion={toggleUnitExpansion}
+            toggleBookingExpansion={toggleBookingExpansion}
+            togglePaymentExpansion={togglePaymentExpansion}
           />
         )}
-        keyExtractor={(item, index) => `${index}}`}
+        keyExtractor={(item, index) => `${item.date}-${index}`}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
@@ -202,4 +306,4 @@ const RevenueReport: React.FC = () => {
   );
 };
 
-export default RevenueReport;
+export default OccupancyReport;
