@@ -17,6 +17,7 @@ import { Booking, Payment } from '../../types/Bookings';
 import { usePostFormData } from '../../hooks/usePostFormData';
 import { usePatchFormData } from '../../hooks/usePatchFormData';
 import * as DocumentPicker from 'expo-document-picker';
+import Toast from 'react-native-toast-message';
 
 interface AddEditPaymentModalProps {
   visible: boolean;
@@ -218,23 +219,27 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
       }
 
       if (response?.status === 'success') {
-        Alert.alert(
-          'Success',
-          isEditMode
-            ? 'Payment updated successfully'
-            : 'Payment record added successfully',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                onSuccess(response.data);
-                onClose();
-              },
-            },
-          ],
-        );
+                {onClose()}
+        { isEditMode?               
+          Toast.show({
+                type: 'success',
+                text1: 'Updated',
+                text2: `Payment updated successfully`,
+              }):              
+              Toast.show({
+                type: 'success',
+                text1: 'Added',
+                text2: `Payment added successfully`,
+              });
+
+        }
       } else {
-        Alert.alert('Error', response?.message || 'Failed to save payment');
+        {onClose()}
+              Toast.show({
+                type: 'error',
+                text1: 'Failed',
+                text2: `${response?.message}`,
+              });
       }
     } catch (error) {
       console.error('Error saving payment:', error);

@@ -100,7 +100,7 @@ const UnitItem: React.FC<UnitItemProps> = ({
         overshootRight={false}
       >
         <Animated.View
-          entering={FadeInRight.delay(index * 50)}
+          // entering={FadeInRight.delay(index * 50)}
           exiting={FadeOutLeft}
         >
           <TouchableOpacity

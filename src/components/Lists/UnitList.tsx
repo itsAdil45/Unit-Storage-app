@@ -17,9 +17,10 @@ import { useGet } from '../../hooks/useGet';
 import { useDelete } from '../../hooks/useDelete';
 import { useAnimatedDelete } from '../Reusable/AnimatedDeleteWrapper';
 import EditUnitModal from '../modals/EditUnitModal';
-import Pagination from '../Reusable/Pagination';
+import LoadMorePagination from '../Reusable/LoadMorePagination'; // Add this import
 import UnitItem, { StorageUnit } from '../Items/UnitItem';
 import styles from './Styles/UnitList';
+
 type WarehouseGroup = {
   [warehouseName: string]: StorageUnit[];
 };
@@ -36,10 +37,12 @@ const UnitList = () => {
   const [allUnits, setAllUnits] = useState<StorageUnit[]>([]);
   const [warehouseGroups, setWarehouseGroups] = useState<WarehouseGroup>({});
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [editingUnit, setEditingUnit] = useState<UnitData | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [displayedUnits, setDisplayedUnits] = useState<StorageUnit[]>([]);
   const itemsPerPage = 20;
 
   const { dark } = useTheme();
@@ -51,8 +54,10 @@ const UnitList = () => {
   const { removingId, handleDelete: baseHandleDelete } =
     useAnimatedDelete<StorageUnit>(deleteRequest, '/storage-units');
 
+  // Reset pagination when warehouse changes
   useEffect(() => {
     setCurrentPage(1);
+    setDisplayedUnits([]);
   }, [selectedWarehouse]);
 
   useFocusEffect(
@@ -114,7 +119,7 @@ const UnitList = () => {
     }, {} as WarehouseGroup);
   };
 
-  const { paginatedUnits, totalPages, totalUnits } = useMemo(() => {
+  const { sortedUnits, totalUnits, totalPages } = useMemo(() => {
     let unitsToDisplay: StorageUnit[] = [];
 
     if (selectedWarehouse === 'All') {
@@ -136,14 +141,11 @@ const UnitList = () => {
 
     const total = sorted.length;
     const pages = Math.ceil(total / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginated = sorted.slice(startIndex, endIndex);
 
     return {
-      paginatedUnits: paginated,
-      totalPages: pages,
+      sortedUnits: sorted,
       totalUnits: total,
+      totalPages: pages,
     };
   }, [
     allUnits,
@@ -151,9 +153,37 @@ const UnitList = () => {
     selectedWarehouse,
     sortBy,
     sortDirection,
-    currentPage,
     itemsPerPage,
   ]);
+
+  // Update displayed units when sorted units change
+  useEffect(() => {
+    if (sortedUnits.length > 0) {
+      const initialUnits = sortedUnits.slice(0, itemsPerPage);
+      setDisplayedUnits(initialUnits);
+      setCurrentPage(1);
+    } else {
+      setDisplayedUnits([]);
+    }
+  }, [sortedUnits]);
+
+  const handleLoadMore = useCallback(() => {
+    if (currentPage >= totalPages || loadingMore) return;
+
+    setLoadingMore(true);
+    
+    // Simulate loading delay (remove in production if not needed)
+    setTimeout(() => {
+      const nextPage = currentPage + 1;
+      const startIndex = (nextPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const newUnits = sortedUnits.slice(startIndex, endIndex);
+      
+      setDisplayedUnits(prevUnits => [...prevUnits, ...newUnits]);
+      setCurrentPage(nextPage);
+      setLoadingMore(false);
+    }, 50);
+  }, [currentPage, totalPages, loadingMore, sortedUnits, itemsPerPage]);
 
   const handleEdit = (unit: StorageUnit) => {
     const unitData: UnitData = {
@@ -202,10 +232,26 @@ const UnitList = () => {
       });
       return newGroups;
     });
+
+    // Update displayed units as well
+    setDisplayedUnits((prev) =>
+      prev.map((unit) =>
+        unit.id === updatedUnit.id
+          ? {
+              ...unit,
+              unitNumber: updatedUnit.unitNumber,
+              size: updatedUnit.size,
+              floor: updatedUnit.floor,
+              status: updatedUnit.status,
+            }
+          : unit,
+      ),
+    );
   };
 
   const handleUnitDelete = (unitId: number) => {
     setAllUnits((prev) => prev.filter((unit) => unit.id !== unitId));
+    setDisplayedUnits((prev) => prev.filter((unit) => unit.id !== unitId));
     setWarehouseGroups((prev) => {
       const newGroups = { ...prev };
       Object.keys(newGroups).forEach((warehouseName) => {
@@ -215,18 +261,6 @@ const UnitList = () => {
       });
       return newGroups;
     });
-  };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
   };
 
   const renderFilterChip = (
@@ -435,7 +469,7 @@ const UnitList = () => {
 
       <View style={[styles.resultsSummary, { borderTopColor: colors.border }]}>
         <Text style={[styles.resultsText, { color: colors.subtext }]}>
-          {totalUnits} total units • Page {currentPage} of {totalPages}
+          {totalUnits} total units • Showing {displayedUnits.length} units
         </Text>
       </View>
     </View>
@@ -482,7 +516,7 @@ const UnitList = () => {
       </View>
 
       <FlatList
-        data={paginatedUnits}
+        data={displayedUnits}
         renderItem={renderStorageUnit}
         keyExtractor={(item) => item.id.toString()}
         ListHeaderComponent={renderHeader}
@@ -502,13 +536,16 @@ const UnitList = () => {
           </View>
         }
         ListFooterComponent={() => (
-          <Pagination
+          <LoadMorePagination
             currentPage={currentPage}
             totalPages={totalPages}
             loading={loading}
+            loadingMore={loadingMore}
             colors={colors}
-            onPreviousPage={handlePreviousPage}
-            onNextPage={handleNextPage}
+            onLoadMore={handleLoadMore}
+            showItemCount={true}
+            totalItems={totalUnits}
+            currentItemCount={displayedUnits.length}
           />
         )}
       />
@@ -536,6 +573,5 @@ const UnitList = () => {
     </SafeAreaView>
   );
 };
-
 
 export default UnitList;

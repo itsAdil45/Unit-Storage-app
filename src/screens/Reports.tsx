@@ -13,6 +13,9 @@ import CustomerReport from '../components/Reports/CustomerReport';
 import RevenueReport from '../components/Reports/RevenueReport';
 import ExpenseReport from '../components/Reports/ExpenseReport';
 import OccupancyReport from '../components/Reports/OccupancyReport';
+import UnitsReport from '../components/Reports/UnitsReport';
+import { useTheme } from '@react-navigation/native';
+import { lightColors, darkColors } from '../constants/color';
 const { width } = Dimensions.get('window');
 
 interface ReportType {
@@ -27,7 +30,7 @@ const reportTypes: ReportType[] = [
   {
     id: 'customer',
     label: 'Customer Report',
-    icon: 'people-outline',
+    icon: 'people-outline', 
     description: 'View customer bookings and payment details',
     component: CustomerReport,
   },
@@ -38,28 +41,35 @@ const reportTypes: ReportType[] = [
     description: 'Analyze revenue and financial performance',
     component: RevenueReport,
   },
-  // Add more report types here as needed
   {
-    id: 'Expense',
+    id: 'expense',
     label: 'Expense Report',
-    icon: 'cube-outline',
-    description: 'Track Expense utilization',
+    icon: 'cash-outline', 
+    description: 'Monitor business expenses and spending trends',
     component: ExpenseReport,
   },
-    {
+  {
     id: 'occupancy',
-    label: 'occupancy Report',
-    icon: 'people-outline',
-    description: 'View occupancy bookings and unit details',
+    label: 'Occupancy Report',
+    icon: 'business-outline',
+    description: 'Track occupancy rates across units and floors',
     component: OccupancyReport,
   },
-  
+  {
+    id: 'units',
+    label: 'Units Report',
+    icon: 'layers-outline', 
+    description: 'Detailed report on all storage units and their statuses',
+    component: UnitsReport,
+  },
 ];
+
 
 export default function Reports() {
   const [selectedReport, setSelectedReport] = useState<ReportType>(reportTypes[0]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
-
+  const { dark } = useTheme();
+  const colors = dark ? darkColors : lightColors;
   const handleReportSelection = (report: ReportType) => {
     setSelectedReport(report);
     setDropdownVisible(false);
@@ -109,24 +119,24 @@ export default function Reports() {
       keyboardShouldPersistTaps="handled"
       removeClippedSubviews={false}
       ListHeaderComponent={() => (
-        <View style={styles.container}>
+        <View style={[styles.container,{backgroundColor:colors.background}]}>
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Reports</Text>
+          <View style={[styles.header,{backgroundColor:colors.card}]}>
+            <Text style={[styles.headerTitle,{color:colors.text}]}>Reports</Text>
             <Text style={styles.headerSubtitle}>
               Generate and view detailed reports
             </Text>
           </View>
 
           {/* Report Type Selector */}
-          <View style={styles.selectorContainer}>
-            <Text style={styles.selectorLabel}>Select Report Type</Text>
+          <View style={[styles.selectorContainer ,{backgroundColor:colors.card}]}>
+            <Text style={[styles.selectorLabel, {color:colors.text}]}>Select Report Type</Text>
             
             <TouchableOpacity
               style={styles.dropdown}
               onPress={() => setDropdownVisible(true)}
             >
-              <View style={styles.dropdownContent}>
+              <View style={[styles.dropdownContent]}>
                 <View style={styles.dropdownLeft}>
                   <Ionicons 
                     name={selectedReport.icon as any} 
@@ -154,7 +164,7 @@ export default function Reports() {
             onRequestClose={() => setDropdownVisible(false)}
           >
             <TouchableOpacity
-              style={styles.modalOverlay}
+              style={[styles.modalOverlay]}
               activeOpacity={1}
               onPress={() => setDropdownVisible(false)}
             >
@@ -197,10 +207,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   header: {
-    backgroundColor: '#fff',
     paddingHorizontal: 20,
     paddingVertical: 24,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.3,
     borderBottomColor: '#e9ecef',
   },
   headerTitle: {

@@ -20,11 +20,10 @@ import EditWarehouseModal from '../modals/EditWarehouseModal';
 import AnimatedDeleteWrapper, {
   useAnimatedDelete,
 } from '../Reusable/AnimatedDeleteWrapper';
-import Pagination from '../Reusable/Pagination';
+import LoadMorePagination from '../Reusable/LoadMorePagination'; // Updated import
 import WarehouseItem from '../Items/WarehouseItem';
 import { Warehouse } from '../../types/Warehouses';
 import styles from './Styles/WarehouseList';
-
 
 const WarehouseList: React.FC = () => {
   const { dark } = useTheme();
@@ -33,11 +32,11 @@ const WarehouseList: React.FC = () => {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
-  const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
-    null,
-  );
+  const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const { get } = useGet();
@@ -49,18 +48,29 @@ const WarehouseList: React.FC = () => {
   );
 
   useEffect(() => {
-    fetchWarehouses(page);
-  }, [page]);
+    if (page === 1) {
+      fetchWarehouses(1, false);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchWarehouses(1);
+      // Reset and fetch fresh data when screen comes into focus
+      setPage(1);
+      setWarehouses([]);
+      fetchWarehouses(1, false);
     }, []),
   );
 
-  const fetchWarehouses = async (pg: number) => {
-    setLoading(true);
-    setWarehouses([]);
+  const fetchWarehouses = async (pg: number, isLoadMore: boolean = false) => {
+    if (isLoadMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      if (pg === 1) {
+        setWarehouses([]);
+      }
+    }
 
     try {
       const endpoint = `/warehouses?page=${pg}&limit=20`;
@@ -68,18 +78,43 @@ const WarehouseList: React.FC = () => {
 
       if (res?.status === 'success') {
         const warehousesData = res.data?.warehouses || [];
-        setWarehouses(Array.isArray(warehousesData) ? warehousesData : []);
+        const newWarehouses = Array.isArray(warehousesData) ? warehousesData : [];
+        
+        if (isLoadMore) {
+          // Append new items to existing ones
+          setWarehouses(prev => [...prev, ...newWarehouses]);
+        } else {
+          // Replace existing items
+          setWarehouses(newWarehouses);
+        }
+        
         setTotalPages(parseInt(res.data?.pagination?.totalPages) || 1);
+        setTotalItems(parseInt(res.data?.pagination?.total) || 0);
       }
     } catch (error) {
       console.error('Error fetching warehouses:', error);
-      setWarehouses([]);
-      setTotalPages(1);
+      if (!isLoadMore) {
+        setWarehouses([]);
+        setTotalPages(1);
+        setTotalItems(0);
+      }
     }
 
-    setLoading(false);
-    if (initialLoad) {
-      setInitialLoad(false);
+    if (isLoadMore) {
+      setLoadingMore(false);
+    } else {
+      setLoading(false);
+      if (initialLoad) {
+        setInitialLoad(false);
+      }
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (page < totalPages && !loading && !loadingMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchWarehouses(nextPage, true);
     }
   };
 
@@ -97,23 +132,12 @@ const WarehouseList: React.FC = () => {
 
   const addWarehouse = (newWarehouse: Warehouse) => {
     setWarehouses((prev) => [newWarehouse, ...prev]);
+    setTotalItems(prev => prev + 1);
   };
 
   const displayWarehouses = useMemo(() => {
     return warehouses || [];
   }, [warehouses]);
-
-  const handlePreviousPage = () => {
-    if (page > 1 && !loading) {
-      setPage(page - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (page < totalPages && !loading) {
-      setPage(page + 1);
-    }
-  };
 
   const renderWarehouseCard = ({
     item,
@@ -125,7 +149,10 @@ const WarehouseList: React.FC = () => {
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
-      onDelete={(id) => handleDelete(id, setWarehouses)}
+      onDelete={(id) => {
+        handleDelete(id, setWarehouses);
+        setTotalItems(prev => prev - 1);
+      }}
       deleteTitle="Delete Warehouse"
       itemName={item.name}
       animationDuration={300}
@@ -208,24 +235,19 @@ const WarehouseList: React.FC = () => {
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
-      />
-
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>
-            Loading...
-          </Text>
-        </View>
-      )}
-
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        loading={loading}
-        colors={colors}
-        onPreviousPage={handlePreviousPage}
-        onNextPage={handleNextPage}
+        ListFooterComponent={
+          <LoadMorePagination
+            currentPage={page}
+            totalPages={totalPages}
+            loading={loading}
+            loadingMore={loadingMore}
+            colors={colors}
+            onLoadMore={handleLoadMore}
+            showItemCount={true}
+            totalItems={totalItems}
+            currentItemCount={displayWarehouses.length}
+          />
+        }
       />
 
       <AddWarehouseModal
@@ -251,6 +273,5 @@ const WarehouseList: React.FC = () => {
     </View>
   );
 };
-
 
 export default WarehouseList;

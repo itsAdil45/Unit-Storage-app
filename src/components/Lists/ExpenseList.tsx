@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,11 @@ import {
   FlatList,
   TextInput,
 } from 'react-native';
-import Pagination from './../Reusable/Pagination';
+import LoadMorePagination from './../Reusable/LoadMorePagination'; // Updated import
 import AnimatedDeleteWrapper, {
   useAnimatedDelete,
 } from './../Reusable/AnimatedDeleteWrapper';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
 import { useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
@@ -24,7 +23,6 @@ import ExpenseItem from './../Items/ExpenseItem';
 import { Expense } from '../../types/Expenses';
 import styles from './Styles/ExpenseList';
 
-
 const ExpenseList: React.FC = () => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
@@ -32,7 +30,9 @@ const ExpenseList: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [search, setSearch] = useState('');
@@ -55,27 +55,42 @@ const ExpenseList: React.FC = () => {
 
   useEffect(() => {
     if (!initialLoad) {
+      // Reset to page 1 and clear existing data when search changes
       setPage(1);
+      setExpenses([]);
+      fetchExpenses(1, false);
     }
   }, [searchDebounced]);
 
   useEffect(() => {
-    fetchExpenses(page);
-  }, [page, searchDebounced]);
+    if (page === 1) {
+      fetchExpenses(1, false);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchExpenses(1);
+      // Reset and fetch fresh data when screen comes into focus
+      setPage(1);
+      setExpenses([]);
+      fetchExpenses(1, false);
     }, []),
   );
-  const fetchExpenses = async (pg: number) => {
-    setLoading(true);
-    setExpenses([]);
+
+  const fetchExpenses = async (pg: number, isLoadMore: boolean = false) => {
+    if (isLoadMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      if (pg === 1) {
+        setExpenses([]);
+      }
+    }
 
     try {
       const queryParams = new URLSearchParams({
         page: pg.toString(),
-        limit: '20',
+        limit: '10',
       });
 
       if (searchDebounced.trim()) {
@@ -86,18 +101,43 @@ const ExpenseList: React.FC = () => {
       const res = await get(endpoint);
 
       if (res?.status === 'success') {
-        setExpenses(res.data.expenses || []);
+        const expensesData = res.data.expenses || [];
+        
+        if (isLoadMore) {
+          // Append new items to existing ones
+          setExpenses(prev => [...prev, ...expensesData]);
+        } else {
+          // Replace existing items
+          setExpenses(expensesData);
+        }
+        
         setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
+        setTotalItems(parseInt(res.data.pagination.total) || 0);
       }
     } catch (error) {
       console.error('Error fetching expenses:', error);
-      setExpenses([]);
-      setTotalPages(1);
+      if (!isLoadMore) {
+        setExpenses([]);
+        setTotalPages(1);
+        setTotalItems(0);
+      }
     }
 
-    setLoading(false);
-    if (initialLoad) {
-      setInitialLoad(false);
+    if (isLoadMore) {
+      setLoadingMore(false);
+    } else {
+      setLoading(false);
+      if (initialLoad) {
+        setInitialLoad(false);
+      }
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (page < totalPages && !loading && !loadingMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchExpenses(nextPage, true);
     }
   };
 
@@ -116,18 +156,6 @@ const ExpenseList: React.FC = () => {
   const displayExpenses = useMemo(() => {
     return expenses;
   }, [expenses]);
-
-  const handlePreviousPage = () => {
-    if (page > 1 && !loading) {
-      setPage(page - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (page < totalPages && !loading) {
-      setPage(page + 1);
-    }
-  };
 
   const handleSearchChange = (text: string) => {
     setSearch(text);
@@ -148,7 +176,10 @@ const ExpenseList: React.FC = () => {
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
-      onDelete={(id) => handleDelete(id, setExpenses)}
+      onDelete={(id) => {
+        handleDelete(id, setExpenses);
+        setTotalItems(prev => prev - 1);
+      }}
       deleteTitle="Delete Expense"
       itemName={item.description}
       animationDuration={300}
@@ -240,24 +271,21 @@ const ExpenseList: React.FC = () => {
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
-      />
-
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>
-            {searchDebounced ? 'Searching...' : 'Loading...'}
-          </Text>
-        </View>
-      )}
-
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        loading={loading}
-        colors={colors}
-        onPreviousPage={handlePreviousPage}
-        onNextPage={handleNextPage}
+        // onEndReached={handleLoadMore}
+        // onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          <LoadMorePagination
+            currentPage={page}
+            totalPages={totalPages}
+            loading={loading}
+            loadingMore={loadingMore}
+            colors={colors}
+            onLoadMore={handleLoadMore}
+            showItemCount={true}
+            totalItems={totalItems}
+            currentItemCount={displayExpenses.length}
+          />
+        }
       />
 
       {editingExpense && (
@@ -274,6 +302,5 @@ const ExpenseList: React.FC = () => {
     </View>
   );
 };
-
 
 export default ExpenseList;

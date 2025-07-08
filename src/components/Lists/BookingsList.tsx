@@ -12,10 +12,10 @@ import {
 import Toast from 'react-native-toast-message';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '@react-navigation/native';
+import { lightColors, darkColors } from '../../constants/color';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
 import { useDelete } from '../../hooks/useDelete';
-import { lightColors, darkColors } from '../../constants/color';
 import { Booking, BookingFilterType, Payment } from '../../types/Bookings';
 import EditBookingModal from '../modals/EditBookingModal';
 import PaymentsModal from '../modals/PaymentsModal';
@@ -23,7 +23,7 @@ import AddEditPaymentModal from '../modals/AddEditPaymentModal';
 import AnimatedDeleteWrapper, {
   useAnimatedDelete,
 } from '../Reusable/AnimatedDeleteWrapper';
-import Pagination from '../Reusable/Pagination';
+import LoadMorePagination from '../Reusable/LoadMorePagination'; // Updated import
 import BookingItem from '../Items/BookingItem';
 import styles from './Styles/BookingList';
 
@@ -33,7 +33,9 @@ const BookingsList: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [selectedBookingForPayments, setSelectedBookingForPayments] =
@@ -70,28 +72,42 @@ const BookingsList: React.FC = () => {
 
   useEffect(() => {
     if (!initialLoad) {
+      // Reset to page 1 and clear existing data when search or filter changes
       setPage(1);
+      setBookings([]);
+      fetchBookings(1, false);
     }
   }, [searchDebounced, statusFilter]);
 
   useEffect(() => {
-    fetchBookings(page);
-  }, [page, searchDebounced, statusFilter]);
+    if (page === 1) {
+      fetchBookings(1, false);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchBookings(1);
+      // Reset and fetch fresh data when screen comes into focus
+      setPage(1);
+      setBookings([]);
+      fetchBookings(1, false);
     }, []),
   );
 
-  const fetchBookings = async (pg: number) => {
-    setLoading(true);
-    setBookings([]);
+  const fetchBookings = async (pg: number, isLoadMore: boolean = false) => {
+    if (isLoadMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      if (pg === 1) {
+        setBookings([]);
+      }
+    }
 
     try {
       const queryParams = new URLSearchParams({
         page: pg.toString(),
-        limit: '20',
+        limit: '10',
       });
 
       if (searchDebounced.trim()) {
@@ -106,18 +122,43 @@ const BookingsList: React.FC = () => {
       const res = await get(endpoint);
 
       if (res?.status === 'success') {
-        setBookings(res.data.bookings || []);
+        const bookingsData = res.data.bookings || [];
+        
+        if (isLoadMore) {
+          // Append new items to existing ones
+          setBookings(prev => [...prev, ...bookingsData]);
+        } else {
+          // Replace existing items
+          setBookings(bookingsData);
+        }
+        
         setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
+        setTotalItems(parseInt(res.data.pagination.total) || 0);
       }
     } catch (error) {
       console.error('Error fetching bookings:', error);
-      setBookings([]);
-      setTotalPages(1);
+      if (!isLoadMore) {
+        setBookings([]);
+        setTotalPages(1);
+        setTotalItems(0);
+      }
     }
 
-    setLoading(false);
-    if (initialLoad) {
-      setInitialLoad(false);
+    if (isLoadMore) {
+      setLoadingMore(false);
+    } else {
+      setLoading(false);
+      if (initialLoad) {
+        setInitialLoad(false);
+      }
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (page < totalPages && !loading && !loadingMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchBookings(nextPage, true);
     }
   };
 
@@ -162,11 +203,11 @@ const BookingsList: React.FC = () => {
             payments: prev!.payments.filter((p) => p.id !== payment.id),
           }));
         }
-              Toast.show({
-                type: 'success',
-                text1: 'Deleted',
-                text2: `Payment deleted successfully`,
-              });
+        Toast.show({
+          type: 'success',
+          text1: 'Deleted',
+          text2: `Payment deleted successfully`,
+        });
       }
     } catch (error) {
       console.error('Error deleting payment:', error);
@@ -240,18 +281,6 @@ const BookingsList: React.FC = () => {
     return bookings;
   }, [bookings]);
 
-  const handlePreviousPage = () => {
-    if (page > 1 && !loading) {
-      setPage(page - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (page < totalPages && !loading) {
-      setPage(page + 1);
-    }
-  };
-
   const handleSearchChange = (text: string) => {
     setSearch(text);
   };
@@ -317,7 +346,10 @@ const BookingsList: React.FC = () => {
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
-      onDelete={(id) => handleDelete(id, setBookings)}
+      onDelete={(id) => {
+        handleDelete(id, setBookings);
+        setTotalItems(prev => prev - 1);
+      }}
       deleteTitle="Delete Booking"
       itemName={`Booking #${item.id} - ${item.customer.firstName} ${item.customer.lastName}`}
     >
@@ -413,7 +445,6 @@ const BookingsList: React.FC = () => {
         </View>
       </View>
 
-      {/* List */}
       <FlatList
         data={displayBookings}
         renderItem={renderBookingCard}
@@ -422,24 +453,21 @@ const BookingsList: React.FC = () => {
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
-      />
-
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>
-            {searchDebounced ? 'Searching...' : 'Loading...'}
-          </Text>
-        </View>
-      )}
-
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        loading={loading}
-        colors={colors}
-        onPreviousPage={handlePreviousPage}
-        onNextPage={handleNextPage}
+        // onEndReached={handleLoadMore}
+        // onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          <LoadMorePagination
+            currentPage={page}
+            totalPages={totalPages}
+            loading={loading}
+            loadingMore={loadingMore}
+            colors={colors}
+            onLoadMore={handleLoadMore}
+            showItemCount={true}
+            totalItems={totalItems}
+            currentItemCount={displayBookings.length}
+          />
+        }
       />
 
       {editingBooking && (
@@ -488,7 +516,5 @@ const BookingsList: React.FC = () => {
     </View>
   );
 };
-
-
 
 export default BookingsList;

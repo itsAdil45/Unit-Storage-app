@@ -81,7 +81,7 @@ const ExpenseReport: React.FC = () => {
       data: reportData,
       generateHTML: generateExpenseReportContent,
       setLoading: setGeneratingPDF,
-      title: 'Customer Report',
+      title: 'Expense Report',
     });
   };
 
@@ -89,8 +89,8 @@ const ExpenseReport: React.FC = () => {
     generateAndShareExcel({
       generateWorkbook: () => generateExpenseExcelWorkbook(reportData),
       setLoading: setGeneratingExcel,
-      title: 'Customer Report Excel',
-      filenamePrefix: 'customer_report',
+      title: 'Expense Report Excel',
+      filenamePrefix: 'expense_report',
     });
   };
 

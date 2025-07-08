@@ -7,7 +7,9 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 
+// Remove the old QuickActions import
 import QuickActions from '../components/widgets/QuickActions';
+// import FloatingQuickActions from '../components/widgets/FloatingQuickActions';
 import PaymentsOverview from '../components/widgets/PaymentsOverview';
 import RecentExpenses from '../components/widgets/RecentExpenses';
 import StorageUnitsOverview from '../components/widgets/StorageUnitsOverview';
@@ -17,7 +19,8 @@ import AddUnitModal from '../components/modals/AddUnitModal';
 import AddCustomerModal from '../components/modals/AddCustomerModal';
 import AddBookingModal from '../components/modals/AddBookingModal';
 import AddExpenseModal from '../components/modals/AddExpenseModal';
-
+import { useTheme } from '@react-navigation/native';
+import { lightColors, darkColors } from '../constants/color';
 import { useGet } from '../hooks/useGet';
 import {
   StorageOverviewData,
@@ -26,6 +29,8 @@ import {
 } from '../types/Types';
 
 const LoadingSpinner = () => {
+    const { dark } = useTheme();
+  const colors = dark ? darkColors : lightColors;
   const scale = useSharedValue(0.8);
   useEffect(() => {
     scale.value = withTiming(1, { duration: 600 });
@@ -34,7 +39,7 @@ const LoadingSpinner = () => {
     transform: [{ scale: scale.value }],
   }));
   return (
-    <View style={styles.loadingContainer}>
+    <View style={[styles.loadingContainer, {backgroundColor:colors.background}]}>
       <Animated.View style={[styles.simpleDot, animatedStyle]} />
     </View>
   );
@@ -115,6 +120,33 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  const handleQuickAction = (action: any) => {
+    switch (action.title) {
+      case 'Add Unit':
+        setShowAddUnitModal(true);
+        break;
+      case 'Customer':
+        setShowAddCustomerModal(true);
+        break;
+      case 'Booking':
+        setShowAddBookingModal(true);
+        break;
+      case 'Expense':
+        setShowAddExpenseModal(true);
+        break;
+      case 'Cust Report':
+        // Navigate to customer report screen
+        console.log('Navigate to customer report');
+        break;
+      case 'Revenue':
+        // Navigate to revenue screen
+        console.log('Navigate to revenue screen');
+        break;
+      default:
+        break;
+    }
+  };
+
   const loadingStyle = useAnimatedStyle(() => ({
     opacity: loadingOpacity.value,
   }));
@@ -136,7 +168,8 @@ const Dashboard = () => {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={() => (
           <DashboardContent>
-            <AnimatedWidget delay={50}>
+            {/* Removed the old QuickActions widget */}
+                        <AnimatedWidget delay={50}>
               <QuickActions
                 onActionPress={(action) => {
                   if (action.title === 'Add Unit') setShowAddUnitModal(true);
@@ -147,29 +180,35 @@ const Dashboard = () => {
                 }}
               />
             </AnimatedWidget>
-
-            <AnimatedWidget delay={100}>
+            
+            <AnimatedWidget delay={50}>
               <PaymentsOverview overview={paymentOverview} />
             </AnimatedWidget>
 
-            <AnimatedWidget delay={150}>
+            <AnimatedWidget delay={100}>
               <RecentExpenses
                 expenses={expenses}
                 onAddExpense={() => setShowAddExpenseModal(true)}
               />
             </AnimatedWidget>
 
-            <AnimatedWidget delay={200}>
+            <AnimatedWidget delay={150}>
               <StorageUnitsOverview overview={storageOverview} />
             </AnimatedWidget>
 
-            <AnimatedWidget delay={250}>
+            <AnimatedWidget delay={200}>
               <AvailabilityCalendar />
             </AnimatedWidget>
           </DashboardContent>
         )}
       />
 
+      {/* Floating Quick Actions - Hide when any modal is open */}
+      {/* {!showAddUnitModal && !showAddCustomerModal && !showAddBookingModal && !showAddExpenseModal && (
+        <FloatingQuickActions onActionPress={handleQuickAction} />
+      )} */}
+
+      {/* Modals - Each with proper zIndex */}
       <AddUnitModal
         visible={showAddUnitModal}
         onClose={() => setShowAddUnitModal(false)}
@@ -210,6 +249,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     paddingVertical: 8,
+    paddingBottom: 100, // Add padding to avoid overlap with floating button
   },
 });
 

@@ -22,7 +22,7 @@ import EditCustomerModal from '../modals/EditCustomerModal';
 import AnimatedDeleteWrapper, {
   useAnimatedDelete,
 } from '../Reusable/AnimatedDeleteWrapper';
-import Pagination from '../Reusable/Pagination';
+import LoadMorePagination from '../Reusable/LoadMorePagination'; // Updated import
 import CustomerItem from '../Items/CustomerItem';
 import { Customer } from '../../types/Customers';
 import styles from './Styles/CustomersList';
@@ -35,7 +35,9 @@ const CustomersList: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [search, setSearch] = useState('');
@@ -54,33 +56,48 @@ const CustomersList: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchDebounced(search);
-    }, 500);
+    }, 50);
     return () => clearTimeout(timer);
   }, [search]);
 
   useEffect(() => {
     if (!initialLoad) {
+      // Reset to page 1 and clear existing data when search or filter changes
       setPage(1);
+      setCustomers([]);
+      fetchCustomers(1, false);
     }
   }, [searchDebounced, statusFilter]);
 
   useEffect(() => {
-    fetchCustomers(page);
-  }, [page, searchDebounced, statusFilter]);
+    if (page === 1) {
+      fetchCustomers(1, false);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchCustomers(1);
+      // Reset and fetch fresh data when screen comes into focus
+      setPage(1);
+      setCustomers([]);
+      fetchCustomers(1, false);
     }, []),
   );
-  const fetchCustomers = async (pg: number) => {
-    setLoading(true);
-    setCustomers([]);
+
+  const fetchCustomers = async (pg: number, isLoadMore: boolean = false) => {
+    if (isLoadMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      if (pg === 1) {
+        setCustomers([]);
+      }
+    }
 
     try {
       const queryParams = new URLSearchParams({
         page: pg.toString(),
-        limit: '20',
+        limit: '10',
       });
 
       if (searchDebounced.trim()) {
@@ -96,18 +113,43 @@ const CustomersList: React.FC = () => {
       const res = await get(endpoint);
 
       if (res?.status === 'success') {
-        setCustomers(res.data.customers || []);
+        const customersData = res.data.customers || [];
+        
+        if (isLoadMore) {
+          // Append new items to existing ones
+          setCustomers(prev => [...prev, ...customersData]);
+        } else {
+          // Replace existing items
+          setCustomers(customersData);
+        }
+        
         setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
+        setTotalItems(parseInt(res.data.pagination.total) || 0);
       }
     } catch (error) {
       console.error('Error fetching customers:', error);
-      setCustomers([]);
-      setTotalPages(1);
+      if (!isLoadMore) {
+        setCustomers([]);
+        setTotalPages(1);
+        setTotalItems(0);
+      }
     }
 
-    setLoading(false);
-    if (initialLoad) {
-      setInitialLoad(false);
+    if (isLoadMore) {
+      setLoadingMore(false);
+    } else {
+      setLoading(false);
+      if (initialLoad) {
+        setInitialLoad(false);
+      }
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (page < totalPages && !loading && !loadingMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchCustomers(nextPage, true);
     }
   };
 
@@ -131,18 +173,6 @@ const CustomersList: React.FC = () => {
   const displayCustomers = useMemo(() => {
     return customers;
   }, [customers]);
-
-  const handlePreviousPage = () => {
-    if (page > 1 && !loading) {
-      setPage(page - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (page < totalPages && !loading) {
-      setPage(page + 1);
-    }
-  };
 
   const handleSearchChange = (text: string) => {
     setSearch(text);
@@ -198,7 +228,10 @@ const CustomersList: React.FC = () => {
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
-      onDelete={(id) => handleDelete(id, setCustomers)}
+      onDelete={(id) => {
+        handleDelete(id, setCustomers);
+        setTotalItems(prev => prev - 1);
+      }}
       deleteTitle="Delete Customer"
       itemName={`${item.firstName} ${item.lastName}`}
     >
@@ -304,25 +337,19 @@ const CustomersList: React.FC = () => {
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
-      />
-
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>
-            {searchDebounced ? 'Searching...' : 'Loading...'}
-          </Text>
-        </View>
-      )}
-
-      {/* Pagination Component */}
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        loading={loading}
-        colors={colors}
-        onPreviousPage={handlePreviousPage}
-        onNextPage={handleNextPage}
+        ListFooterComponent={
+          <LoadMorePagination
+            currentPage={page}
+            totalPages={totalPages}
+            loading={loading}
+            loadingMore={loadingMore}
+            colors={colors}
+            onLoadMore={handleLoadMore}
+            showItemCount={true}
+            totalItems={totalItems}
+            currentItemCount={displayCustomers.length}
+          />
+        }
       />
 
       {/* Edit Modal */}
@@ -352,7 +379,5 @@ const CustomersList: React.FC = () => {
     </View>
   );
 };
-
-
 
 export default CustomersList;

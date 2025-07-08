@@ -15,24 +15,26 @@ import { useGet } from '../../hooks/useGet';
 import { lightColors, darkColors } from '../../constants/color';
 import Pagination from '../Reusable/Pagination';
 import styles from './Styles/CustomerReport';
-import generateRevenueReportContent from './PdfStructures/revenueReportContent';
-import { generateRevenueExcelWorkbook } from './ExcelStructures/revenueExcelWorkbook';
+import UnitsReportItem from '../Items/UnitsReportItem';
+import generateUnitPDFContent from './PdfStructures/UnitPDFContent';
+import { generateUnitExcelWorkbook } from './ExcelStructures/UnitExcelWorkbook';
+
 import { generateAndSharePDF } from '../Reusable/GenerateAndSharePDF';
 import { generateAndShareExcel } from '../Reusable/GenerateAndShareExcel';
-import { RevenueReportData, ApiResponse } from '../../types/RevenueReport';
-import RevenueReportItem from '../Items/RevenueReportItem';
+import { UnitReportData, ApiResponse } from '../../types/StorageUnitsReport';
 
-const RevenueReport: React.FC = () => {
+const UnitsReport: React.FC = () => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
 
-  const [reportData, setReportData] = useState<RevenueReportData[]>([]);
+  const [reportData, setReportData] = useState<UnitReportData[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [page, setPage] = useState(1);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [generatingExcel, setGeneratingExcel] = useState(false);
-
+  const [expandedBookings, setExpandedBookings] = useState<{ [key: string]: boolean }>({});
+  const [expandedPayments, setExpandedPayments] = useState<{ [key: string]: boolean }>({});
 
   const { get } = useGet();
   const itemsPerPage = 5;
@@ -46,9 +48,9 @@ const RevenueReport: React.FC = () => {
   const fetchReportData = async () => {
     setLoading(true);
     try {
-      const res: ApiResponse = await get('/reports/revenue');
+      const res: ApiResponse = await get('/reports/storage-units');
       if (res?.status === 'success') {
-        setReportData(res.data.reportDataResult || []);
+        setReportData(res.data.reportData || []);
       }
     } catch (error) {
       console.error('Error fetching customer report:', error);
@@ -74,22 +76,52 @@ const RevenueReport: React.FC = () => {
     return `AED ${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
   };
 
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return '#4CAF50';
+      case 'completed': return '#2196F3';
+      case 'cancelled': return '#FF5722';
+      case 'paid': return '#4CAF50';
+      case 'pending': return '#FF9800';
+      default: return colors.subtext;
+    }
+  };
+
+  const getPaymentMethodDisplay = (method: string | null) =>
+    method ? method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified';
+
+  const toggleBookingExpansion = (email: string, bookingId: number) => {
+    const key = `${email}-${bookingId}`;
+    setExpandedBookings(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const togglePaymentExpansion = (email: string, bookingId: number) => {
+    const key = `${email}-${bookingId}-payments`;
+    setExpandedPayments(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const handleGeneratePDF = () => {
     generateAndSharePDF({
       data: reportData,
-      generateHTML: generateRevenueReportContent,
+      generateHTML: generateUnitPDFContent,
       setLoading: setGeneratingPDF,
-      title: 'Revenue Report',
+      title: 'Units Reportt',
     });
   };
 
   const handleGenerateExcel = () => {
     generateAndShareExcel({
-      generateWorkbook: () => generateRevenueExcelWorkbook(reportData),
+      generateWorkbook: () => generateUnitExcelWorkbook(reportData),
       setLoading: setGeneratingExcel,
-      title: 'Revenue Report Excel',
-      filenamePrefix: 'revenue_report',
+      title: 'Unit Report Excel',
+      filenamePrefix: 'Units_Report',
     });
   };
 
@@ -136,7 +168,7 @@ const RevenueReport: React.FC = () => {
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
       <View style={styles.initialLoadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.text }]}>Loading Revenue reports...</Text>
+        <Text style={[styles.loadingText, { color: colors.text }]}>Loading customer reports...</Text>
       </View>
     </View>
   ) : (
@@ -144,7 +176,7 @@ const RevenueReport: React.FC = () => {
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
 
       <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Revenue Reports</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Customer Reports</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity
             style={[styles.exportButton, { backgroundColor: '#4CAF50' }]}
@@ -168,12 +200,19 @@ const RevenueReport: React.FC = () => {
       <FlatList
         data={displayData}
         renderItem={({ item }) => (
-          <RevenueReportItem
+          <UnitsReportItem
             item={item}
             formatCurrency={formatCurrency}
+            formatDate={formatDate}
+            getStatusColor={getStatusColor}
+            getPaymentMethodDisplay={getPaymentMethodDisplay}
+            expandedBookings={expandedBookings}
+            expandedPayments={expandedPayments}
+            toggleBookingExpansion={toggleBookingExpansion}
+            togglePaymentExpansion={togglePaymentExpansion}
           />
         )}
-        keyExtractor={(item, index) => `${index}}`}
+        keyExtractor={(item, index) => `${item.unitId}-${index}`}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
@@ -202,4 +241,4 @@ const RevenueReport: React.FC = () => {
   );
 };
 
-export default RevenueReport;
+export default UnitsReport;
