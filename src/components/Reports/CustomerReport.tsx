@@ -13,7 +13,8 @@ import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
 import { lightColors, darkColors } from '../../constants/color';
-import Pagination from '../Reusable/Pagination';
+import LoadMorePagination from '../Reusable/LoadMorePagination';
+
 import styles from './Styles/CustomerReport';
 import CustomerReportItem from '../Items/CustomerReportItem';
 import generateCustomerPDFContent from './PdfStructures/customerPDFContent';
@@ -27,7 +28,9 @@ const CustomerReport: React.FC = () => {
   const colors = dark ? darkColors : lightColors;
 
   const [reportData, setReportData] = useState<CustomerReportData[]>([]);
+  const [displayData, setDisplayData] = useState<CustomerReportData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [page, setPage] = useState(1);
   const [generatingPDF, setGeneratingPDF] = useState(false);
@@ -36,13 +39,7 @@ const CustomerReport: React.FC = () => {
   const [expandedPayments, setExpandedPayments] = useState<{ [key: string]: boolean }>({});
 
   const { get } = useGet();
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(reportData.length / itemsPerPage);
-
-  const displayData = useMemo(() => {
-    const startIndex = (page - 1) * itemsPerPage;
-    return reportData.slice(startIndex, startIndex + itemsPerPage);
-  }, [reportData, page]);
+  const itemsPerPage = 10;
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -50,11 +47,13 @@ const CustomerReport: React.FC = () => {
       const res: ApiResponse = await get('/reports/customer');
       if (res?.status === 'success') {
         setReportData(res.data.reportData || []);
+        setDisplayData(res.data.reportData?.slice(0, itemsPerPage) || []);
       }
     } catch (error) {
       console.error('Error fetching customer report:', error);
       Alert.alert('Error', 'Failed to fetch customer report');
       setReportData([]);
+      setDisplayData([]);
     }
     setLoading(false);
     if (initialLoad) setInitialLoad(false);
@@ -67,8 +66,29 @@ const CustomerReport: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       fetchReportData();
+      setPage(1);
     }, [])
   );
+
+  const handleLoadMore = () => {
+    if (loading || loadingMore) return;
+    
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const startIndex = (nextPage - 1) * itemsPerPage;
+    const newData = reportData.slice(startIndex, startIndex + itemsPerPage);
+    
+    if (newData.length > 0) {
+      setDisplayData(prev => [...prev, ...newData]);
+      setPage(nextPage);
+    }
+    
+    setLoadingMore(false);
+  };
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(reportData.length / itemsPerPage);
+  }, [reportData]);
 
   const formatCurrency = (amount: number | string) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -216,6 +236,20 @@ const CustomerReport: React.FC = () => {
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
+
+        ListFooterComponent={
+          <LoadMorePagination
+            currentPage={page}
+            totalPages={totalPages}
+            loading={loading}
+            loadingMore={loadingMore}
+            colors={colors}
+            onLoadMore={handleLoadMore}
+            showItemCount={true}
+            totalItems={reportData.length}
+            currentItemCount={displayData.length}
+          />
+        }
       />
 
       {loading && (
@@ -224,15 +258,6 @@ const CustomerReport: React.FC = () => {
           <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
         </View>
       )}
-
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        loading={loading}
-        colors={colors}
-        onPreviousPage={() => setPage(p => Math.max(p - 1, 1))}
-        onNextPage={() => setPage(p => Math.min(p + 1, totalPages))}
-      />
 
       {renderPDFLoadingOverlay()}
       {renderExcelLoadingOverlay()}

@@ -149,6 +149,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 8,
   },
+    statsContainer: {
+    marginBottom: 16,
+    paddingHorizontal: 0,
+  },
 });
 
 export default styles;

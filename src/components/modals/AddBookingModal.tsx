@@ -24,6 +24,7 @@ interface Customer {
   firstName: string;
   lastName: string;
   email: string;
+  deleted: number
 }
 
 interface StorageUnit {
@@ -78,14 +79,13 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({
       if (customerSearch.length > 0) {
         const response = await get('/customers', { search: customerSearch });
         if (response?.status === 'success')
-          setCustomers(response.data.customers);
+          setCustomers( response.data.customers);
       } else {
         setCustomers([]);
       }
     }, 300);
     return () => clearTimeout(timeoutId);
   }, [customerSearch]);
-
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
       if (storageUnitSearch.length > 0) {
@@ -258,35 +258,38 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({
                       },
                     ]}
                   >
-                    <ScrollView style={styles.dropdownList} nestedScrollEnabled>
-                      {customers.map((item) => (
-                        <TouchableOpacity
-                          key={item.id}
-                          style={[
-                            styles.dropdownItem,
-                            { borderBottomColor: colors.border },
-                          ]}
-                          onPress={() => selectCustomer(item)}
-                        >
-                          <Text
-                            style={[
-                              styles.dropdownItemText,
-                              { color: colors.text },
-                            ]}
-                          >
-                            {item.firstName} {item.lastName}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.dropdownItemSubtext,
-                              { color: colors.border },
-                            ]}
-                          >
-                            {item.email}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
+<ScrollView style={styles.dropdownList} nestedScrollEnabled>
+  {customers
+    .filter((item) => item.deleted === 0) // ✅ Only include non-deleted customers
+    .map((item) => (
+      <TouchableOpacity
+        key={item.id}
+        style={[
+          styles.dropdownItem,
+          { borderBottomColor: colors.border },
+        ]}
+        onPress={() => selectCustomer(item)}
+      >
+        <Text
+          style={[
+            styles.dropdownItemText,
+            { color: colors.text },
+          ]}
+        >
+          {item.firstName} {item.lastName}
+        </Text>
+        <Text
+          style={[
+            styles.dropdownItemSubtext,
+            { color: colors.border },
+          ]}
+        >
+          {item.email}
+        </Text>
+      </TouchableOpacity>
+    ))}
+</ScrollView>
+
                   </View>
                 )}
               </View>

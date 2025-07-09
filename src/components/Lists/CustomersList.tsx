@@ -22,7 +22,7 @@ import EditCustomerModal from '../modals/EditCustomerModal';
 import AnimatedDeleteWrapper, {
   useAnimatedDelete,
 } from '../Reusable/AnimatedDeleteWrapper';
-import LoadMorePagination from '../Reusable/LoadMorePagination'; // Updated import
+import LoadMorePagination from '../Reusable/LoadMorePagination'; 
 import CustomerItem from '../Items/CustomerItem';
 import { Customer } from '../../types/Customers';
 import styles from './Styles/CustomersList';
@@ -62,7 +62,6 @@ const CustomersList: React.FC = () => {
 
   useEffect(() => {
     if (!initialLoad) {
-      // Reset to page 1 and clear existing data when search or filter changes
       setPage(1);
       setCustomers([]);
       fetchCustomers(1, false);
@@ -77,7 +76,6 @@ const CustomersList: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      // Reset and fetch fresh data when screen comes into focus
       setPage(1);
       setCustomers([]);
       fetchCustomers(1, false);
@@ -104,10 +102,11 @@ const CustomersList: React.FC = () => {
         queryParams.append('search', searchDebounced.trim());
       }
 
-      if (statusFilter !== 'All') {
-        const statusValue = statusFilter === 'Active' ? '0' : '1';
-        queryParams.append('filterStatus', statusValue);
+      let statusValue = '0'; 
+      if (statusFilter === 'Inactive') {
+        statusValue = '1';
       }
+      queryParams.append('filterStatus', statusValue);
 
       const endpoint = `/customers?${queryParams.toString()}`;
       const res = await get(endpoint);
@@ -116,10 +115,8 @@ const CustomersList: React.FC = () => {
         const customersData = res.data.customers || [];
         
         if (isLoadMore) {
-          // Append new items to existing ones
           setCustomers(prev => [...prev, ...customersData]);
         } else {
-          // Replace existing items
           setCustomers(customersData);
         }
         
@@ -279,7 +276,7 @@ const CustomersList: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background  }]}>
       <StatusBar
         barStyle={dark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.card}

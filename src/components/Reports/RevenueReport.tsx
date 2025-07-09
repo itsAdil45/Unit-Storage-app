@@ -13,7 +13,7 @@ import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
 import { lightColors, darkColors } from '../../constants/color';
-import Pagination from '../Reusable/Pagination';
+import LoadMorePagination from '../Reusable/LoadMorePagination'; // Changed from Pagination
 import styles from './Styles/CustomerReport';
 import generateRevenueReportContent from './PdfStructures/revenueReportContent';
 import { generateRevenueExcelWorkbook } from './ExcelStructures/revenueExcelWorkbook';
@@ -27,21 +27,16 @@ const RevenueReport: React.FC = () => {
   const colors = dark ? darkColors : lightColors;
 
   const [reportData, setReportData] = useState<RevenueReportData[]>([]);
+  const [displayData, setDisplayData] = useState<RevenueReportData[]>([]); // Added for load-more
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false); // Added for load-more
   const [initialLoad, setInitialLoad] = useState(true);
   const [page, setPage] = useState(1);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [generatingExcel, setGeneratingExcel] = useState(false);
 
-
   const { get } = useGet();
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(reportData.length / itemsPerPage);
-
-  const displayData = useMemo(() => {
-    const startIndex = (page - 1) * itemsPerPage;
-    return reportData.slice(startIndex, startIndex + itemsPerPage);
-  }, [reportData, page]);
+  const itemsPerPage = 10; // Increased for better load-more UX
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -49,11 +44,14 @@ const RevenueReport: React.FC = () => {
       const res: ApiResponse = await get('/reports/revenue');
       if (res?.status === 'success') {
         setReportData(res.data.reportDataResult || []);
+        // Initially show first page of data
+        setDisplayData(res.data.reportDataResult?.slice(0, itemsPerPage) || []);
       }
     } catch (error) {
-      console.error('Error fetching customer report:', error);
-      Alert.alert('Error', 'Failed to fetch customer report');
+      console.error('Error fetching revenue report:', error);
+      Alert.alert('Error', 'Failed to fetch revenue report');
       setReportData([]);
+      setDisplayData([]);
     }
     setLoading(false);
     if (initialLoad) setInitialLoad(false);
@@ -66,14 +64,36 @@ const RevenueReport: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       fetchReportData();
+            setPage(1);
+
     }, [])
   );
+
+  // Load-more pagination logic
+  const handleLoadMore = () => {
+    if (loading || loadingMore) return;
+    
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const startIndex = (nextPage - 1) * itemsPerPage;
+    const newData = reportData.slice(startIndex, startIndex + itemsPerPage);
+    
+    if (newData.length > 0) {
+      setDisplayData(prev => [...prev, ...newData]);
+      setPage(nextPage);
+    }
+    
+    setLoadingMore(false);
+  };
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(reportData.length / itemsPerPage);
+  }, [reportData]);
 
   const formatCurrency = (amount: number | string) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return `AED ${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
   };
-
 
   const handleGeneratePDF = () => {
     generateAndSharePDF({
@@ -96,9 +116,9 @@ const RevenueReport: React.FC = () => {
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
       <MaterialIcons name="assessment" size={64} color={colors.subtext} />
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>No customer reports available</Text>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>No revenue reports available</Text>
       <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
-        Customer reports will appear here once data is available
+        Revenue reports will appear here once data is available
       </Text>
     </View>
   );
@@ -136,7 +156,7 @@ const RevenueReport: React.FC = () => {
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
       <View style={styles.initialLoadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.text }]}>Loading Revenue reports...</Text>
+        <Text style={[styles.loadingText, { color: colors.text }]}>Loading revenue reports...</Text>
       </View>
     </View>
   ) : (
@@ -173,11 +193,24 @@ const RevenueReport: React.FC = () => {
             formatCurrency={formatCurrency}
           />
         )}
-        keyExtractor={(item, index) => `${index}}`}
+        keyExtractor={(item, index) => `${index}`}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
+        ListFooterComponent={
+          <LoadMorePagination
+            currentPage={page}
+            totalPages={totalPages}
+            loading={loading}
+            loadingMore={loadingMore}
+            colors={colors}
+            onLoadMore={handleLoadMore}
+            showItemCount={true}
+            totalItems={reportData.length}
+            currentItemCount={displayData.length}
+          />
+        }
       />
 
       {loading && (
@@ -186,15 +219,6 @@ const RevenueReport: React.FC = () => {
           <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
         </View>
       )}
-
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        loading={loading}
-        colors={colors}
-        onPreviousPage={() => setPage(p => Math.max(p - 1, 1))}
-        onNextPage={() => setPage(p => Math.min(p + 1, totalPages))}
-      />
 
       {renderPDFLoadingOverlay()}
       {renderExcelLoadingOverlay()}

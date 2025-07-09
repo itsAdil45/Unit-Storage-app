@@ -317,6 +317,7 @@ const BookingsList: React.FC = () => {
           backgroundColor:
             statusFilter === value ? colors.primary : colors.card,
           borderColor: colors.border,
+          zIndex: 120
         },
       ]}
     >

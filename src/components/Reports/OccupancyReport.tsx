@@ -13,7 +13,7 @@ import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
 import { lightColors, darkColors } from '../../constants/color';
-import Pagination from '../Reusable/Pagination';
+import LoadMorePagination from '../Reusable/LoadMorePagination';
 import styles from './Styles/CustomerReport';
 import OccupancyReportItem from '../Items/OccupancyReportItem';
 import generateOccupancyPDFContent from './PdfStructures/OccupancyReportContent';
@@ -27,7 +27,9 @@ const OccupancyReport: React.FC = () => {
   const colors = dark ? darkColors : lightColors;
 
   const [reportData, setReportData] = useState<OccupancyReportData[]>([]);
+  const [displayData, setDisplayData] = useState<OccupancyReportData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [page, setPage] = useState(1);
   const [generatingPDF, setGeneratingPDF] = useState(false);
@@ -37,13 +39,7 @@ const OccupancyReport: React.FC = () => {
   const [expandedPayments, setExpandedPayments] = useState<{ [key: string]: boolean }>({});
 
   const { get } = useGet();
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(reportData.length / itemsPerPage);
-
-  const displayData = useMemo(() => {
-    const startIndex = (page - 1) * itemsPerPage;
-    return reportData.slice(startIndex, startIndex + itemsPerPage);
-  }, [reportData, page]);
+  const itemsPerPage = 10;
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -51,11 +47,14 @@ const OccupancyReport: React.FC = () => {
       const res: OccupancyReportResponse = await get('/reports/occupancy');
       if (res?.status === 'success') {
         setReportData(res.data.reportData || []);
+        // Initially show first page of data
+        setDisplayData(res.data.reportData?.slice(0, itemsPerPage) || []);
       }
     } catch (error) {
       console.error('Error fetching occupancy report:', error);
       Alert.alert('Error', 'Failed to fetch occupancy report');
       setReportData([]);
+      setDisplayData([]);
     }
     setLoading(false);
     if (initialLoad) setInitialLoad(false);
@@ -68,8 +67,30 @@ const OccupancyReport: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       fetchReportData();
+            setPage(1);
+
     }, [])
   );
+
+  const handleLoadMore = () => {
+    if (loading || loadingMore) return;
+    
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const startIndex = (nextPage - 1) * itemsPerPage;
+    const newData = reportData.slice(startIndex, startIndex + itemsPerPage);
+    
+    if (newData.length > 0) {
+      setDisplayData(prev => [...prev, ...newData]);
+      setPage(nextPage);
+    }
+    
+    setLoadingMore(false);
+  };
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(reportData.length / itemsPerPage);
+  }, [reportData]);
 
   const formatCurrency = (amount: number | string) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -133,6 +154,23 @@ const OccupancyReport: React.FC = () => {
     });
   };
 
+  // Calculate overall statistics from all report data
+  const overallStats = useMemo(() => {
+    if (reportData.length === 0) return null;
+    
+    const totalUnits = reportData.reduce((sum, report) => sum + report.totalUnits, 0);
+    const totalOccupied = reportData.reduce((sum, report) => sum + report.occupiedUnits, 0);
+    const totalAvailable = reportData.reduce((sum, report) => sum + report.availableUnits, 0);
+    const avgOccupancyRate = reportData.reduce((sum, report) => sum + report.occupancyRate, 0) / reportData.length;
+    
+    return {
+      totalUnits,
+      totalOccupied,
+      totalAvailable,
+      avgOccupancyRate
+    };
+  }, [reportData]);
+
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
       <MaterialIcons name="domain" size={64} color={colors.subtext} />
@@ -170,23 +208,6 @@ const OccupancyReport: React.FC = () => {
       </View>
     </Modal>
   );
-
-  // Calculate overall statistics from all report data
-  const overallStats = useMemo(() => {
-    if (reportData.length === 0) return null;
-    
-    const totalUnits = reportData.reduce((sum, report) => sum + report.totalUnits, 0);
-    const totalOccupied = reportData.reduce((sum, report) => sum + report.occupiedUnits, 0);
-    const totalAvailable = reportData.reduce((sum, report) => sum + report.availableUnits, 0);
-    const avgOccupancyRate = reportData.reduce((sum, report) => sum + report.occupancyRate, 0) / reportData.length;
-    
-    return {
-      totalUnits,
-      totalOccupied,
-      totalAvailable,
-      avgOccupancyRate
-    };
-  }, [reportData]);
 
   return initialLoad ? (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -282,6 +303,19 @@ const OccupancyReport: React.FC = () => {
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
+        ListFooterComponent={
+          <LoadMorePagination
+            currentPage={page}
+            totalPages={totalPages}
+            loading={loading}
+            loadingMore={loadingMore}
+            colors={colors}
+            onLoadMore={handleLoadMore}
+            showItemCount={true}
+            totalItems={reportData.length}
+            currentItemCount={displayData.length}
+          />
+        }
       />
 
       {loading && (
@@ -290,15 +324,6 @@ const OccupancyReport: React.FC = () => {
           <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
         </View>
       )}
-
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        loading={loading}
-        colors={colors}
-        onPreviousPage={() => setPage(p => Math.max(p - 1, 1))}
-        onNextPage={() => setPage(p => Math.min(p + 1, totalPages))}
-      />
 
       {renderPDFLoadingOverlay()}
       {renderExcelLoadingOverlay()}

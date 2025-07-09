@@ -187,7 +187,8 @@ const WarehouseList: React.FC = () => {
 
   if (initialLoad) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: colors.background,          zIndex: 120
+ }]}>
         <StatusBar
           barStyle={dark ? 'light-content' : 'dark-content'}
           backgroundColor={colors.card}

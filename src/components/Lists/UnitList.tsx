@@ -17,12 +17,21 @@ import { useGet } from '../../hooks/useGet';
 import { useDelete } from '../../hooks/useDelete';
 import { useAnimatedDelete } from '../Reusable/AnimatedDeleteWrapper';
 import EditUnitModal from '../modals/EditUnitModal';
-import LoadMorePagination from '../Reusable/LoadMorePagination'; // Add this import
+import LoadMorePagination from '../Reusable/LoadMorePagination';
 import UnitItem, { StorageUnit } from '../Items/UnitItem';
+import UnitStatsCards from '../UnitStatsCards';
 import styles from './Styles/UnitList';
 
 type WarehouseGroup = {
   [warehouseName: string]: StorageUnit[];
+};
+
+type UnitOverviewData = {
+  checkingOut: number;
+  empty: number;
+  occupied: number;
+  overdue: number;
+  total: number;
 };
 
 const UnitList = () => {
@@ -36,6 +45,7 @@ const UnitList = () => {
 
   const [allUnits, setAllUnits] = useState<StorageUnit[]>([]);
   const [warehouseGroups, setWarehouseGroups] = useState<WarehouseGroup>({});
+  const [unitOverviewData, setUnitOverviewData] = useState<UnitOverviewData | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -63,8 +73,23 @@ const UnitList = () => {
   useFocusEffect(
     useCallback(() => {
       fetchAllUnits();
+      fetchUnitsOverview();
     }, [])
   );
+
+  const fetchUnitsOverview = async () => {
+    try {
+      const endpoint = `/dashboard/storageOverview`;
+      const res = await get(endpoint);
+
+      if (res?.status === 'success') {
+        setUnitOverviewData(res.data);
+      }
+    } catch (error) {
+      console.error('Error fetching unit overview:', error);
+      setUnitOverviewData(null);
+    }
+  };
 
   const fetchAllUnits = async () => {
     setLoading(true);
@@ -284,6 +309,7 @@ const UnitList = () => {
                 ? colors.border
                 : '#F2F2F7',
             borderColor: isSelected ? colors.primary : colors.border,
+            zIndex: 120
           },
         ]}
       >
@@ -330,8 +356,49 @@ const UnitList = () => {
     />
   );
 
+  const renderStatsCards = () => {
+    if (!unitOverviewData) return null;
+
+    const statsData = [
+      {
+        label: 'Total Units',
+        value: unitOverviewData.total,
+        iconColor: '#397AF9',
+      },
+      {
+        label: 'Available Units',
+        value: unitOverviewData.empty,
+        iconColor: '#00B8D9',
+      },
+      {
+        label: 'Occupied Units',
+        value: unitOverviewData.occupied,
+        iconColor: '#FFAB00',
+      },
+    ];
+
+    return (
+      <FlatList
+        data={statsData}
+        horizontal
+        keyExtractor={(item) => item.label}
+        renderItem={({ item }) => (
+          <UnitStatsCards
+            label={item.label}
+            value={item.value}
+            iconColor={item.iconColor}
+          />
+        )}
+        showsHorizontalScrollIndicator={false}
+        style={styles.statsContainer}
+      />
+    );
+  };
+
   const renderHeader = () => (
     <View style={[styles.headerContainer, { backgroundColor: colors.card }]}>
+      {renderStatsCards()}
+      
       <View style={styles.filterContainer}>
         <Text style={[styles.filterSectionTitle, { color: colors.text }]}>
           Warehouse

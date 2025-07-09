@@ -1,5 +1,5 @@
 import React,{useState} from 'react';
-import { View, FlatList } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import CustomersList from '../components/Lists/CustomersList';
 import FloatingQuickActions from '../components/widgets/FloatingQuickActions';
 import AddUnitModal from '../components/modals/AddUnitModal';
@@ -27,35 +27,24 @@ export default function Customers() {
         setShowAddExpenseModal(true);
         break;
       case 'Cust Report':
-        // Navigate to customer report screen
         console.log('Navigate to customer report');
         break;
       case 'Revenue':
-        // Navigate to revenue screen
         console.log('Navigate to revenue screen');
         break;
       default:
         break;
     }
   };
+    const hasOpenModal = showAddUnitModal || showAddCustomerModal || showAddBookingModal || showAddExpenseModal;
+
   return (
-    <>
-    <FlatList
-      data={[]}
-      keyExtractor={() => 'dummy'}
-      renderItem={null}
-      keyboardShouldPersistTaps="handled"
-      removeClippedSubviews={false}
-      ListHeaderComponent={() => (
-        <View>
-          {/* <QuickActions/> */}
-          <CustomersList />
-        </View>
-      )}
-      />
-            {/* {!showAddUnitModal && !showAddCustomerModal && !showAddBookingModal && !showAddExpenseModal && (
+    <View style={styles.container}>
+      <CustomersList />
+
+            {!hasOpenModal && (
         <FloatingQuickActions onActionPress={handleQuickAction} />
-      )} */}
+      )}
             <AddUnitModal
         visible={showAddUnitModal}
         onClose={() => setShowAddUnitModal(false)}
@@ -76,6 +65,12 @@ export default function Customers() {
         onClose={() => setShowAddExpenseModal(false)}
         onAdd={(b) => console.log('Expense added:', b)}
       />
-      </>
+      </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

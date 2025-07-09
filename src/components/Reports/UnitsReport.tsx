@@ -13,12 +13,11 @@ import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
 import { lightColors, darkColors } from '../../constants/color';
-import Pagination from '../Reusable/Pagination';
+import LoadMorePagination from '../Reusable/LoadMorePagination';
 import styles from './Styles/CustomerReport';
 import UnitsReportItem from '../Items/UnitsReportItem';
 import generateUnitPDFContent from './PdfStructures/UnitPDFContent';
 import { generateUnitExcelWorkbook } from './ExcelStructures/UnitExcelWorkbook';
-
 import { generateAndSharePDF } from '../Reusable/GenerateAndSharePDF';
 import { generateAndShareExcel } from '../Reusable/GenerateAndShareExcel';
 import { UnitReportData, ApiResponse } from '../../types/StorageUnitsReport';
@@ -28,7 +27,9 @@ const UnitsReport: React.FC = () => {
   const colors = dark ? darkColors : lightColors;
 
   const [reportData, setReportData] = useState<UnitReportData[]>([]);
+  const [displayData, setDisplayData] = useState<UnitReportData[]>([]); 
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false); 
   const [initialLoad, setInitialLoad] = useState(true);
   const [page, setPage] = useState(1);
   const [generatingPDF, setGeneratingPDF] = useState(false);
@@ -37,13 +38,7 @@ const UnitsReport: React.FC = () => {
   const [expandedPayments, setExpandedPayments] = useState<{ [key: string]: boolean }>({});
 
   const { get } = useGet();
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(reportData.length / itemsPerPage);
-
-  const displayData = useMemo(() => {
-    const startIndex = (page - 1) * itemsPerPage;
-    return reportData.slice(startIndex, startIndex + itemsPerPage);
-  }, [reportData, page]);
+  const itemsPerPage = 10; 
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -51,11 +46,13 @@ const UnitsReport: React.FC = () => {
       const res: ApiResponse = await get('/reports/storage-units');
       if (res?.status === 'success') {
         setReportData(res.data.reportData || []);
+        setDisplayData(res.data.reportData?.slice(0, itemsPerPage) || []);
       }
     } catch (error) {
-      console.error('Error fetching customer report:', error);
-      Alert.alert('Error', 'Failed to fetch customer report');
+      console.error('Error fetching units report:', error);
+      Alert.alert('Error', 'Failed to fetch units report');
       setReportData([]);
+      setDisplayData([]);
     }
     setLoading(false);
     if (initialLoad) setInitialLoad(false);
@@ -68,8 +65,29 @@ const UnitsReport: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       fetchReportData();
+      setPage(1);
     }, [])
   );
+
+  const handleLoadMore = () => {
+    if (loading || loadingMore) return;
+    
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const startIndex = (nextPage - 1) * itemsPerPage;
+    const newData = reportData.slice(startIndex, startIndex + itemsPerPage);
+    
+    if (newData.length > 0) {
+      setDisplayData(prev => [...prev, ...newData]);
+      setPage(nextPage);
+    }
+    
+    setLoadingMore(false);
+  };
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(reportData.length / itemsPerPage);
+  }, [reportData]);
 
   const formatCurrency = (amount: number | string) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -112,7 +130,7 @@ const UnitsReport: React.FC = () => {
       data: reportData,
       generateHTML: generateUnitPDFContent,
       setLoading: setGeneratingPDF,
-      title: 'Units Reportt',
+      title: 'Units Report',
     });
   };
 
@@ -128,9 +146,9 @@ const UnitsReport: React.FC = () => {
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
       <MaterialIcons name="assessment" size={64} color={colors.subtext} />
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>No customer reports available</Text>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>No units reports available</Text>
       <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
-        Customer reports will appear here once data is available
+        Units reports will appear here once data is available
       </Text>
     </View>
   );
@@ -168,7 +186,7 @@ const UnitsReport: React.FC = () => {
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
       <View style={styles.initialLoadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.text }]}>Loading customer reports...</Text>
+        <Text style={[styles.loadingText, { color: colors.text }]}>Loading units reports...</Text>
       </View>
     </View>
   ) : (
@@ -176,7 +194,7 @@ const UnitsReport: React.FC = () => {
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
 
       <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Customer Reports</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Units Reports</Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity
             style={[styles.exportButton, { backgroundColor: '#4CAF50' }]}
@@ -217,6 +235,19 @@ const UnitsReport: React.FC = () => {
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
+        ListFooterComponent={
+          <LoadMorePagination
+            currentPage={page}
+            totalPages={totalPages}
+            loading={loading}
+            loadingMore={loadingMore}
+            colors={colors}
+            onLoadMore={handleLoadMore}
+            showItemCount={true}
+            totalItems={reportData.length}
+            currentItemCount={displayData.length}
+          />
+        }
       />
 
       {loading && (
@@ -225,15 +256,6 @@ const UnitsReport: React.FC = () => {
           <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
         </View>
       )}
-
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        loading={loading}
-        colors={colors}
-        onPreviousPage={() => setPage(p => Math.max(p - 1, 1))}
-        onNextPage={() => setPage(p => Math.min(p + 1, totalPages))}
-      />
 
       {renderPDFLoadingOverlay()}
       {renderExcelLoadingOverlay()}

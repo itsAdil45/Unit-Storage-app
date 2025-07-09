@@ -127,11 +127,11 @@ const FloatingQuickActions: React.FC<FloatingQuickActionsProps> = ({
   }));
 
   return (
-    <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+    <View  style={styles.container} pointerEvents="box-none">
       {/* Overlay - Only visible when expanded */}
       {isExpanded && (
         <AnimatedPressable
-          // style={[styles.overlay, overlayAnimatedStyle]}
+          style={[styles.overlay, overlayAnimatedStyle]}
           onPress={toggleExpanded}
         />
       )}
@@ -217,7 +217,19 @@ const progress = animationProgress.value;
 };
 
 const styles = StyleSheet.create({
-
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    // backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    zIndex: 98,
+  },
+  container: {
+  position: 'absolute',
+  bottom: 0,
+  right: 0,
+  width: 100, // Adjust as needed
+  height: 400, // Enough to cover expanded actions
+  zIndex: 100,
+},
   fab: {
     position: 'absolute',
     bottom: 30,

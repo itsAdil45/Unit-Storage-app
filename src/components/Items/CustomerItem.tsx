@@ -32,7 +32,7 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
     <TouchableOpacity
       style={[
         styles.userCard,
-        { backgroundColor: dark ? colors.card : 'white', borderWidth: 0 },
+        { backgroundColor: dark ? colors.card : 'white', borderWidth: 0 , zIndex: 220},
       ]}
       activeOpacity={0.8}
     >
@@ -85,7 +85,7 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
           <TouchableOpacity
             style={[
               styles.actionButton,
-              { backgroundColor: dark ? colors.border : '#f8f9fa' },
+              { backgroundColor: dark ? colors.border : '#f8f9fa',zIndex:120 },
             ]}
             onPress={() => onEdit(user)}
           >

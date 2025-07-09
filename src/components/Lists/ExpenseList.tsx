@@ -8,7 +8,7 @@ import {
   FlatList,
   TextInput,
 } from 'react-native';
-import LoadMorePagination from './../Reusable/LoadMorePagination'; // Updated import
+import LoadMorePagination from './../Reusable/LoadMorePagination';
 import AnimatedDeleteWrapper, {
   useAnimatedDelete,
 } from './../Reusable/AnimatedDeleteWrapper';
@@ -55,7 +55,6 @@ const ExpenseList: React.FC = () => {
 
   useEffect(() => {
     if (!initialLoad) {
-      // Reset to page 1 and clear existing data when search changes
       setPage(1);
       setExpenses([]);
       fetchExpenses(1, false);
@@ -70,7 +69,6 @@ const ExpenseList: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      // Reset and fetch fresh data when screen comes into focus
       setPage(1);
       setExpenses([]);
       fetchExpenses(1, false);
@@ -104,10 +102,8 @@ const ExpenseList: React.FC = () => {
         const expensesData = res.data.expenses || [];
         
         if (isLoadMore) {
-          // Append new items to existing ones
           setExpenses(prev => [...prev, ...expensesData]);
         } else {
-          // Replace existing items
           setExpenses(expensesData);
         }
         
@@ -271,8 +267,7 @@ const ExpenseList: React.FC = () => {
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
-        // onEndReached={handleLoadMore}
-        // onEndReachedThreshold={0.5}
+        keyboardShouldPersistTaps="handled"
         ListFooterComponent={
           <LoadMorePagination
             currentPage={page}

@@ -1,17 +1,19 @@
-import React,{useState} from 'react';
-import { Text, View, FlatList } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import ExpenseList from '../components/Lists/ExpenseList';
 import FloatingQuickActions from '../components/widgets/FloatingQuickActions';
 import AddUnitModal from '../components/modals/AddUnitModal';
 import AddCustomerModal from '../components/modals/AddCustomerModal';
 import AddBookingModal from '../components/modals/AddBookingModal';
 import AddExpenseModal from '../components/modals/AddExpenseModal';
+
 export default function Expenses() {
   const [showAddUnitModal, setShowAddUnitModal] = useState(false);
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [showAddBookingModal, setShowAddBookingModal] = useState(false);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
-      const handleQuickAction = (action: any) => {
+
+  const handleQuickAction = (action: any) => {
     switch (action.title) {
       case 'Add Unit':
         setShowAddUnitModal(true);
@@ -26,36 +28,30 @@ export default function Expenses() {
         setShowAddExpenseModal(true);
         break;
       case 'Cust Report':
-        // Navigate to customer report screen
         console.log('Navigate to customer report');
         break;
       case 'Revenue':
-        // Navigate to revenue screen
         console.log('Navigate to revenue screen');
         break;
       default:
         break;
     }
   };
-  return (
-    <>
-    <FlatList
-      data={[]}
-      keyExtractor={() => 'dummy'}
-      renderItem={null}
-      keyboardShouldPersistTaps="handled"
-      removeClippedSubviews={false}
-      ListHeaderComponent={() => (
-        <View>
-          <ExpenseList />
-        </View>
-      )}
-      />
 
-            {/* {!showAddUnitModal && !showAddCustomerModal && !showAddBookingModal && !showAddExpenseModal && (
+  const hasOpenModal = showAddUnitModal || showAddCustomerModal || showAddBookingModal || showAddExpenseModal;
+
+  return (
+    <View style={styles.container}>
+      {/* Main Content */}
+      <ExpenseList />
+
+      {/* Floating Action Button - Only show when no modals are open */}
+      {!hasOpenModal && (
         <FloatingQuickActions onActionPress={handleQuickAction} />
-      )} */}
-            <AddUnitModal
+      )}
+
+      {/* Modals */}
+      <AddUnitModal
         visible={showAddUnitModal}
         onClose={() => setShowAddUnitModal(false)}
         onAdd={(unit) => console.log('Added unit:', unit)}
@@ -75,6 +71,12 @@ export default function Expenses() {
         onClose={() => setShowAddExpenseModal(false)}
         onAdd={(b) => console.log('Expense added:', b)}
       />
-      </>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

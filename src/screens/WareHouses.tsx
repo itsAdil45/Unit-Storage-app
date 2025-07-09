@@ -1,5 +1,5 @@
 import React,{useState} from 'react';
-import { Text, View, FlatList } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import WarehouseList from '../components/Lists/WarehouseList';
 import FloatingQuickActions from '../components/widgets/FloatingQuickActions';
 import AddUnitModal from '../components/modals/AddUnitModal';
@@ -7,11 +7,12 @@ import AddCustomerModal from '../components/modals/AddCustomerModal';
 import AddBookingModal from '../components/modals/AddBookingModal';
 import AddExpenseModal from '../components/modals/AddExpenseModal';
 export default function WareHouses() {
-  const [showAddUnitModal, setShowAddUnitModal] = useState(false);
-  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
-  const [showAddBookingModal, setShowAddBookingModal] = useState(false);
-  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
-        const handleQuickAction = (action: any) => {
+    const [showAddUnitModal, setShowAddUnitModal] = useState(false);
+    const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+    const [showAddBookingModal, setShowAddBookingModal] = useState(false);
+    const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+    
+      const handleQuickAction = (action: any) => {
     switch (action.title) {
       case 'Add Unit':
         setShowAddUnitModal(true);
@@ -26,34 +27,22 @@ export default function WareHouses() {
         setShowAddExpenseModal(true);
         break;
       case 'Cust Report':
-        // Navigate to customer report screen
         console.log('Navigate to customer report');
         break;
       case 'Revenue':
-        // Navigate to revenue screen
         console.log('Navigate to revenue screen');
         break;
       default:
         break;
     }
   };
+    const hasOpenModal = showAddUnitModal || showAddCustomerModal || showAddBookingModal || showAddExpenseModal;
+
   return (
-    <>
-    <FlatList
-    data={[]}
-    keyExtractor={() => 'dummy'}
-    renderItem={null}
-    keyboardShouldPersistTaps="handled"
-    removeClippedSubviews={false}
-      ListHeaderComponent={() => (
-        <View>
-          {/* <QuickActions/> */}
-          <WarehouseList />
-        </View>
-      )}
-      />
-      
-            {!showAddUnitModal && !showAddCustomerModal && !showAddBookingModal && !showAddExpenseModal && (
+    <View style={styles.container}>
+      <WarehouseList />
+
+            {!hasOpenModal && (
         <FloatingQuickActions onActionPress={handleQuickAction} />
       )}
             <AddUnitModal
@@ -76,6 +65,12 @@ export default function WareHouses() {
         onClose={() => setShowAddExpenseModal(false)}
         onAdd={(b) => console.log('Expense added:', b)}
       />
-      </>
-    );
+      </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
