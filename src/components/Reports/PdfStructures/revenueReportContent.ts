@@ -1,9 +1,6 @@
 import { RevenueReportData } from "../../../types/RevenueReport";
+import { formatAEDCurrency } from "../../../Utils/Formatters";
 
-const formatCurrency = (amount: number | string) => {
-  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return `AED ${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-};
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -153,15 +150,15 @@ const generateRevenueReportContent = (revenueData: RevenueReportData[]) => {
           <h2>Overall Summary</h2>
           <div class="summary-grid">
             <div class="summary-item">
-              <div class="summary-value">${formatCurrency(totalRevenue)}</div>
+              <div class="summary-value">${formatAEDCurrency(totalRevenue)}</div>
               <div class="summary-label">Total Revenue</div>
             </div>
             <div class="summary-item">
-              <div class="summary-value">${formatCurrency(totalExpenses)}</div>
+              <div class="summary-value">${formatAEDCurrency(totalExpenses)}</div>
               <div class="summary-label">Total Expenses</div>
             </div>
             <div class="summary-item">
-              <div class="summary-value ${totalNetRevenue >= 0 ? 'revenue-positive' : 'revenue-negative'}">${formatCurrency(totalNetRevenue)}</div>
+              <div class="summary-value ${totalNetRevenue >= 0 ? 'revenue-positive' : 'revenue-negative'}">${formatAEDCurrency(totalNetRevenue)}</div>
               <div class="summary-label">Net Revenue</div>
             </div>
           </div>
@@ -181,15 +178,15 @@ const generateRevenueReportContent = (revenueData: RevenueReportData[]) => {
         
         <div class="revenue-grid">
           <div class="revenue-item">
-            <div class="revenue-value">${formatCurrency(warehouse.totalRevenue)}</div>
+            <div class="revenue-value">${formatAEDCurrency(warehouse.totalRevenue)}</div>
             <div class="revenue-label">Total Revenue</div>
           </div>
           <div class="revenue-item">
-            <div class="revenue-value">${formatCurrency(warehouse.totalExpenses)}</div>
+            <div class="revenue-value">${formatAEDCurrency(warehouse.totalExpenses)}</div>
             <div class="revenue-label">Total Expenses</div>
           </div>
           <div class="revenue-item">
-            <div class="revenue-value ${warehouse.netRevenue >= 0 ? 'revenue-positive' : 'revenue-negative'}">${formatCurrency(warehouse.netRevenue)}</div>
+            <div class="revenue-value ${warehouse.netRevenue >= 0 ? 'revenue-positive' : 'revenue-negative'}">${formatAEDCurrency(warehouse.netRevenue)}</div>
             <div class="revenue-label">Net Revenue</div>
           </div>
           <div class="revenue-item">
@@ -220,7 +217,7 @@ const generateRevenueReportContent = (revenueData: RevenueReportData[]) => {
           <tr>
             <td>${customer.customerName}</td>
             <td>${customer.unitNumber || 'N/A'}</td>
-            <td>${formatCurrency(customer.amount)}</td>
+            <td>${formatAEDCurrency(customer.amount)}</td>
           </tr>
         `;
       });

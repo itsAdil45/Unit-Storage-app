@@ -9,6 +9,7 @@ import {
 import styles from './Styles/WarehouseItem';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { WarehouseItemProps } from '../../types/Warehouses';
+import { formatDate } from '../../Utils/Formatters';
 
 const WarehouseItem: React.FC<WarehouseItemProps> = ({
   item: warehouse,
@@ -26,13 +27,8 @@ const WarehouseItem: React.FC<WarehouseItemProps> = ({
     return 'warehouse';
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+
+
 
   const handleViewVideo = async () => {
     if (!warehouse.videoFileLink) {

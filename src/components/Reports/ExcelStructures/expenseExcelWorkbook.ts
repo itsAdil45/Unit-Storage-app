@@ -1,18 +1,7 @@
 import * as XLSX from 'xlsx';
 import { ExpenseReportData } from "../../../types/ExpenseReport";
+import { formatCurrency, formatDate } from '../../../Utils/Formatters';
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
-
-const formatCurrency = (amount: number | string) => {
-  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return num;
-};
 
 export const generateExpenseExcelWorkbook = (expenseData: ExpenseReportData[]): XLSX.WorkBook => {
   const workbook = XLSX.utils.book_new();

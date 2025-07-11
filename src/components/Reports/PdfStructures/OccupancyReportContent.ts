@@ -1,9 +1,6 @@
 import { OccupancyReportData, OccupiedUnit, AvailableUnit, Booking, Payment } from "../../../types/OccupancyReport";
+import { formatAEDCurrency } from "../../../Utils/Formatters";
 
-const formatCurrency = (amount: number | string) => {
-  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return `AED ${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-};
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -326,7 +323,7 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
           </div>
           <div class="summary-grid">
             <div class="summary-item">
-              <div class="summary-value">${formatCurrency(totalRevenue)}</div>
+              <div class="summary-value">${formatAEDCurrency(totalRevenue)}</div>
               <div class="summary-label">Total Revenue</div>
             </div>
             <div class="summary-item">
@@ -377,7 +374,7 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
               <div class="stat-label">Occupancy</div>
             </div>
             <div class="warehouse-stat">
-              <div class="stat-value">${formatCurrency(stats.revenue)}</div>
+              <div class="stat-value">${formatAEDCurrency(stats.revenue)}</div>
               <div class="stat-label">Revenue</div>
             </div>
           </div>
@@ -412,7 +409,7 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
                 <div class="booking-dates">
                   ${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}
                 </div>
-                <div class="booking-price">Price: ${formatCurrency(booking.price)}</div>
+                <div class="booking-price">Price: ${formatAEDCurrency(booking.price)}</div>
                 <div>Status: ${booking.bookingStatus}</div>
                 <div>Space: ${booking.spaceOccupied} sq ft</div>
               </div>
@@ -428,7 +425,7 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
                 <div class="payment-item">
                   <span>${formatDate(payment.date)} - ${payment.method}</span>
                   <span>
-                    ${formatCurrency(payment.amount)}
+                    ${formatAEDCurrency(payment.amount)}
                     <span class="payment-status payment-${payment.status.toLowerCase()}">${payment.status}</span>
                   </span>
                 </div>

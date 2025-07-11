@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ExpenseItemProps } from '../../types/Expenses';
 import styles from './Styles/ExpenseItem';
+import { formatDate } from '../../Utils/Formatters';
+
 const ExpenseItem: React.FC<ExpenseItemProps> = ({
   item: expense,
   index,
@@ -37,13 +39,7 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({
     return `$${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+
 
   return (
     <TouchableOpacity

@@ -21,6 +21,9 @@ import { generateUnitExcelWorkbook } from './ExcelStructures/UnitExcelWorkbook';
 import { generateAndSharePDF } from '../Reusable/GenerateAndSharePDF';
 import { generateAndShareExcel } from '../Reusable/GenerateAndShareExcel';
 import { UnitReportData, ApiResponse } from '../../types/StorageUnitsReport';
+import { formatDate, getStatusColor ,formatAEDCurrency} from '../../Utils/Formatters';
+import { fetchReportHelper } from '../../Utils/ReportFetcher';
+import { createHandleLoadMore, useTotalPages } from '../../Utils/paginationUtils';
 
 const UnitsReport: React.FC = () => {
   const { dark } = useTheme();
@@ -40,24 +43,19 @@ const UnitsReport: React.FC = () => {
   const { get } = useGet();
   const itemsPerPage = 10; 
 
-  const fetchReportData = async () => {
-    setLoading(true);
-    try {
-      const res: ApiResponse = await get('/reports/storage-units');
-      if (res?.status === 'success') {
-        setReportData(res.data.reportData || []);
-        setDisplayData(res.data.reportData?.slice(0, itemsPerPage) || []);
-      }
-    } catch (error) {
-      console.error('Error fetching units report:', error);
-      Alert.alert('Error', 'Failed to fetch units report');
-      setReportData([]);
-      setDisplayData([]);
-    }
-    setLoading(false);
-    if (initialLoad) setInitialLoad(false);
+  const fetchReportData = () => {
+    fetchReportHelper<UnitReportData>({
+      get,
+      endpoint: '/reports/storage-units',
+      dataKey: 'reportData',
+      itemsPerPage,
+      setReportData,
+      setDisplayData,
+      setLoading,
+      initialLoad,
+      setInitialLoad,
+    });
   };
-
   useEffect(() => {
     fetchReportData();
   }, []);
@@ -69,48 +67,19 @@ const UnitsReport: React.FC = () => {
     }, [])
   );
 
-  const handleLoadMore = () => {
-    if (loading || loadingMore) return;
-    
-    setLoadingMore(true);
-    const nextPage = page + 1;
-    const startIndex = (nextPage - 1) * itemsPerPage;
-    const newData = reportData.slice(startIndex, startIndex + itemsPerPage);
-    
-    if (newData.length > 0) {
-      setDisplayData(prev => [...prev, ...newData]);
-      setPage(nextPage);
-    }
-    
-    setLoadingMore(false);
-  };
+  const handleLoadMore = createHandleLoadMore<UnitReportData>({
+  loading,
+  loadingMore,
+  page,
+  itemsPerPage,
+  setDisplayData,
+  setPage,
+  setLoadingMore,
+  reportData,
+});
 
-  const totalPages = useMemo(() => {
-    return Math.ceil(reportData.length / itemsPerPage);
-  }, [reportData]);
+const totalPages = useTotalPages(reportData, itemsPerPage);
 
-  const formatCurrency = (amount: number | string) => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return `AED ${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-  };
-
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return '#4CAF50';
-      case 'completed': return '#2196F3';
-      case 'cancelled': return '#FF5722';
-      case 'paid': return '#4CAF50';
-      case 'pending': return '#FF9800';
-      default: return colors.subtext;
-    }
-  };
 
   const getPaymentMethodDisplay = (method: string | null) =>
     method ? method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified';
@@ -220,7 +189,7 @@ const UnitsReport: React.FC = () => {
         renderItem={({ item }) => (
           <UnitsReportItem
             item={item}
-            formatCurrency={formatCurrency}
+            formatCurrency={formatAEDCurrency}
             formatDate={formatDate}
             getStatusColor={getStatusColor}
             getPaymentMethodDisplay={getPaymentMethodDisplay}

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Booking, Payment } from '../../types/Bookings';
+import { formatDate, getStatusColor, formatCurrency } from '../../Utils/Formatters';
 
 interface PaymentsModalProps {
   visible: boolean;
@@ -32,32 +33,7 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
   colors,
   dark,
 }) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
 
-  const formatCurrency = (amount: string) => {
-    return `$${parseFloat(amount).toFixed(2)}`;
-  };
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'paid':
-        return '#4CAF50';
-      case 'pending':
-        return '#FF9800';
-      case 'overdue':
-        return '#FF5722';
-      case 'cancelled':
-        return '#9E9E9E';
-      default:
-        return colors.subtext;
-    }
-  };
 
   const handleEditPayment = (payment: Payment) => {
     onEditPayment(booking, payment);

@@ -9,6 +9,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { Booking } from '../../types/Bookings';
 import styles from './Styles/BookingItem';
+import { formatDate, getStatusColor, formatCurrency } from '../../Utils/Formatters';
 interface BookingItemProps {
   item: Booking;
   index: number;
@@ -30,27 +31,6 @@ const BookingItem: React.FC<BookingItemProps> = ({
   onAddPayment,
   onDeletePress,
 }) => {
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return '#4CAF50';
-      case 'completed':
-        return '#2196F3';
-      case 'cancelled':
-        return '#FF5722';
-      default:
-        return colors.subtext;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
 
   const handleViewPdf = async () => {
     if (!item.pdfDocumentUrl) {
@@ -71,9 +51,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
     }
   };
 
-  const formatCurrency = (amount: string | number) => {
-    return `$${parseFloat(amount.toString()).toFixed(2)}`;
-  };
+
 
   return (
     <View

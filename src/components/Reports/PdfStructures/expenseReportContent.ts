@@ -1,9 +1,6 @@
 import { ExpenseReportData } from "../../../types/ExpenseReport";
+import { formatAEDCurrency } from "../../../Utils/Formatters";
 
-const formatCurrency = (amount: number | string) => {
-  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return `AED ${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-};
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -181,7 +178,7 @@ const generateExpenseReportContent = (expenseData: ExpenseReportData[]) => {
           <h2>Overall Summary</h2>
           <div class="summary-grid">
             <div class="summary-item">
-              <div class="summary-value">${formatCurrency(totalExpenses)}</div>
+              <div class="summary-value">${formatAEDCurrency(totalExpenses)}</div>
               <div class="summary-label">Total Expenses</div>
             </div>
             <div class="summary-item">
@@ -213,7 +210,7 @@ const generateExpenseReportContent = (expenseData: ExpenseReportData[]) => {
       html += `
         <div class="breakdown-item">
           <div class="breakdown-name">${data.warehouseName}</div>
-          <div class="breakdown-value">${formatCurrency(data.total)}</div>
+          <div class="breakdown-value">${formatAEDCurrency(data.total)}</div>
         </div>
       `;
     });
@@ -231,7 +228,7 @@ const generateExpenseReportContent = (expenseData: ExpenseReportData[]) => {
       html += `
         <div class="breakdown-item">
           <div class="breakdown-name">${expenseType}</div>
-          <div class="breakdown-value">${formatCurrency(total)}</div>
+          <div class="breakdown-value">${formatAEDCurrency(total)}</div>
         </div>
       `;
     });
@@ -269,7 +266,7 @@ const generateExpenseReportContent = (expenseData: ExpenseReportData[]) => {
         <td>${expense.warehouseName}</td>
         <td>${expense.expenseType}</td>
         <td>${expense.description}</td>
-        <td class="amount-cell">${formatCurrency(expense.total)}</td>
+        <td class="amount-cell">${formatAEDCurrency(expense.total)}</td>
       </tr>
     `;
   });

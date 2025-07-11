@@ -1,12 +1,6 @@
 import * as XLSX from 'xlsx';
+import { formatDate } from '../../../Utils/Formatters';
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
   const getPaymentMethodDisplay = (method: string | null) => {
     if (!method) return 'Not specified';
     return method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());

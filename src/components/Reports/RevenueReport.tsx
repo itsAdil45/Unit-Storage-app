@@ -21,6 +21,9 @@ import { generateAndSharePDF } from '../Reusable/GenerateAndSharePDF';
 import { generateAndShareExcel } from '../Reusable/GenerateAndShareExcel';
 import { RevenueReportData, ApiResponse } from '../../types/RevenueReport';
 import RevenueReportItem from '../Items/RevenueReportItem';
+import { formatAEDCurrency } from '../../Utils/Formatters';
+import { fetchReportHelper } from '../../Utils/ReportFetcher';
+import { createHandleLoadMore, useTotalPages } from '../../Utils/paginationUtils';
 
 const RevenueReport: React.FC = () => {
   const { dark } = useTheme();
@@ -38,25 +41,19 @@ const RevenueReport: React.FC = () => {
   const { get } = useGet();
   const itemsPerPage = 10; // Increased for better load-more UX
 
-  const fetchReportData = async () => {
-    setLoading(true);
-    try {
-      const res: ApiResponse = await get('/reports/revenue');
-      if (res?.status === 'success') {
-        setReportData(res.data.reportDataResult || []);
-        // Initially show first page of data
-        setDisplayData(res.data.reportDataResult?.slice(0, itemsPerPage) || []);
-      }
-    } catch (error) {
-      console.error('Error fetching revenue report:', error);
-      Alert.alert('Error', 'Failed to fetch revenue report');
-      setReportData([]);
-      setDisplayData([]);
-    }
-    setLoading(false);
-    if (initialLoad) setInitialLoad(false);
+  const fetchReportData = () => {
+    fetchReportHelper<RevenueReportData>({
+      get,
+      endpoint: '/reports/revenue',
+      dataKey: 'reportDataResult',
+      itemsPerPage,
+      setReportData,
+      setDisplayData,
+      setLoading,
+      initialLoad,
+      setInitialLoad,
+    });
   };
-
   useEffect(() => {
     fetchReportData();
   }, []);
@@ -69,31 +66,18 @@ const RevenueReport: React.FC = () => {
     }, [])
   );
 
-  // Load-more pagination logic
-  const handleLoadMore = () => {
-    if (loading || loadingMore) return;
-    
-    setLoadingMore(true);
-    const nextPage = page + 1;
-    const startIndex = (nextPage - 1) * itemsPerPage;
-    const newData = reportData.slice(startIndex, startIndex + itemsPerPage);
-    
-    if (newData.length > 0) {
-      setDisplayData(prev => [...prev, ...newData]);
-      setPage(nextPage);
-    }
-    
-    setLoadingMore(false);
-  };
+  const handleLoadMore = createHandleLoadMore<RevenueReportData>({
+  loading,
+  loadingMore,
+  page,
+  itemsPerPage,
+  setDisplayData,
+  setPage,
+  setLoadingMore,
+  reportData,
+});
 
-  const totalPages = useMemo(() => {
-    return Math.ceil(reportData.length / itemsPerPage);
-  }, [reportData]);
-
-  const formatCurrency = (amount: number | string) => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return `AED ${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-  };
+const totalPages = useTotalPages(reportData, itemsPerPage);
 
   const handleGeneratePDF = () => {
     generateAndSharePDF({
@@ -190,7 +174,7 @@ const RevenueReport: React.FC = () => {
         renderItem={({ item }) => (
           <RevenueReportItem
             item={item}
-            formatCurrency={formatCurrency}
+            formatCurrency={formatAEDCurrency}
           />
         )}
         keyExtractor={(item, index) => `${index}`}

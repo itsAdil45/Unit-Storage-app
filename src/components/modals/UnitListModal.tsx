@@ -18,6 +18,7 @@ import EditUnitModal from './EditUnitModal';
 import { useGet } from '../../hooks/useGet';
 import { useDelete } from '../../hooks/useDelete';
 import ModalUnitItem from '../Items/ModalUnitItem';
+import { formatDate } from '../../Utils/Formatters';
 
 interface Props {
   visible: boolean;
@@ -94,15 +95,7 @@ const UnitListModal: React.FC<Props> = ({ visible, onClose, selectedDate }) => {
     );
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+
 
   const renderUnitItem = ({ item }: { item: UnitData }) => (
     <ModalUnitItem

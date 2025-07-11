@@ -1,18 +1,6 @@
 import * as XLSX from 'xlsx';
 import { OccupancyReportData, OccupiedUnit, AvailableUnit, Booking, Payment } from "../../../types/OccupancyReport";
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
-
-const formatCurrency = (amount: number | string) => {
-  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return num;
-};
+import { formatDate, formatCurrency } from '../../../Utils/Formatters';
 
 export const generateOccupancyExcelWorkbook = (occupancyData: OccupancyReportData[]): XLSX.WorkBook => {
   const workbook = XLSX.utils.book_new();

@@ -1,19 +1,8 @@
 
 
 import { CustomerReportData } from "../../../types/CustomerReport";
+import { formatDate ,formatAEDCurrency} from '../../../Utils/Formatters';
 
-  const formatCurrency = (amount: number | string) => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return `AED ${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
   const generateCustomerPDFContent = (customers: CustomerReportData[] ) => {
     const currentDate = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
@@ -154,15 +143,15 @@ import { CustomerReportData } from "../../../types/CustomerReport";
               <div class="summary-label">Completed Bookings</div>
             </div>
             <div class="summary-item">
-              <div class="summary-value">${formatCurrency(customer.totalPayment)}</div>
+              <div class="summary-value">${formatAEDCurrency(customer.totalPayment)}</div>
               <div class="summary-label">Total Payment</div>
             </div>
             <div class="summary-item">
-              <div class="summary-value">${formatCurrency(customer.paidPayment)}</div>
+              <div class="summary-value">${formatAEDCurrency(customer.paidPayment)}</div>
               <div class="summary-label">Paid Payment</div>
             </div>
             <div class="summary-item">
-              <div class="summary-value">${formatCurrency(customer.pendingPayments)}</div>
+              <div class="summary-value">${formatAEDCurrency(customer.pendingPayments)}</div>
               <div class="summary-label">Pending Payments</div>
             </div>
           </div>
@@ -182,7 +171,7 @@ import { CustomerReportData } from "../../../types/CustomerReport";
               <div><strong>End Date:</strong> ${formatDate(booking.endDate)}</div>
               <div><strong>Status:</strong> <span class="status-${booking.bookingStatus}">${booking.bookingStatus.toUpperCase()}</span></div>
               <div><strong>Space:</strong> ${booking.spaceOccupied} m²</div>
-              <div><strong>Price:</strong> ${formatCurrency(booking.price)}</div>
+              <div><strong>Price:</strong> ${formatAEDCurrency(booking.price)}</div>
             </div>
             
             <h4>Payment History</h4>
@@ -206,7 +195,7 @@ import { CustomerReportData } from "../../../types/CustomerReport";
               <td>${payment.paymentId}</td>
               <td>${formatDate(payment.date)}</td>
               <td>${payment.method || 'N/A'}</td>
-              <td>${formatCurrency(payment.amount)}</td>
+              <td>${formatAEDCurrency(payment.amount)}</td>
               <td>${formatDate(payment.startDate)} - ${formatDate(payment.endDate)}</td>
               <td><span class="status-${payment.status}">${payment.status.toUpperCase()}</span></td>
             </tr>
