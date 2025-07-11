@@ -34,7 +34,7 @@ type UnitOverviewData = {
   total: number;
 };
 
-const UnitList = () => {
+const UnitList=({ refresh }: { refresh: number })=> {
   const [selectedWarehouse, setSelectedWarehouse] = useState('All');
   const [sortBy, setSortBy] = useState<
     'unitNumber' | 'percentage' | 'customers'
@@ -70,6 +70,11 @@ const UnitList = () => {
     setDisplayedUnits([]);
   }, [selectedWarehouse]);
 
+    useEffect(() => {
+      fetchAllUnits();
+      fetchUnitsOverview();
+    }, [refresh]);
+    
   useFocusEffect(
     useCallback(() => {
       fetchAllUnits();

@@ -6,15 +6,13 @@ import Animated, {
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
-
-// Remove the old QuickActions import
+import { useNavigation } from '@react-navigation/native';
 import QuickActions from '../components/widgets/QuickActions';
-// import FloatingQuickActions from '../components/widgets/FloatingQuickActions';
 import PaymentsOverview from '../components/widgets/PaymentsOverview';
 import RecentExpenses from '../components/widgets/RecentExpenses';
 import StorageUnitsOverview from '../components/widgets/StorageUnitsOverview';
 import AvailabilityCalendar from '../components/widgets/AvailabilityCalendar';
-
+import { RootTabParamList } from '../types/Types';
 import AddUnitModal from '../components/modals/AddUnitModal';
 import AddCustomerModal from '../components/modals/AddCustomerModal';
 import AddBookingModal from '../components/modals/AddBookingModal';
@@ -27,6 +25,7 @@ import {
   PaymentOverviewData,
   ExpenseData,
 } from '../types/Types';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
 const LoadingSpinner = () => {
     const { dark } = useTheme();
@@ -86,6 +85,8 @@ const Dashboard = () => {
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [showAddBookingModal, setShowAddBookingModal] = useState(false);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+type DashboardNavProp = BottomTabNavigationProp<RootTabParamList, 'Dashboard'>;
+const navigation = useNavigation<DashboardNavProp>();
 
   const [paymentOverview, setPaymentOverview] =
     useState<PaymentOverviewData | null>(null);
@@ -120,32 +121,6 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  const handleQuickAction = (action: any) => {
-    switch (action.title) {
-      case 'Add Unit':
-        setShowAddUnitModal(true);
-        break;
-      case 'Customer':
-        setShowAddCustomerModal(true);
-        break;
-      case 'Booking':
-        setShowAddBookingModal(true);
-        break;
-      case 'Expense':
-        setShowAddExpenseModal(true);
-        break;
-      case 'Cust Report':
-        // Navigate to customer report screen
-        console.log('Navigate to customer report');
-        break;
-      case 'Revenue':
-        // Navigate to revenue screen
-        console.log('Navigate to revenue screen');
-        break;
-      default:
-        break;
-    }
-  };
 
   const loadingStyle = useAnimatedStyle(() => ({
     opacity: loadingOpacity.value,
@@ -168,17 +143,34 @@ const Dashboard = () => {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={() => (
           <DashboardContent>
-            {/* Removed the old QuickActions widget */}
                         <AnimatedWidget delay={50}>
-              <QuickActions
-                onActionPress={(action) => {
-                  if (action.title === 'Add Unit') setShowAddUnitModal(true);
-                  else if (action.title === 'Customer')
-                    setShowAddCustomerModal(true);
-                  else if (action.title === 'Booking')
-                    setShowAddBookingModal(true);
-                }}
-              />
+<QuickActions
+  onActionPress={(action) => {
+    switch (action.title) {
+      case 'Add Unit':
+        setShowAddUnitModal(true);
+        break;
+      case 'Customer':
+        setShowAddCustomerModal(true);
+        break;
+      case 'Booking':
+        setShowAddBookingModal(true);
+        break;
+      case 'Expense':
+        navigation.navigate('Reports', { openReport: 'expense' });
+        break;
+      case 'Cust Report':
+        navigation.navigate('Reports', { openReport: 'customer' });
+        break;
+      case 'Revenue':
+        navigation.navigate('Reports', { openReport: 'revenue' });
+        break;
+      default:
+        break;
+    }
+  }}
+/>
+
             </AnimatedWidget>
             
             <AnimatedWidget delay={50}>
@@ -203,12 +195,6 @@ const Dashboard = () => {
         )}
       />
 
-      {/* Floating Quick Actions - Hide when any modal is open */}
-      {/* {!showAddUnitModal && !showAddCustomerModal && !showAddBookingModal && !showAddExpenseModal && (
-        <FloatingQuickActions onActionPress={handleQuickAction} />
-      )} */}
-
-      {/* Modals - Each with proper zIndex */}
       <AddUnitModal
         visible={showAddUnitModal}
         onClose={() => setShowAddUnitModal(false)}

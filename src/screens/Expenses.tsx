@@ -12,6 +12,7 @@ export default function Expenses() {
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [showAddBookingModal, setShowAddBookingModal] = useState(false);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+const [refreshExpenses, setRefreshExpenses] = useState(0);
 
   const handleQuickAction = (action: any) => {
     switch (action.title) {
@@ -42,15 +43,12 @@ export default function Expenses() {
 
   return (
     <View style={styles.container}>
-      {/* Main Content */}
-      <ExpenseList />
+    <ExpenseList refresh={refreshExpenses} />
 
-      {/* Floating Action Button - Only show when no modals are open */}
       {!hasOpenModal && (
         <FloatingQuickActions onActionPress={handleQuickAction} />
       )}
 
-      {/* Modals */}
       <AddUnitModal
         visible={showAddUnitModal}
         onClose={() => setShowAddUnitModal(false)}
@@ -69,8 +67,10 @@ export default function Expenses() {
       <AddExpenseModal
         visible={showAddExpenseModal}
         onClose={() => setShowAddExpenseModal(false)}
-        onAdd={(b) => console.log('Expense added:', b)}
-      />
+        onAdd={(b) => {
+          console.log('Expense added:', b);
+          setRefreshExpenses((prev) => prev + 1); 
+        }}      />
     </View>
   );
 }

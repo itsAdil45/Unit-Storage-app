@@ -11,7 +11,8 @@ export default function Bookings() {
     const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
     const [showAddBookingModal, setShowAddBookingModal] = useState(false);
     const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
-    
+        const [refresh, setRefresh] = useState(0);
+
       const handleQuickAction = (action: any) => {
     switch (action.title) {
       case 'Add Unit':
@@ -40,7 +41,7 @@ export default function Bookings() {
 
   return (
     <View style={styles.container}>
-      <BookingsList />
+      <BookingsList refresh={refresh} />
 
             {!hasOpenModal && (
         <FloatingQuickActions onActionPress={handleQuickAction} />
@@ -58,8 +59,9 @@ export default function Bookings() {
       <AddBookingModal
         visible={showAddBookingModal}
         onClose={() => setShowAddBookingModal(false)}
-        onAdd={(b) => console.log('Booking added:', b)}
-      />
+                        onAdd={(b) => {
+          setRefresh((prev) => prev + 1); 
+        }}       />
       <AddExpenseModal
         visible={showAddExpenseModal}
         onClose={() => setShowAddExpenseModal(false)}

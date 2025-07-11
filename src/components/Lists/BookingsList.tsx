@@ -27,7 +27,7 @@ import LoadMorePagination from '../Reusable/LoadMorePagination'; // Updated impo
 import BookingItem from '../Items/BookingItem';
 import styles from './Styles/BookingList';
 
-const BookingsList: React.FC = () => {
+const BookingsList=({ refresh }: { refresh: number })=> {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -77,7 +77,7 @@ const BookingsList: React.FC = () => {
       setBookings([]);
       fetchBookings(1, false);
     }
-  }, [searchDebounced, statusFilter]);
+  }, [searchDebounced, statusFilter,refresh]);
 
   useEffect(() => {
     if (page === 1) {

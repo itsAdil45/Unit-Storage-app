@@ -26,24 +26,24 @@ const actions = [
     color: '#00bcd4',
     lib: 'MaterialCommunityIcons',
   },
-  {
-    title: 'Cust Report',
-    icon: 'account-group',
-    color: '#4caf50',
-    lib: 'MaterialCommunityIcons',
-  },
+  // {
+  //   title: 'Cust Report',
+  //   icon: 'account-group',
+  //   color: '#4caf50',
+  //   lib: 'MaterialCommunityIcons',
+  // },
   {
     title: 'Expense',
     icon: 'archive-outline',
     color: '#3f51b5',
     lib: 'MaterialCommunityIcons',
   },
-  {
-    title: 'Revenue',
-    icon: 'money-bill-wave',
-    color: '#f44336',
-    lib: 'FontAwesome5',
-  },
+  // {
+  //   title: 'Revenue',
+  //   icon: 'money-bill-wave',
+  //   color: '#f44336',
+  //   lib: 'FontAwesome5',
+  // },
 ];
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);

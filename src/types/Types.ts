@@ -10,6 +10,12 @@
 //   warehouseId: number; // Warehouse ID for operations
 //   bookings: any[]; // Array of bookings (you may want to define a Booking type)
 // };
+// types/navigation.ts
+
+export type RootTabParamList = {
+  Dashboard: undefined;
+  Reports: { openReport?: 'customer' | 'revenue' | 'expense' }; // add more if needed
+};
 
 // types/Unit.ts
 export interface UnitData {

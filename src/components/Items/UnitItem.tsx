@@ -101,7 +101,7 @@ const UnitItem: React.FC<UnitItemProps> = ({
       >
         <Animated.View
           // entering={FadeInRight.delay(index * 50)}
-          exiting={FadeOutLeft}
+          //exiting={FadeOutLeft}
         >
           <TouchableOpacity
             onPress={() => onUnitPress(item)}

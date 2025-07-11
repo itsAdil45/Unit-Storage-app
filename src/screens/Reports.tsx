@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Text, 
   View, 
@@ -17,7 +17,8 @@ import UnitsReport from '../components/Reports/UnitsReport';
 import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../constants/color';
 const { width } = Dimensions.get('window');
-
+import { RouteProp, useRoute } from '@react-navigation/native';
+import { RootTabParamList } from '../types/Types';
 interface ReportType {
   id: string;
   label: string;
@@ -66,6 +67,18 @@ const reportTypes: ReportType[] = [
 
 
 export default function Reports() {
+type ReportsRouteProp = RouteProp<RootTabParamList, 'Reports'>;
+const route = useRoute<ReportsRouteProp>();
+const { openReport } = route.params || {};
+useEffect(() => {
+  if (openReport) {
+    const found = reportTypes.find(r => r.id === openReport);
+    if (found) {
+      setSelectedReport(found);
+    }
+  }
+}, [openReport]);
+
   const [selectedReport, setSelectedReport] = useState<ReportType>(reportTypes[0]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const { dark } = useTheme();

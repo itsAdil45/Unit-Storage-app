@@ -27,7 +27,7 @@ import CustomerItem from '../Items/CustomerItem';
 import { Customer } from '../../types/Customers';
 import styles from './Styles/CustomersList';
 
-const CustomersList: React.FC = () => {
+const CustomersList=({ refresh }: { refresh: number })=> {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
   const [emailModalVisible, setEmailModalVisible] = useState(false);
@@ -66,7 +66,7 @@ const CustomersList: React.FC = () => {
       setCustomers([]);
       fetchCustomers(1, false);
     }
-  }, [searchDebounced, statusFilter]);
+  }, [searchDebounced, statusFilter,refresh]);
 
   useEffect(() => {
     if (page === 1) {

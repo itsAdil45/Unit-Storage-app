@@ -238,7 +238,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
           onPress={() => onAddPayment(item)}
           style={[styles.actionButton, { backgroundColor: '#4CAF50' + '15' }]}
         >
-          <MaterialIcons name="add" size={16} color="#4CAF50" />
+          <MaterialIcons name="add" size={12} color="#4CAF50" />
           <Text style={[styles.actionText, { color: '#4CAF50' }]}>Add Pay</Text>
         </TouchableOpacity>
 

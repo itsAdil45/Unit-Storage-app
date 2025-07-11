@@ -143,7 +143,7 @@ const  styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionText: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '600',
     marginLeft: 4,
   },

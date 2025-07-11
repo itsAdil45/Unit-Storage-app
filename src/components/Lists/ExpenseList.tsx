@@ -23,7 +23,7 @@ import ExpenseItem from './../Items/ExpenseItem';
 import { Expense } from '../../types/Expenses';
 import styles from './Styles/ExpenseList';
 
-const ExpenseList: React.FC = () => {
+const ExpenseList = ({ refresh }: { refresh: number }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
 
@@ -59,7 +59,7 @@ const ExpenseList: React.FC = () => {
       setExpenses([]);
       fetchExpenses(1, false);
     }
-  }, [searchDebounced]);
+  }, [searchDebounced, refresh]);
 
   useEffect(() => {
     if (page === 1) {

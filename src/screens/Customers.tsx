@@ -11,6 +11,7 @@ export default function Customers() {
     const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
     const [showAddBookingModal, setShowAddBookingModal] = useState(false);
     const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+    const [refresh, setRefresh] = useState(0);
     
       const handleQuickAction = (action: any) => {
     switch (action.title) {
@@ -40,7 +41,7 @@ export default function Customers() {
 
   return (
     <View style={styles.container}>
-      <CustomersList />
+      <CustomersList refresh={refresh}/>
 
             {!hasOpenModal && (
         <FloatingQuickActions onActionPress={handleQuickAction} />
@@ -53,7 +54,9 @@ export default function Customers() {
       <AddCustomerModal
         visible={showAddCustomerModal}
         onClose={() => setShowAddCustomerModal(false)}
-        onAdd={(c) => console.log('New customer:', c)}
+                onAdd={(b) => {
+          setRefresh((prev) => prev + 1); 
+        }} 
       />
       <AddBookingModal
         visible={showAddBookingModal}
