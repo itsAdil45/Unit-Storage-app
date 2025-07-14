@@ -66,18 +66,30 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     logoScale.value = withSpring(1, { damping: 8, stiffness: 100 });
     logoRotation.value = withSequence(
       withTiming(5, { duration: 200 }),
-      withTiming(0, { duration: 300 })
+      withTiming(0, { duration: 300 }),
     );
 
     decorationOpacity.value = withDelay(300, withTiming(1, { duration: 500 }));
-    decorationScale.value = withDelay(300, withSpring(1, { damping: 10, stiffness: 80 }));
+    decorationScale.value = withDelay(
+      300,
+      withSpring(1, { damping: 10, stiffness: 80 }),
+    );
 
     titleOpacity.value = withDelay(600, withTiming(1, { duration: 600 }));
-    titleTranslateY.value = withDelay(600, withSpring(0, { damping: 12, stiffness: 90 }));
-    titleScale.value = withDelay(600, withSpring(1, { damping: 10, stiffness: 80 }));
+    titleTranslateY.value = withDelay(
+      600,
+      withSpring(0, { damping: 12, stiffness: 90 }),
+    );
+    titleScale.value = withDelay(
+      600,
+      withSpring(1, { damping: 10, stiffness: 80 }),
+    );
 
     subtitleOpacity.value = withDelay(900, withTiming(1, { duration: 500 }));
-    subtitleTranslateY.value = withDelay(900, withSpring(0, { damping: 12, stiffness: 90 }));
+    subtitleTranslateY.value = withDelay(
+      900,
+      withSpring(0, { damping: 12, stiffness: 90 }),
+    );
 
     taglineOpacity.value = withDelay(1200, withTiming(1, { duration: 500 }));
 
@@ -90,7 +102,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     opacity: logoOpacity.value,
     transform: [
       { scale: logoScale.value },
-      { rotate: `${logoRotation.value}deg` }
+      { rotate: `${logoRotation.value}deg` },
     ],
   }));
 
@@ -103,7 +115,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     opacity: titleOpacity.value,
     transform: [
       { translateY: titleTranslateY.value },
-      { scale: titleScale.value }
+      { scale: titleScale.value },
     ],
   }));
 
@@ -123,7 +135,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
       <Animated.View style={[styles.decorationTop, decorationAnimatedStyle]}>
         <View style={styles.decorativeCircle} />
       </Animated.View>
-      
+
       <Animated.View style={[styles.decorationBottom, decorationAnimatedStyle]}>
         <View style={styles.decorativeCircle} />
       </Animated.View>

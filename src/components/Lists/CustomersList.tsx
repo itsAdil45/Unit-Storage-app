@@ -22,12 +22,12 @@ import EditCustomerModal from '../modals/EditCustomerModal';
 import AnimatedDeleteWrapper, {
   useAnimatedDelete,
 } from '../Reusable/AnimatedDeleteWrapper';
-import LoadMorePagination from '../Reusable/LoadMorePagination'; 
+import LoadMorePagination from '../Reusable/LoadMorePagination';
 import CustomerItem from '../Items/CustomerItem';
 import { Customer } from '../../types/Customers';
 import styles from './Styles/CustomersList';
 
-const CustomersList=({ refresh }: { refresh: number })=> {
+const CustomersList = ({ refresh }: { refresh: number }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
   const [emailModalVisible, setEmailModalVisible] = useState(false);
@@ -66,7 +66,7 @@ const CustomersList=({ refresh }: { refresh: number })=> {
       setCustomers([]);
       fetchCustomers(1, false);
     }
-  }, [searchDebounced, statusFilter,refresh]);
+  }, [searchDebounced, statusFilter, refresh]);
 
   useEffect(() => {
     if (page === 1) {
@@ -102,7 +102,7 @@ const CustomersList=({ refresh }: { refresh: number })=> {
         queryParams.append('search', searchDebounced.trim());
       }
 
-      let statusValue = '0'; 
+      let statusValue = '0';
       if (statusFilter === 'Inactive') {
         statusValue = '1';
       }
@@ -113,13 +113,13 @@ const CustomersList=({ refresh }: { refresh: number })=> {
 
       if (res?.status === 'success') {
         const customersData = res.data.customers || [];
-        
+
         if (isLoadMore) {
-          setCustomers(prev => [...prev, ...customersData]);
+          setCustomers((prev) => [...prev, ...customersData]);
         } else {
           setCustomers(customersData);
         }
-        
+
         setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
         setTotalItems(parseInt(res.data.pagination.total) || 0);
       }
@@ -227,7 +227,7 @@ const CustomersList=({ refresh }: { refresh: number })=> {
       removingId={removingId}
       onDelete={(id) => {
         handleDelete(id, setCustomers);
-        setTotalItems(prev => prev - 1);
+        setTotalItems((prev) => prev - 1);
       }}
       deleteTitle="Delete Customer"
       itemName={`${item.firstName} ${item.lastName}`}
@@ -276,7 +276,7 @@ const CustomersList=({ refresh }: { refresh: number })=> {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background  }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar
         barStyle={dark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.card}

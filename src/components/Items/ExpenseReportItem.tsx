@@ -9,25 +9,25 @@ interface Props {
   item: ExpenseReportData;
 }
 
-const ExpenseReportItem: React.FC<Props> = ({
-  item,
-}) => {
+const ExpenseReportItem: React.FC<Props> = ({ item }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
-    //   const paymentKey = `${item.email}-${booking.bookingId}-payments`;
-    //   const isPaymentExpanded = expandedPayments[paymentKey];
-
-      
-  
+  //   const paymentKey = `${item.email}-${booking.bookingId}-payments`;
+  //   const isPaymentExpanded = expandedPayments[paymentKey];
 
   return (
-    <View style={[styles.customerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View
+      style={[
+        styles.customerCard,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <View style={styles.customerHeader}>
         <Text style={[styles.customerName, { color: colors.text }]}>
           {item.warehouseName} {item.warehouseId}
         </Text>
         <Text style={[styles.customerInfo, { color: colors.subtext }]}>
-          {item.date} 
+          {item.date}
         </Text>
       </View>
 
@@ -48,7 +48,6 @@ const ExpenseReportItem: React.FC<Props> = ({
             Description
           </Text>
         </View>
-
       </View>
 
       {/* <View style={styles.paymentSummary}>
@@ -82,7 +81,6 @@ const ExpenseReportItem: React.FC<Props> = ({
         <Text style={[styles.bookingsTitle, { color: colors.text }]}>
           Expense Details ({item.expenseType})
         </Text>
-
       </View>
     </View>
   );

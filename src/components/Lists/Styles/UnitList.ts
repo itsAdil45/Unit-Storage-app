@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 8,
   },
-    statsContainer: {
+  statsContainer: {
     marginBottom: 16,
     paddingHorizontal: 0,
   },

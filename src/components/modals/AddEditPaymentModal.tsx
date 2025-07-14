@@ -140,8 +140,11 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error picking document:', error);
-      Alert.alert('Error', 'Failed to pick document');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', Failed to pick document`,
+      });
     }
   };
 
@@ -155,11 +158,19 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
 
   const validateForm = () => {
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', Please enter a valid amount`,
+      });
       return false;
     }
     if (startDate >= endDate) {
-      Alert.alert('Error', 'Start date must be before end date');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', Start date must be before end date`,
+      });
       return false;
     }
     return true;
@@ -219,31 +230,38 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
       }
 
       if (response?.status === 'success') {
-                {onClose()}
-        { isEditMode?               
-          Toast.show({
+        {
+          onClose();
+        }
+        {
+          isEditMode
+            ? Toast.show({
                 type: 'success',
                 text1: 'Updated',
                 text2: `Payment updated successfully`,
-              }):              
-              Toast.show({
+              })
+            : Toast.show({
                 type: 'success',
                 text1: 'Added',
                 text2: `Payment added successfully`,
               });
-
         }
       } else {
-        {onClose()}
-              Toast.show({
-                type: 'error',
-                text1: 'Failed',
-                text2: `${response?.message}`,
-              });
+        {
+          onClose();
+        }
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: `${response?.message}`,
+        });
       }
     } catch (error) {
-      console.error('Error saving payment:', error);
-      Alert.alert('Error', 'Failed to save payment');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', Failed to save payment`,
+      });
     } finally {
       setLoading(false);
     }

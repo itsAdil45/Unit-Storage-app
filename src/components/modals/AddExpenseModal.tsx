@@ -78,14 +78,22 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const handleAdd = async () => {
     // Validate required fields
     if (!name.trim() || !expenseType || !amount || !warehouse) {
-      Alert.alert('Error', 'Please fill all fields');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', Please fill all fields`,
+      });
       return;
     }
 
     // Validate amount is a positive number
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', Please enter a valid amount`,
+      });
       return;
     }
 
@@ -104,11 +112,11 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       const response = await post('/expenses', payload); // Adjust endpoint as needed
 
       if (response && response.status === 'success') {
-              Toast.show({
-        type: 'success',
-        text1: 'Added',
-        text2: `Expense added successfully `,
-      });
+        Toast.show({
+          type: 'success',
+          text1: 'Added',
+          text2: `Expense added successfully `,
+        });
         // Call the onAdd callback
         onAdd({
           name,
@@ -124,11 +132,14 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         resetForm();
         onClose();
       } else {
-        Alert.alert('Error', response?.message || 'Failed to add expense');
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: `${response?.message}`,
+        });
       }
     } catch (error) {
       console.error('Error adding expense:', error);
-      Alert.alert('Error', 'Failed to add expense. Please try again.');
     } finally {
       setSubmitting(false);
     }

@@ -62,11 +62,19 @@ const AddWarehouseModal: React.FC<AddWarehouseModalProps> = ({
 
   const validateForm = () => {
     if (!formData.name.trim()) {
-      Alert.alert('Validation Error', 'Warehouse name is required');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', Warehouse name is required`,
+      });
       return false;
     }
     if (!formData.address.trim()) {
-      Alert.alert('Validation Error', 'Address is required');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', Address is required`,
+      });
       return false;
     }
     return true;
@@ -86,19 +94,22 @@ const AddWarehouseModal: React.FC<AddWarehouseModalProps> = ({
       const response = await post('/warehouses', payload);
 
       if (response?.status === 'success') {
-                      Toast.show({
-        type: 'success',
-        text1: 'Added',
-        text2: `Warehouse added successfully `,
-      });
+        Toast.show({
+          type: 'success',
+          text1: 'Added',
+          text2: `Warehouse added successfully `,
+        });
         onSaveSuccess(response.data);
         handleClose();
       } else {
-        Alert.alert('Error', 'Failed to add warehouse');
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: `${response?.message}`,
+        });
       }
     } catch (error) {
       console.error('Error adding warehouse:', error);
-      Alert.alert('Error', 'Failed to add warehouse');
     }
     setLoading(false);
   };

@@ -52,7 +52,7 @@ const EditUnitModal: React.FC<Props> = ({
 
     if (res?.status === 'success') {
       onClose();
-      onSaveSuccess(res.data); 
+      onSaveSuccess(res.data);
     }
   };
 

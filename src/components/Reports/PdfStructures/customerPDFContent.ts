@@ -1,16 +1,14 @@
+import { CustomerReportData } from '../../../types/CustomerReport';
+import { formatDate, formatAEDCurrency } from '../../../Utils/Formatters';
 
+const generateCustomerPDFContent = (customers: CustomerReportData[]) => {
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
-import { CustomerReportData } from "../../../types/CustomerReport";
-import { formatDate ,formatAEDCurrency} from '../../../Utils/Formatters';
-
-  const generateCustomerPDFContent = (customers: CustomerReportData[] ) => {
-    const currentDate = new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-
-    let html = `
+  let html = `
       <html>
         <head>
           <meta charset="utf-8">
@@ -117,8 +115,8 @@ import { formatDate ,formatAEDCurrency} from '../../../Utils/Formatters';
           </div>
     `;
 
-    customers.forEach((customer) => {
-      html += `
+  customers.forEach((customer) => {
+    html += `
         <div class="customer-section">
           <div class="customer-header">
             <div class="customer-name">${customer.firstName} ${customer.lastName}</div>
@@ -160,8 +158,8 @@ import { formatDate ,formatAEDCurrency} from '../../../Utils/Formatters';
             <h3>Booking Details</h3>
       `;
 
-      customer.bookingDetails.forEach((booking) => {
-        html += `
+    customer.bookingDetails.forEach((booking) => {
+      html += `
           <div class="booking-item">
             <div class="booking-header">
               Booking #${booking.bookingId} - Unit ${booking.unitNumber}
@@ -189,8 +187,8 @@ import { formatDate ,formatAEDCurrency} from '../../../Utils/Formatters';
               <tbody>
         `;
 
-        booking.payments.forEach((payment) => {
-          html += `
+      booking.payments.forEach((payment) => {
+        html += `
             <tr>
               <td>${payment.paymentId}</td>
               <td>${formatDate(payment.date)}</td>
@@ -200,27 +198,27 @@ import { formatDate ,formatAEDCurrency} from '../../../Utils/Formatters';
               <td><span class="status-${payment.status}">${payment.status.toUpperCase()}</span></td>
             </tr>
           `;
-        });
+      });
 
-        html += `
+      html += `
               </tbody>
             </table>
           </div>
         `;
-      });
-
-      html += `
-          </div>
-        </div>
-      `;
     });
 
     html += `
+          </div>
+        </div>
+      `;
+  });
+
+  html += `
         </body>
       </html>
     `;
 
-    return html;
-  };
+  return html;
+};
 
-  export default generateCustomerPDFContent;
+export default generateCustomerPDFContent;

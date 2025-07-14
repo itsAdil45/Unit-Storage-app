@@ -24,7 +24,7 @@ interface Customer {
   firstName: string;
   lastName: string;
   email: string;
-  deleted: number
+  deleted: number;
 }
 
 interface StorageUnit {
@@ -79,7 +79,7 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({
       if (customerSearch.length > 0) {
         const response = await get('/customers', { search: customerSearch });
         if (response?.status === 'success')
-          setCustomers( response.data.customers);
+          setCustomers(response.data.customers);
       } else {
         setCustomers([]);
       }
@@ -107,12 +107,20 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({
 
   const handleAdd = async () => {
     if (!selectedCustomer || !selectedStorageUnit) {
-      Alert.alert('Error', 'Please select both customer and storage unit');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', Please select both customer and storage unit`,
+      });
       return;
     }
 
     if (!totalPrice || !spaceOccupied) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', 'Please fill in all required fieldse`,
+      });
       return;
     }
 
@@ -145,19 +153,22 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({
         // Call the onAdd callback with the created booking data
         onAdd(response.data);
 
-      Toast.show({
-        type: 'success',
-        text1: 'Added',
-        text2: `Booking added successfully!`,
-      });
+        Toast.show({
+          type: 'success',
+          text1: 'Added',
+          text2: `Booking added successfully!`,
+        });
         onClose();
         resetForm();
       } else {
-        Alert.alert('Error', response?.message || 'Failed to create booking');
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: `${response?.message}`,
+        });
       }
     } catch (error) {
       console.error('Error creating booking:', error);
-      Alert.alert('Error', 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -258,38 +269,37 @@ const AddBookingModal: React.FC<AddBookingModalProps> = ({
                       },
                     ]}
                   >
-<ScrollView style={styles.dropdownList} nestedScrollEnabled>
-  {customers
-    .filter((item) => item.deleted === 0) // ✅ Only include non-deleted customers
-    .map((item) => (
-      <TouchableOpacity
-        key={item.id}
-        style={[
-          styles.dropdownItem,
-          { borderBottomColor: colors.border },
-        ]}
-        onPress={() => selectCustomer(item)}
-      >
-        <Text
-          style={[
-            styles.dropdownItemText,
-            { color: colors.text },
-          ]}
-        >
-          {item.firstName} {item.lastName}
-        </Text>
-        <Text
-          style={[
-            styles.dropdownItemSubtext,
-            { color: colors.border },
-          ]}
-        >
-          {item.email}
-        </Text>
-      </TouchableOpacity>
-    ))}
-</ScrollView>
-
+                    <ScrollView style={styles.dropdownList} nestedScrollEnabled>
+                      {customers
+                        .filter((item) => item.deleted === 0) // ✅ Only include non-deleted customers
+                        .map((item) => (
+                          <TouchableOpacity
+                            key={item.id}
+                            style={[
+                              styles.dropdownItem,
+                              { borderBottomColor: colors.border },
+                            ]}
+                            onPress={() => selectCustomer(item)}
+                          >
+                            <Text
+                              style={[
+                                styles.dropdownItemText,
+                                { color: colors.text },
+                              ]}
+                            >
+                              {item.firstName} {item.lastName}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.dropdownItemSubtext,
+                                { color: colors.border },
+                              ]}
+                            >
+                              {item.email}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                    </ScrollView>
                   </View>
                 )}
               </View>

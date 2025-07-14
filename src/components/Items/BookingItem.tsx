@@ -1,15 +1,13 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  Linking,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Booking } from '../../types/Bookings';
 import styles from './Styles/BookingItem';
-import { formatDate, getStatusColor, formatCurrency } from '../../Utils/Formatters';
+import {
+  formatDate,
+  getStatusColor,
+  formatCurrency,
+} from '../../Utils/Formatters';
 interface BookingItemProps {
   item: Booking;
   index: number;
@@ -31,7 +29,6 @@ const BookingItem: React.FC<BookingItemProps> = ({
   onAddPayment,
   onDeletePress,
 }) => {
-
   const handleViewPdf = async () => {
     if (!item.pdfDocumentUrl) {
       Alert.alert('No Document', 'No PDF document available for this booking');
@@ -50,8 +47,6 @@ const BookingItem: React.FC<BookingItemProps> = ({
       Alert.alert('Error', 'Failed to open PDF document');
     }
   };
-
-
 
   return (
     <View
@@ -257,7 +252,5 @@ const BookingItem: React.FC<BookingItemProps> = ({
     </View>
   );
 };
-
-
 
 export default BookingItem;

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import styles from '../Reports/Styles/CustomerReport';
-import { CustomerReportData, Payment } from '../../types/CustomerReport'; 
+import { CustomerReportData, Payment } from '../../types/CustomerReport';
 import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
 
@@ -33,12 +33,20 @@ const CustomerReportItem: React.FC<Props> = ({
   const colors = dark ? darkColors : lightColors;
 
   const renderPaymentItem = (payment: Payment) => (
-    <View key={payment.paymentId} style={[styles.paymentItem, { backgroundColor: colors.background }]}>
+    <View
+      key={payment.paymentId}
+      style={[styles.paymentItem, { backgroundColor: colors.background }]}
+    >
       <View style={styles.paymentHeader}>
         <Text style={[styles.paymentId, { color: colors.primary }]}>
           Payment #{payment.paymentId}
         </Text>
-        <View style={[styles.paymentStatusBadge, { backgroundColor: getStatusColor(payment.status) }]}>
+        <View
+          style={[
+            styles.paymentStatusBadge,
+            { backgroundColor: getStatusColor(payment.status) },
+          ]}
+        >
           <Text style={styles.paymentStatusText}>
             {payment.status.toUpperCase()}
           </Text>
@@ -55,7 +63,8 @@ const CustomerReportItem: React.FC<Props> = ({
           Method: {getPaymentMethodDisplay(payment.method)}
         </Text>
         <Text style={[styles.paymentDetail, { color: colors.subtext }]}>
-          Period: {formatDate(payment.startDate)} - {formatDate(payment.endDate)}
+          Period: {formatDate(payment.startDate)} -{' '}
+          {formatDate(payment.endDate)}
         </Text>
       </View>
     </View>
@@ -69,10 +78,15 @@ const CustomerReportItem: React.FC<Props> = ({
       const isPaymentExpanded = expandedPayments[paymentKey];
 
       return (
-        <View key={booking.bookingId} style={[styles.bookingItem, { backgroundColor: colors.background }]}>
+        <View
+          key={booking.bookingId}
+          style={[styles.bookingItem, { backgroundColor: colors.background }]}
+        >
           <TouchableOpacity
             style={styles.bookingHeader}
-            onPress={() => toggleBookingExpansion(item.email, booking.bookingId)}
+            onPress={() =>
+              toggleBookingExpansion(item.email, booking.bookingId)
+            }
           >
             <View style={styles.bookingTitleRow}>
               <Text style={[styles.bookingId, { color: colors.primary }]}>
@@ -87,7 +101,12 @@ const CustomerReportItem: React.FC<Props> = ({
                 color={colors.subtext}
               />
             </View>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(booking.bookingStatus) }]}>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: getStatusColor(booking.bookingStatus) },
+              ]}
+            >
               <Text style={styles.statusText}>
                 {booking.bookingStatus.toUpperCase()}
               </Text>
@@ -98,27 +117,43 @@ const CustomerReportItem: React.FC<Props> = ({
             <View style={styles.expandedBookingContent}>
               <View style={styles.bookingInfo}>
                 <Text style={[styles.bookingDetail, { color: colors.subtext }]}>
-                  {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
+                  {formatDate(booking.startDate)} -{' '}
+                  {formatDate(booking.endDate)}
                 </Text>
                 <Text style={[styles.bookingDetail, { color: colors.subtext }]}>
-                  Space: {booking.spaceOccupied} m² • Price: {formatCurrency(booking.price)}
+                  Space: {booking.spaceOccupied} m² • Price:{' '}
+                  {formatCurrency(booking.price)}
                 </Text>
               </View>
 
               <TouchableOpacity
                 style={styles.paymentsHeader}
-                onPress={() => togglePaymentExpansion(item.email, booking.bookingId)}
+                onPress={() =>
+                  togglePaymentExpansion(item.email, booking.bookingId)
+                }
               >
                 <View style={styles.paymentsHeaderContent}>
                   <Text style={[styles.paymentsTitle, { color: colors.text }]}>
                     Payments ({booking.payments.length})
                   </Text>
                   <View style={styles.paymentsSummary}>
-                    <Text style={[styles.paymentsSummaryText, { color: '#4CAF50' }]}>
-                      {booking.payments.filter(p => p.status === 'paid').length} paid
+                    <Text
+                      style={[styles.paymentsSummaryText, { color: '#4CAF50' }]}
+                    >
+                      {
+                        booking.payments.filter((p) => p.status === 'paid')
+                          .length
+                      }{' '}
+                      paid
                     </Text>
-                    <Text style={[styles.paymentsSummaryText, { color: '#FF9800' }]}>
-                      {booking.payments.filter(p => p.status === 'pending').length} pending
+                    <Text
+                      style={[styles.paymentsSummaryText, { color: '#FF9800' }]}
+                    >
+                      {
+                        booking.payments.filter((p) => p.status === 'pending')
+                          .length
+                      }{' '}
+                      pending
                     </Text>
                   </View>
                 </View>
@@ -142,7 +177,12 @@ const CustomerReportItem: React.FC<Props> = ({
   };
 
   return (
-    <View style={[styles.customerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View
+      style={[
+        styles.customerCard,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <View style={styles.customerHeader}>
         <Text style={[styles.customerName, { color: colors.text }]}>
           {item.firstName} {item.lastName}

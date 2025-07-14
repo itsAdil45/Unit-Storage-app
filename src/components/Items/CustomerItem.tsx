@@ -3,8 +3,6 @@ import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { CustomerItemProps } from '../../types/Customers';
 import styles from './Styles/CustomerItem';
 
-
-
 const CustomerItem: React.FC<CustomerItemProps> = ({
   item: user,
   index,
@@ -32,7 +30,11 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
     <TouchableOpacity
       style={[
         styles.userCard,
-        { backgroundColor: dark ? colors.card : 'white', borderWidth: 0 , zIndex: 220},
+        {
+          backgroundColor: dark ? colors.card : 'white',
+          borderWidth: 0,
+          zIndex: 220,
+        },
       ]}
       activeOpacity={0.8}
     >
@@ -85,7 +87,10 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
           <TouchableOpacity
             style={[
               styles.actionButton,
-              { backgroundColor: dark ? colors.border : '#f8f9fa',zIndex:120 },
+              {
+                backgroundColor: dark ? colors.border : '#f8f9fa',
+                zIndex: 120,
+              },
             ]}
             onPress={() => onEdit(user)}
           >
@@ -140,6 +145,5 @@ const CustomerItem: React.FC<CustomerItemProps> = ({
     </TouchableOpacity>
   );
 };
-
 
 export default CustomerItem;

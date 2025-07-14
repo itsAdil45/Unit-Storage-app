@@ -21,9 +21,16 @@ import { generateAndSharePDF } from '../Reusable/GenerateAndSharePDF';
 import { generateAndShareExcel } from '../Reusable/GenerateAndShareExcel';
 import { generateCustomerExcelWorkbook } from './ExcelStructures/customerExcelContent';
 import { CustomerReportData, ApiResponse } from '../../types/CustomerReport';
-import { formatDate, getStatusColor ,formatAEDCurrency} from '../../Utils/Formatters';
+import {
+  formatDate,
+  getStatusColor,
+  formatAEDCurrency,
+} from '../../Utils/Formatters';
 import { fetchReportHelper } from '../../Utils/ReportFetcher';
-import { createHandleLoadMore, useTotalPages } from '../../Utils/paginationUtils';
+import {
+  createHandleLoadMore,
+  useTotalPages,
+} from '../../Utils/PaginationUtils';
 
 const CustomerReport: React.FC = () => {
   const { dark } = useTheme();
@@ -37,8 +44,12 @@ const CustomerReport: React.FC = () => {
   const [page, setPage] = useState(1);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [generatingExcel, setGeneratingExcel] = useState(false);
-  const [expandedBookings, setExpandedBookings] = useState<{ [key: string]: boolean }>({});
-  const [expandedPayments, setExpandedPayments] = useState<{ [key: string]: boolean }>({});
+  const [expandedBookings, setExpandedBookings] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [expandedPayments, setExpandedPayments] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   const { get } = useGet();
   const itemsPerPage = 10;
@@ -65,31 +76,33 @@ const CustomerReport: React.FC = () => {
     useCallback(() => {
       fetchReportData();
       setPage(1);
-    }, [])
+    }, []),
   );
   const handleLoadMore = createHandleLoadMore<CustomerReportData>({
-  loading,
-  loadingMore,
-  page,
-  itemsPerPage,
-  setDisplayData,
-  setPage,
-  setLoadingMore,
-  reportData,
-});
+    loading,
+    loadingMore,
+    page,
+    itemsPerPage,
+    setDisplayData,
+    setPage,
+    setLoadingMore,
+    reportData,
+  });
 
-const totalPages = useTotalPages(reportData, itemsPerPage);
+  const totalPages = useTotalPages(reportData, itemsPerPage);
   const getPaymentMethodDisplay = (method: string | null) =>
-    method ? method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified';
+    method
+      ? method.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+      : 'Not specified';
 
   const toggleBookingExpansion = (email: string, bookingId: number) => {
     const key = `${email}-${bookingId}`;
-    setExpandedBookings(prev => ({ ...prev, [key]: !prev[key] }));
+    setExpandedBookings((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const togglePaymentExpansion = (email: string, bookingId: number) => {
     const key = `${email}-${bookingId}-payments`;
-    setExpandedPayments(prev => ({ ...prev, [key]: !prev[key] }));
+    setExpandedPayments((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleGeneratePDF = () => {
@@ -113,7 +126,9 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
       <MaterialIcons name="assessment" size={64} color={colors.subtext} />
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>No customer reports available</Text>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        No customer reports available
+      </Text>
       <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
         Customer reports will appear here once data is available
       </Text>
@@ -121,11 +136,20 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
   );
 
   const renderPDFLoadingOverlay = () => (
-    <Modal visible={generatingPDF} transparent animationType="fade" statusBarTranslucent>
+    <Modal
+      visible={generatingPDF}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+    >
       <View style={styles.pdfOverlay}>
-        <View style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}>
+        <View
+          style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}
+        >
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>Generating PDF...</Text>
+          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>
+            Generating PDF...
+          </Text>
           <Text style={[styles.pdfLoadingSubtext, { color: colors.subtext }]}>
             Please wait while we prepare your report
           </Text>
@@ -135,11 +159,20 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
   );
 
   const renderExcelLoadingOverlay = () => (
-    <Modal visible={generatingExcel} transparent animationType="fade" statusBarTranslucent>
+    <Modal
+      visible={generatingExcel}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+    >
       <View style={styles.pdfOverlay}>
-        <View style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}>
+        <View
+          style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}
+        >
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>Generating Excel...</Text>
+          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>
+            Generating Excel...
+          </Text>
           <Text style={[styles.pdfLoadingSubtext, { color: colors.subtext }]}>
             Please wait while we prepare your Excel file
           </Text>
@@ -150,18 +183,33 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
 
   return initialLoad ? (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
+      <StatusBar
+        barStyle={dark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.card}
+      />
       <View style={styles.initialLoadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.text }]}>Loading customer reports...</Text>
+        <Text style={[styles.loadingText, { color: colors.text }]}>
+          Loading customer reports...
+        </Text>
       </View>
     </View>
   ) : (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
+      <StatusBar
+        barStyle={dark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.card}
+      />
 
-      <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Customer Reports</Text>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Customer Reports
+        </Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity
             style={[styles.exportButton, { backgroundColor: '#4CAF50' }]}
@@ -202,7 +250,6 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
-
         ListFooterComponent={
           <LoadMorePagination
             currentPage={page}
@@ -221,7 +268,9 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
       {loading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
+          <Text style={[styles.loadingText, { color: colors.text }]}>
+            Loading...
+          </Text>
         </View>
       )}
 

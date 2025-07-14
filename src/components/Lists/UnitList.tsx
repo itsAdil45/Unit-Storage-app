@@ -34,7 +34,7 @@ type UnitOverviewData = {
   total: number;
 };
 
-const UnitList=({ refresh }: { refresh: number })=> {
+const UnitList = ({ refresh }: { refresh: number }) => {
   const [selectedWarehouse, setSelectedWarehouse] = useState('All');
   const [sortBy, setSortBy] = useState<
     'unitNumber' | 'percentage' | 'customers'
@@ -45,7 +45,8 @@ const UnitList=({ refresh }: { refresh: number })=> {
 
   const [allUnits, setAllUnits] = useState<StorageUnit[]>([]);
   const [warehouseGroups, setWarehouseGroups] = useState<WarehouseGroup>({});
-  const [unitOverviewData, setUnitOverviewData] = useState<UnitOverviewData | null>(null);
+  const [unitOverviewData, setUnitOverviewData] =
+    useState<UnitOverviewData | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -70,16 +71,16 @@ const UnitList=({ refresh }: { refresh: number })=> {
     setDisplayedUnits([]);
   }, [selectedWarehouse]);
 
-    useEffect(() => {
-      fetchAllUnits();
-      fetchUnitsOverview();
-    }, [refresh]);
-    
+  useEffect(() => {
+    fetchAllUnits();
+    fetchUnitsOverview();
+  }, [refresh]);
+
   useFocusEffect(
     useCallback(() => {
       fetchAllUnits();
       fetchUnitsOverview();
-    }, [])
+    }, []),
   );
 
   const fetchUnitsOverview = async () => {
@@ -201,15 +202,15 @@ const UnitList=({ refresh }: { refresh: number })=> {
     if (currentPage >= totalPages || loadingMore) return;
 
     setLoadingMore(true);
-    
+
     // Simulate loading delay (remove in production if not needed)
     setTimeout(() => {
       const nextPage = currentPage + 1;
       const startIndex = (nextPage - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
       const newUnits = sortedUnits.slice(startIndex, endIndex);
-      
-      setDisplayedUnits(prevUnits => [...prevUnits, ...newUnits]);
+
+      setDisplayedUnits((prevUnits) => [...prevUnits, ...newUnits]);
       setCurrentPage(nextPage);
       setLoadingMore(false);
     }, 50);
@@ -314,7 +315,7 @@ const UnitList=({ refresh }: { refresh: number })=> {
                 ? colors.border
                 : '#F2F2F7',
             borderColor: isSelected ? colors.primary : colors.border,
-            zIndex: 120
+            zIndex: 120,
           },
         ]}
       >
@@ -403,7 +404,7 @@ const UnitList=({ refresh }: { refresh: number })=> {
   const renderHeader = () => (
     <View style={[styles.headerContainer, { backgroundColor: colors.card }]}>
       {renderStatsCards()}
-      
+
       <View style={styles.filterContainer}>
         <Text style={[styles.filterSectionTitle, { color: colors.text }]}>
           Warehouse

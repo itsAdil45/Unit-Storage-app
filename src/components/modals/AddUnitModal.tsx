@@ -82,9 +82,12 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
   };
 
   const handleAdd = async () => {
-    // Validate required fields
     if (!warehouse || !unitNumber || !size || !floor) {
-      Alert.alert('Error', 'Please fill all fields');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', Please fill all fields`,
+      });
       return;
     }
 
@@ -99,15 +102,14 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
         status: 'available',
       };
 
-      const response = await post('/storage-units', payload); // Adjust endpoint as needed
+      const response = await post('/storage-units', payload);
 
       if (response && response.status === 'success') {
-              Toast.show({
-        type: 'success',
-        text1: 'Added',
-        text2: `Unit added successfully `,
-      });
-        // Call the onAdd callback with the original format
+        Toast.show({
+          type: 'success',
+          text1: 'Added',
+          text2: `Unit added successfully `,
+        });
         onAdd({
           warehouse:
             warehouses.find((w) => w.id.toString() === warehouse)?.name ||
@@ -125,11 +127,14 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
 
         onClose();
       } else {
-        Alert.alert('Error', response?.message || 'Failed to add unit');
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: `${response?.message}`,
+        });
       }
     } catch (error) {
       console.error('Error adding unit:', error);
-      Alert.alert('Error', 'Failed to add unit. Please try again.');
     } finally {
       setSubmitting(false);
     }

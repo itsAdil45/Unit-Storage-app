@@ -60,32 +60,56 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
   const handleAdd = async () => {
     // Validate required fields
     if (!firstName.trim()) {
-      Alert.alert('Error', 'Please enter first name');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', 'Please enter first name`,
+      });
       return;
     }
 
     if (!lastName.trim()) {
-      Alert.alert('Error', 'Please enter last name');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', 'Please enter last name`,
+      });
       return;
     }
 
     if (!email.trim()) {
-      Alert.alert('Error', 'Please enter email');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', 'Please enter email`,
+      });
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', 'Please enter valid email`,
+      });
       return;
     }
 
     if (!phone.trim()) {
-      Alert.alert('Error', 'Please enter phone number');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', 'Please enter phone number`,
+      });
       return;
     }
 
     if (!validatePhone(phone)) {
-      Alert.alert('Error', 'Please enter a valid phone number');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Error', 'Please enter valid phone number`,
+      });
       return;
     }
 
@@ -104,26 +128,25 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
       const response = await post('/customers', payload);
 
       if (response && response.status === 'success') {
-      Toast.show({
-        type: 'success',
-        text1: 'Added',
-        text2: `Customer added successfully`,
-      });
+        Toast.show({
+          type: 'success',
+          text1: 'Added',
+          text2: `Customer added successfully`,
+        });
         onAdd(payload);
 
         // Reset form
         resetForm();
         onClose();
       } else {
-        // Alert.alert('Error', response?.message || 'Failed to add customer');
-      Toast.show({
-        type: 'error',
-        text1: 'Failed',
-        text2: `Failed to add customer`,
-      });
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: `${response?.message}`,
+        });
       }
     } catch (error) {
-            Toast.show({
+      Toast.show({
         type: 'error',
         text1: 'Failed',
         text2: `Failed to add customer`,

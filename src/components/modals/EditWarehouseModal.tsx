@@ -88,11 +88,19 @@ const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({
 
   const validateForm = () => {
     if (!formData.name.trim()) {
-      Alert.alert('Validation Error', 'Warehouse name is required');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Warehouse name is required'`,
+      });
       return false;
     }
     if (!formData.address.trim()) {
-      Alert.alert('Validation Error', 'Address is required');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Address is required'`,
+      });
       return false;
     }
     return true;
@@ -112,11 +120,11 @@ const EditWarehouseModal: React.FC<EditWarehouseModalProps> = ({
       const response = await patch(`/warehouses/${warehouse.id}`, payload);
 
       if (response?.status === 'success') {
-      Toast.show({
-        type: 'success',
-        text1: 'Updated',
-        text2: `Warehouse updated successfully `,
-      });
+        Toast.show({
+          type: 'success',
+          text1: 'Updated',
+          text2: `Warehouse updated successfully `,
+        });
         onSaveSuccess({ ...warehouse, ...payload });
         onClose();
       } else {

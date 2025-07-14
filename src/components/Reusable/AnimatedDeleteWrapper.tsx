@@ -41,14 +41,7 @@ const AnimatedDeleteWrapper: React.FC<AnimatedDeleteWrapperProps> = ({
   }, [removingId, itemId, slideAnim, animationDuration, slideDistance]);
 
   const handleDeleteConfirmation = () => {
-    const message = itemName
-      ? `Are you sure you want to delete "${itemName}"?`
-      : deleteMessage;
-
-    Alert.alert(deleteTitle, message, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => onDelete(itemId) },
-    ]);
+    onDelete(itemId);
   };
 
   return (

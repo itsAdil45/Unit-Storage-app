@@ -22,7 +22,10 @@ import { generateAndShareExcel } from '../Reusable/GenerateAndShareExcel';
 import { ExpenseReportData, ApiResponse } from '../../types/ExpenseReport';
 import ExpenseReportItem from '../Items/ExpenseReportItem';
 import { fetchReportHelper } from '../../Utils/ReportFetcher';
-import { createHandleLoadMore, useTotalPages } from '../../Utils/paginationUtils';
+import {
+  createHandleLoadMore,
+  useTotalPages,
+} from '../../Utils/PaginationUtils';
 
 const ExpenseReport: React.FC = () => {
   const { dark } = useTheme();
@@ -40,20 +43,19 @@ const ExpenseReport: React.FC = () => {
   const { get } = useGet();
   const itemsPerPage = 10;
 
-
-const fetchReportData = () => {
-  fetchReportHelper<ExpenseReportData>({
-    get,
-    endpoint: '/reports/expense',
-    dataKey: 'reportDataResult',
-    itemsPerPage,
-    setReportData,
-    setDisplayData,
-    setLoading,
-    initialLoad,
-    setInitialLoad,
-  });
-};
+  const fetchReportData = () => {
+    fetchReportHelper<ExpenseReportData>({
+      get,
+      endpoint: '/reports/expense',
+      dataKey: 'reportDataResult',
+      itemsPerPage,
+      setReportData,
+      setDisplayData,
+      setLoading,
+      initialLoad,
+      setInitialLoad,
+    });
+  };
 
   useEffect(() => {
     fetchReportData();
@@ -62,22 +64,21 @@ const fetchReportData = () => {
   useFocusEffect(
     useCallback(() => {
       fetchReportData();
-            setPage(1);
-
-    }, [])
+      setPage(1);
+    }, []),
   );
   const handleLoadMore = createHandleLoadMore<ExpenseReportData>({
-  loading,
-  loadingMore,
-  page,
-  itemsPerPage,
-  setDisplayData,
-  setPage,
-  setLoadingMore,
-  reportData,
-});
+    loading,
+    loadingMore,
+    page,
+    itemsPerPage,
+    setDisplayData,
+    setPage,
+    setLoadingMore,
+    reportData,
+  });
 
-const totalPages = useTotalPages(reportData, itemsPerPage);
+  const totalPages = useTotalPages(reportData, itemsPerPage);
 
   const handleGeneratePDF = () => {
     generateAndSharePDF({
@@ -100,7 +101,9 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
       <MaterialIcons name="assessment" size={64} color={colors.subtext} />
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>No expense reports available</Text>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        No expense reports available
+      </Text>
       <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
         Expense reports will appear here once data is available
       </Text>
@@ -108,11 +111,20 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
   );
 
   const renderPDFLoadingOverlay = () => (
-    <Modal visible={generatingPDF} transparent animationType="fade" statusBarTranslucent>
+    <Modal
+      visible={generatingPDF}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+    >
       <View style={styles.pdfOverlay}>
-        <View style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}>
+        <View
+          style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}
+        >
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>Generating PDF...</Text>
+          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>
+            Generating PDF...
+          </Text>
           <Text style={[styles.pdfLoadingSubtext, { color: colors.subtext }]}>
             Please wait while we prepare your report
           </Text>
@@ -122,11 +134,20 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
   );
 
   const renderExcelLoadingOverlay = () => (
-    <Modal visible={generatingExcel} transparent animationType="fade" statusBarTranslucent>
+    <Modal
+      visible={generatingExcel}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+    >
       <View style={styles.pdfOverlay}>
-        <View style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}>
+        <View
+          style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}
+        >
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>Generating Excel...</Text>
+          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>
+            Generating Excel...
+          </Text>
           <Text style={[styles.pdfLoadingSubtext, { color: colors.subtext }]}>
             Please wait while we prepare your Excel file
           </Text>
@@ -137,18 +158,33 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
 
   return initialLoad ? (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
+      <StatusBar
+        barStyle={dark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.card}
+      />
       <View style={styles.initialLoadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.text }]}>Loading expense reports...</Text>
+        <Text style={[styles.loadingText, { color: colors.text }]}>
+          Loading expense reports...
+        </Text>
       </View>
     </View>
   ) : (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} backgroundColor={colors.card} />
+      <StatusBar
+        barStyle={dark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.card}
+      />
 
-      <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Expense Reports</Text>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Expense Reports
+        </Text>
         <View style={styles.headerButtons}>
           <TouchableOpacity
             style={[styles.exportButton, { backgroundColor: '#4CAF50' }]}
@@ -177,7 +213,6 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
-
         ListFooterComponent={
           <LoadMorePagination
             currentPage={page}
@@ -196,7 +231,9 @@ const totalPages = useTotalPages(reportData, itemsPerPage);
       {loading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
+          <Text style={[styles.loadingText, { color: colors.text }]}>
+            Loading...
+          </Text>
         </View>
       )}
 

@@ -90,29 +90,30 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
         setPdfDocument(result.assets[0]);
       }
     } catch (error) {
-      console.error('Error picking document:', error);
-      Alert.alert('Error', 'Failed to pick document');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Failed to pick document`,
+      });
     }
   };
 
   const handleSave = async () => {
     if (!status || !totalPrice || !spaceOccupied) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Please fill in all required fields`,
+      });
       return;
     }
 
-    // Validate start date is before end date
-    if (startDate >= endDate) {
-      Alert.alert('Error', 'Start date must be before end date');
-      return;
-    }
-
-    // Validate totalPrice and spaceOccupied are numbers
     if (isNaN(parseFloat(totalPrice)) || isNaN(parseFloat(spaceOccupied))) {
-      Alert.alert(
-        'Error',
-        'Total price and space occupied must be valid numbers',
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Total price and space occupied must be valid numbers`,
+      });
       return;
     }
 
@@ -154,11 +155,14 @@ const EditBookingModal: React.FC<EditBookingModalProps> = ({
           text2: `Booking updated successfully `,
         });
       } else {
-        Alert.alert('Error', response?.message || 'Failed to update booking');
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: `${response?.message}`,
+        });
       }
     } catch (error) {
       console.error('Error updating booking:', error);
-      Alert.alert('Error', 'Failed to update booking');
     }
 
     setLoading(false);

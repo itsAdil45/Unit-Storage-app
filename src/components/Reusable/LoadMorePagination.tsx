@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface LoadMorePaginationProps {
@@ -69,13 +75,13 @@ const LoadMorePagination: React.FC<LoadMorePaginationProps> = ({
       >
         {loadingMore ? (
           <>
-            <ActivityIndicator size="small" color="#fff" style={styles.loadingIcon} />
+            <ActivityIndicator
+              size="small"
+              color="#fff"
+              style={styles.loadingIcon}
+            />
             <Text
-              style={[
-                styles.loadMoreButtonText,
-                { color: '#fff' },
-                textStyle,
-              ]}
+              style={[styles.loadMoreButtonText, { color: '#fff' }, textStyle]}
             >
               Loading...
             </Text>

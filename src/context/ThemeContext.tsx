@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from 'react';
 import { DarkTheme, DefaultTheme, Theme } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -61,7 +67,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const theme = isDark ? DarkTheme : DefaultTheme;
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme, theme, isThemeLoaded }}>
+    <ThemeContext.Provider
+      value={{ isDark, toggleTheme, theme, isThemeLoaded }}
+    >
       {children}
     </ThemeContext.Provider>
   );

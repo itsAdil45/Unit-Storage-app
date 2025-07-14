@@ -13,7 +13,7 @@ interface ApiResponse<T = any> {
 
 export const usePostFormData = () => {
   const postFormData = useCallback(
-    async <T = any>(
+    async <T = any,>(
       endpoint: string,
       formData: FormData,
       token?: string,

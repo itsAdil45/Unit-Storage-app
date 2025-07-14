@@ -4,7 +4,6 @@ export interface CustomerDetails {
   amount: number;
 }
 
-
 export interface RevenueReportData {
   date: string;
   warehouseId: number;

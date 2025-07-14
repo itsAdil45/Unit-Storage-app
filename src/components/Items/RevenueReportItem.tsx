@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import styles from '../Reports/Styles/CustomerReport';
-import { RevenueReportData } from '../../types/RevenueReport'; 
+import { RevenueReportData } from '../../types/RevenueReport';
 import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
 
@@ -10,47 +10,50 @@ interface Props {
   formatCurrency: (amount: number | string) => string;
 }
 
-const RevenueReportItem: React.FC<Props> = ({
-  item,
-  formatCurrency,
-
-}) => {
+const RevenueReportItem: React.FC<Props> = ({ item, formatCurrency }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
-    //   const paymentKey = `${item.email}-${booking.bookingId}-payments`;
-    //   const isPaymentExpanded = expandedPayments[paymentKey];
+  //   const paymentKey = `${item.email}-${booking.bookingId}-payments`;
+  //   const isPaymentExpanded = expandedPayments[paymentKey];
 
-      
   const renderCustomerDetailItem = () => {
     return item.customerDetails.map((customer, key) => {
-return(
-    <View key={key} style={[styles.paymentItem, { backgroundColor: colors.background }]}>
-      <View style={styles.paymentHeader}>
-        <Text style={[styles.paymentId, { color: colors.primary }]}>
-        {customer.customerName}
-        </Text>
-      </View>
-      <View style={styles.paymentDetails}>
-        <Text style={[styles.paymentDetail, { color: colors.text }]}>
-          Amount: {formatCurrency(customer.amount)}
-        </Text>
-        <Text style={[styles.paymentDetail, { color: colors.subtext }]}>
-         Unit # {customer.unitNumber}
-        </Text>
-      </View>
-    </View>
-     ) } )
-
-}    
+      return (
+        <View
+          key={key}
+          style={[styles.paymentItem, { backgroundColor: colors.background }]}
+        >
+          <View style={styles.paymentHeader}>
+            <Text style={[styles.paymentId, { color: colors.primary }]}>
+              {customer.customerName}
+            </Text>
+          </View>
+          <View style={styles.paymentDetails}>
+            <Text style={[styles.paymentDetail, { color: colors.text }]}>
+              Amount: {formatCurrency(customer.amount)}
+            </Text>
+            <Text style={[styles.paymentDetail, { color: colors.subtext }]}>
+              Unit # {customer.unitNumber}
+            </Text>
+          </View>
+        </View>
+      );
+    });
+  };
 
   return (
-    <View style={[styles.customerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View
+      style={[
+        styles.customerCard,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <View style={styles.customerHeader}>
         <Text style={[styles.customerName, { color: colors.text }]}>
           {item.warehouseName} {item.warehouseId}
         </Text>
         <Text style={[styles.customerInfo, { color: colors.subtext }]}>
-          {item.date} 
+          {item.date}
         </Text>
       </View>
 
@@ -112,8 +115,7 @@ return(
         <Text style={[styles.bookingsTitle, { color: colors.text }]}>
           Customer Details ({item.customerDetails.length})
         </Text>
-            {renderCustomerDetailItem()}
-
+        {renderCustomerDetailItem()}
       </View>
     </View>
   );

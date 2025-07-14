@@ -1,15 +1,9 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import AnimatedDeleteWrapper from '../Reusable/AnimatedDeleteWrapper';
 import styles from './Styles/UnitItem';
-
-
 
 export type StorageUnit = {
   id: number;
@@ -21,9 +15,9 @@ export type StorageUnit = {
   status: 'available' | 'maintenance';
   pricePerDay: number | null;
   totalSpaceOccupied: number;
-  bookings: any[]; 
-  percentage: number; 
-  customers: number; 
+  bookings: any[];
+  percentage: number;
+  customers: number;
 };
 
 interface UnitItemProps {
@@ -50,8 +44,8 @@ const UnitItem: React.FC<UnitItemProps> = ({
   onDelete,
 }) => {
   const getStatusColor = (percentage: number) => {
-    if (percentage >= 100) return '#FF3B30'; 
-    if (percentage >= 80) return '#FF9500'; 
+    if (percentage >= 100) return '#FF3B30';
+    if (percentage >= 80) return '#FF9500';
     if (percentage >= 50) return '#FFCC00';
     return '#34C759';
   };
@@ -100,8 +94,8 @@ const UnitItem: React.FC<UnitItemProps> = ({
         overshootRight={false}
       >
         <Animated.View
-          // entering={FadeInRight.delay(index * 50)}
-          //exiting={FadeOutLeft}
+        // entering={FadeInRight.delay(index * 50)}
+        //exiting={FadeOutLeft}
         >
           <TouchableOpacity
             onPress={() => onUnitPress(item)}
@@ -110,9 +104,7 @@ const UnitItem: React.FC<UnitItemProps> = ({
               {
                 backgroundColor: colors.card,
                 borderColor:
-                  selectedUnit?.id === item.id
-                    ? colors.primary
-                    : 'transparent',
+                  selectedUnit?.id === item.id ? colors.primary : 'transparent',
                 shadowColor: dark ? '#000' : '#000',
               },
               selectedUnit?.id === item.id && styles.unitCardSelected,
@@ -129,9 +121,7 @@ const UnitItem: React.FC<UnitItemProps> = ({
                 <Text style={[styles.unitId, { color: colors.text }]}>
                   {item.unitNumber}
                 </Text>
-                <Text
-                  style={[styles.unitLocation, { color: colors.subtext }]}
-                >
+                <Text style={[styles.unitLocation, { color: colors.subtext }]}>
                   {item.warehouseName} • {item.floor} Floor • {item.size} sqft
                 </Text>
                 <View style={styles.customerInfo}>
@@ -155,12 +145,8 @@ const UnitItem: React.FC<UnitItemProps> = ({
                 >
                   {item.percentage}%
                 </Text>
-                <Text
-                  style={[
-                    styles.statusText,
-                  ]}
-                >
-                  {(item.status).toUpperCase()}
+                <Text style={[styles.statusText]}>
+                  {item.status.toUpperCase()}
                 </Text>
               </View>
               <View style={styles.progressBarContainer}>
@@ -188,6 +174,5 @@ const UnitItem: React.FC<UnitItemProps> = ({
     </AnimatedDeleteWrapper>
   );
 };
-
 
 export default UnitItem;

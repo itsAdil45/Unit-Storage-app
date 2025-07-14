@@ -19,7 +19,7 @@ import { useDelete } from '../../hooks/useDelete';
 import { Booking, BookingFilterType, Payment } from '../../types/Bookings';
 import EditBookingModal from '../modals/EditBookingModal';
 import PaymentsModal from '../modals/PaymentsModal';
-import AddEditPaymentModal from '../modals/AddEditPaymentModal'; 
+import AddEditPaymentModal from '../modals/AddEditPaymentModal';
 import AnimatedDeleteWrapper, {
   useAnimatedDelete,
 } from '../Reusable/AnimatedDeleteWrapper';
@@ -27,7 +27,7 @@ import LoadMorePagination from '../Reusable/LoadMorePagination'; // Updated impo
 import BookingItem from '../Items/BookingItem';
 import styles from './Styles/BookingList';
 
-const BookingsList=({ refresh }: { refresh: number })=> {
+const BookingsList = ({ refresh }: { refresh: number }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -72,12 +72,11 @@ const BookingsList=({ refresh }: { refresh: number })=> {
 
   useEffect(() => {
     if (!initialLoad) {
-      // Reset to page 1 and clear existing data when search or filter changes
       setPage(1);
       setBookings([]);
       fetchBookings(1, false);
     }
-  }, [searchDebounced, statusFilter,refresh]);
+  }, [searchDebounced, statusFilter, refresh]);
 
   useEffect(() => {
     if (page === 1) {
@@ -87,7 +86,6 @@ const BookingsList=({ refresh }: { refresh: number })=> {
 
   useFocusEffect(
     useCallback(() => {
-      // Reset and fetch fresh data when screen comes into focus
       setPage(1);
       setBookings([]);
       fetchBookings(1, false);
@@ -123,15 +121,13 @@ const BookingsList=({ refresh }: { refresh: number })=> {
 
       if (res?.status === 'success') {
         const bookingsData = res.data.bookings || [];
-        
+
         if (isLoadMore) {
-          // Append new items to existing ones
-          setBookings(prev => [...prev, ...bookingsData]);
+          setBookings((prev) => [...prev, ...bookingsData]);
         } else {
-          // Replace existing items
           setBookings(bookingsData);
         }
-        
+
         setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
         setTotalItems(parseInt(res.data.pagination.total) || 0);
       }
@@ -174,7 +170,7 @@ const BookingsList=({ refresh }: { refresh: number })=> {
     setPaymentModalState({
       visible: true,
       booking,
-      payment: undefined, 
+      payment: undefined,
     });
   };
 
@@ -182,7 +178,7 @@ const BookingsList=({ refresh }: { refresh: number })=> {
     setPaymentModalState({
       visible: true,
       booking,
-      payment, 
+      payment,
     });
   };
 
@@ -211,7 +207,6 @@ const BookingsList=({ refresh }: { refresh: number })=> {
       }
     } catch (error) {
       console.error('Error deleting payment:', error);
-      Alert.alert('Error', 'Failed to delete payment');
     }
   };
 
@@ -317,7 +312,7 @@ const BookingsList=({ refresh }: { refresh: number })=> {
           backgroundColor:
             statusFilter === value ? colors.primary : colors.card,
           borderColor: colors.border,
-          zIndex: 120
+          zIndex: 120,
         },
       ]}
     >
@@ -349,7 +344,7 @@ const BookingsList=({ refresh }: { refresh: number })=> {
       removingId={removingId}
       onDelete={(id) => {
         handleDelete(id, setBookings);
-        setTotalItems(prev => prev - 1);
+        setTotalItems((prev) => prev - 1);
       }}
       deleteTitle="Delete Booking"
       itemName={`Booking #${item.id} - ${item.customer.firstName} ${item.customer.lastName}`}
@@ -362,7 +357,7 @@ const BookingsList=({ refresh }: { refresh: number })=> {
         onEdit={handleEdit}
         onPayments={handlePayments}
         onAddPayment={handleAddPayment}
-        onDeletePress={() => {}} 
+        onDeletePress={() => {}}
       />
     </AnimatedDeleteWrapper>
   );
@@ -501,7 +496,7 @@ const BookingsList=({ refresh }: { refresh: number })=> {
         <AddEditPaymentModal
           visible={paymentModalState.visible}
           booking={paymentModalState.booking}
-          payment={paymentModalState.payment} 
+          payment={paymentModalState.payment}
           onClose={() =>
             setPaymentModalState({
               visible: false,

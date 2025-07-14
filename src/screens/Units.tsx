@@ -12,7 +12,7 @@ export default function Units() {
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [showAddBookingModal, setShowAddBookingModal] = useState(false);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
-    const [refresh, setRefresh] = useState(0);
+  const [refresh, setRefresh] = useState(0);
 
   const handleQuickAction = (action: any) => {
     switch (action.title) {
@@ -41,22 +41,26 @@ export default function Units() {
     }
   };
 
-  const hasOpenModal = showAddUnitModal || showAddCustomerModal || showAddBookingModal || showAddExpenseModal;
+  const hasOpenModal =
+    showAddUnitModal ||
+    showAddCustomerModal ||
+    showAddBookingModal ||
+    showAddExpenseModal;
 
   return (
     <View style={styles.container}>
-      <UnitList refresh={refresh}/>
-      
+      <UnitList refresh={refresh} />
+
       {!hasOpenModal && (
         <FloatingQuickActions onActionPress={handleQuickAction} />
       )}
-      
+
       <AddUnitModal
         visible={showAddUnitModal}
         onClose={() => setShowAddUnitModal(false)}
-                        onAdd={(b) => {
-          setRefresh((prev) => prev + 1); 
-        }} 
+        onAdd={(b) => {
+          setRefresh((prev) => prev + 1);
+        }}
       />
       <AddCustomerModal
         visible={showAddCustomerModal}

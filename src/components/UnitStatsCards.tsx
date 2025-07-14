@@ -5,7 +5,12 @@ import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../constants/color';
 import { Props } from '../types/Types';
 
-const UnitStatsCards = ({ label, value, percent, iconColor = '#007aff' }: Props) => {
+const UnitStatsCards = ({
+  label,
+  value,
+  percent,
+  iconColor = '#007aff',
+}: Props) => {
   const { dark } = useTheme();
   const backgroundColor = dark ? darkColors.card : lightColors.card;
   const textColor = dark ? darkColors.text : lightColors.text;

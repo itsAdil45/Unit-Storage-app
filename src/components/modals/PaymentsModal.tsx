@@ -12,14 +12,19 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Booking, Payment } from '../../types/Bookings';
-import { formatDate, getStatusColor, formatCurrency } from '../../Utils/Formatters';
+import {
+  formatDate,
+  getStatusColor,
+  formatCurrency,
+} from '../../Utils/Formatters';
+import Toast from 'react-native-toast-message';
 
 interface PaymentsModalProps {
   visible: boolean;
   booking: Booking;
   onClose: () => void;
-  onEditPayment: (booking: Booking, payment: Payment) => void; // New prop for edit
-  onDeletePayment: (payment: Payment) => void; // New prop for delete
+  onEditPayment: (booking: Booking, payment: Payment) => void;
+  onDeletePayment: (payment: Payment) => void;
   colors: any;
   dark: boolean;
 }
@@ -28,41 +33,26 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
   visible,
   booking,
   onClose,
-  onEditPayment, // New prop
-  onDeletePayment, // New prop
+  onEditPayment,
+  onDeletePayment,
   colors,
   dark,
 }) => {
-
-
   const handleEditPayment = (payment: Payment) => {
     onEditPayment(booking, payment);
   };
 
   const handleDeletePayment = (payment: Payment) => {
-    Alert.alert(
-      'Delete Payment',
-      `Are you sure you want to delete Payment #${payment.id}?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => onDeletePayment(payment),
-        },
-      ],
-    );
+    onDeletePayment(payment);
   };
 
   const handleViewInvoice = async (item: Payment) => {
     if (!item.invoiceAttachment) {
-      Alert.alert(
-        'No Document',
-        'No invoice document available for this booking',
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `No invoice document available for this booking'`,
+      });
       return;
     }
     try {
@@ -70,20 +60,24 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
       if (supported) {
         await Linking.openURL(item.invoiceAttachment);
       } else {
-        Alert.alert('Error', 'Cannot open invoice document');
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: `Cannot open invoice document'`,
+        });
       }
     } catch (error) {
       console.error('Error opening invoice:', error);
-      Alert.alert('Error', 'Failed to open invoice document');
     }
   };
 
   const handleViewPaymentReceivedAttachment = async (item: Payment) => {
     if (!item.paymentReceivedAttachment) {
-      Alert.alert(
-        'No Document',
-        'No invoice document available for this booking',
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `No invoice document available for this booking`,
+      });
       return;
     }
 
@@ -94,11 +88,14 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
       if (supported) {
         await Linking.openURL(item.paymentReceivedAttachment);
       } else {
-        Alert.alert('Error', 'Cannot open invoice document');
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: `Cannot open invoice document'`,
+        });
       }
     } catch (error) {
       console.error('Error opening invoice:', error);
-      Alert.alert('Error', 'Failed to open invoice document');
     }
   };
 

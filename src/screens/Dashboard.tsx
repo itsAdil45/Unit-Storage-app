@@ -28,7 +28,7 @@ import {
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
 const LoadingSpinner = () => {
-    const { dark } = useTheme();
+  const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
   const scale = useSharedValue(0.8);
   useEffect(() => {
@@ -38,7 +38,9 @@ const LoadingSpinner = () => {
     transform: [{ scale: scale.value }],
   }));
   return (
-    <View style={[styles.loadingContainer, {backgroundColor:colors.background}]}>
+    <View
+      style={[styles.loadingContainer, { backgroundColor: colors.background }]}
+    >
       <Animated.View style={[styles.simpleDot, animatedStyle]} />
     </View>
   );
@@ -85,8 +87,11 @@ const Dashboard = () => {
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [showAddBookingModal, setShowAddBookingModal] = useState(false);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
-type DashboardNavProp = BottomTabNavigationProp<RootTabParamList, 'Dashboard'>;
-const navigation = useNavigation<DashboardNavProp>();
+  type DashboardNavProp = BottomTabNavigationProp<
+    RootTabParamList,
+    'Dashboard'
+  >;
+  const navigation = useNavigation<DashboardNavProp>();
 
   const [paymentOverview, setPaymentOverview] =
     useState<PaymentOverviewData | null>(null);
@@ -121,7 +126,6 @@ const navigation = useNavigation<DashboardNavProp>();
     fetchData();
   }, []);
 
-
   const loadingStyle = useAnimatedStyle(() => ({
     opacity: loadingOpacity.value,
   }));
@@ -143,36 +147,37 @@ const navigation = useNavigation<DashboardNavProp>();
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={() => (
           <DashboardContent>
-                        <AnimatedWidget delay={50}>
-<QuickActions
-  onActionPress={(action) => {
-    switch (action.title) {
-      case 'Add Unit':
-        setShowAddUnitModal(true);
-        break;
-      case 'Customer':
-        setShowAddCustomerModal(true);
-        break;
-      case 'Booking':
-        setShowAddBookingModal(true);
-        break;
-      case 'Expense':
-        navigation.navigate('Reports', { openReport: 'expense' });
-        break;
-      case 'Cust Report':
-        navigation.navigate('Reports', { openReport: 'customer' });
-        break;
-      case 'Revenue':
-        navigation.navigate('Reports', { openReport: 'revenue' });
-        break;
-      default:
-        break;
-    }
-  }}
-/>
-
+            <AnimatedWidget delay={50}>
+              <QuickActions
+                onActionPress={(action) => {
+                  switch (action.title) {
+                    case 'Add Unit':
+                      setShowAddUnitModal(true);
+                      break;
+                    case 'Customer':
+                      setShowAddCustomerModal(true);
+                      break;
+                    case 'Booking':
+                      setShowAddBookingModal(true);
+                      break;
+                    case 'Expense':
+                      navigation.navigate('Reports', { openReport: 'expense' });
+                      break;
+                    case 'Cust Report':
+                      navigation.navigate('Reports', {
+                        openReport: 'customer',
+                      });
+                      break;
+                    case 'Revenue':
+                      navigation.navigate('Reports', { openReport: 'revenue' });
+                      break;
+                    default:
+                      break;
+                  }
+                }}
+              />
             </AnimatedWidget>
-            
+
             <AnimatedWidget delay={50}>
               <PaymentsOverview overview={paymentOverview} />
             </AnimatedWidget>

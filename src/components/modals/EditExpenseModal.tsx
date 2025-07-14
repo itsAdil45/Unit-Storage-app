@@ -117,14 +117,13 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
       const updatedData = {
         description: description.trim(),
         amount: parseFloat(amount),
-        date: selectedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        date: selectedDate.toISOString().split('T')[0],
         expenseType,
       };
 
       const response = await patch(`/expenses/${expense.id}`, updatedData);
 
       if (response?.status === 'success') {
-        // Create updated expense object for local state update
         const updatedExpense: Expense = {
           ...expense,
           ...updatedData,
@@ -133,17 +132,20 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
         };
 
         onSaveSuccess(updatedExpense);
-      Toast.show({
-        type: 'success',
-        text1: 'Updated',
-        text2: `Expense updated successfully `,
-      });
+        Toast.show({
+          type: 'success',
+          text1: 'Updated',
+          text2: `Expense updated successfully `,
+        });
       } else {
-        Alert.alert('Error', 'Failed to update expense');
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: `Error', Failed to update expense`,
+        });
       }
     } catch (error) {
       console.error('Error updating expense:', error);
-      Alert.alert('Error', 'Failed to update expense');
     }
   };
 
@@ -163,16 +165,13 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
   };
 
   const handleAmountChange = (text: string) => {
-    // Allow only numbers and decimal point
     const numericText = text.replace(/[^0-9.]/g, '');
 
-    // Ensure only one decimal point
     const parts = numericText.split('.');
     if (parts.length > 2) {
       return;
     }
 
-    // Limit decimal places to 2
     if (parts[1] && parts[1].length > 2) {
       return;
     }

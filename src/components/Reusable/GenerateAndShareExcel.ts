@@ -26,13 +26,19 @@ export const generateAndShareExcel = ({
         const workbook = generateWorkbook();
         const sheetNames = workbook.SheetNames;
 
-        if (!noDataCheck && (!sheetNames.length || !workbook.Sheets[sheetNames[0]])) {
+        if (
+          !noDataCheck &&
+          (!sheetNames.length || !workbook.Sheets[sheetNames[0]])
+        ) {
           Alert.alert('No Data', 'No data available to generate Excel file');
           setLoading(false);
           return;
         }
 
-        const excelBuffer = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' });
+        const excelBuffer = XLSX.write(workbook, {
+          type: 'base64',
+          bookType: 'xlsx',
+        });
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const filename = `${filenamePrefix}_${timestamp}.xlsx`;

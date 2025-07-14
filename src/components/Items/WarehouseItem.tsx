@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  Linking,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Linking } from 'react-native';
 import styles from './Styles/WarehouseItem';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { WarehouseItemProps } from '../../types/Warehouses';
@@ -26,9 +20,6 @@ const WarehouseItem: React.FC<WarehouseItemProps> = ({
   const getWarehouseIcon = (): string => {
     return 'warehouse';
   };
-
-
-
 
   const handleViewVideo = async () => {
     if (!warehouse.videoFileLink) {
@@ -188,7 +179,5 @@ const WarehouseItem: React.FC<WarehouseItemProps> = ({
     </TouchableOpacity>
   );
 };
-
-
 
 export default WarehouseItem;

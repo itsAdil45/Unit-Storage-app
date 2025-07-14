@@ -35,7 +35,6 @@ export async function fetchReportHelper<T>({
     }
   } catch (error) {
     console.error(`Error fetching ${endpoint}:`, error);
-    Alert.alert('Error', `Failed to fetch report`);
     setReportData([]);
     setDisplayData([]);
   }

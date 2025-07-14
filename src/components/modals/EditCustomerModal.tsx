@@ -18,7 +18,7 @@ import { Picker } from '@react-native-picker/picker';
 import { usePatch } from '../../hooks/usePatch';
 import { lightColors, darkColors } from '../../constants/color';
 const { height: screenHeight } = Dimensions.get('window');
-
+import Toast from 'react-native-toast-message';
 interface Customer {
   id: number;
   firstName: string;
@@ -106,7 +106,12 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
       !formData.lastName.trim() ||
       !formData.email.trim()
     ) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: `Please fill in all required fields`,
+      });
+
       return;
     }
 
@@ -115,7 +120,6 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
     if (response?.status === 'success') {
       const updatedCustomer = { ...customer, ...formData };
       onSaveSuccess(updatedCustomer);
-      // Don't call handleClose() here, just call onClose() directly
       onClose();
     } else {
       Alert.alert('Error', 'Failed to update customer');

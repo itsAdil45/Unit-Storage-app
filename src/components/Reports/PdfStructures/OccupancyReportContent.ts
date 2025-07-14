@@ -1,6 +1,11 @@
-import { OccupancyReportData, OccupiedUnit, AvailableUnit, Booking, Payment } from "../../../types/OccupancyReport";
-import { formatAEDCurrency } from "../../../Utils/Formatters";
-
+import {
+  OccupancyReportData,
+  OccupiedUnit,
+  AvailableUnit,
+  Booking,
+  Payment,
+} from '../../../types/OccupancyReport';
+import { formatAEDCurrency } from '../../../Utils/Formatters';
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -14,7 +19,9 @@ const formatPercentage = (value: number) => {
   return `${value.toFixed(1)}%`;
 };
 
-const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) => {
+const generateOccupancyReportContent = (
+  occupancyData: OccupancyReportData[],
+) => {
   const currentDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -22,21 +29,32 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
   });
 
   // Calculate aggregate statistics
-  const totalUnitsAcrossAll = occupancyData.reduce((sum, report) => sum + report.totalUnits, 0);
-  const totalOccupiedUnits = occupancyData.reduce((sum, report) => sum + report.occupiedUnits, 0);
-  const totalAvailableUnits = occupancyData.reduce((sum, report) => sum + report.availableUnits, 0);
-  const averageOccupancyRate = occupancyData.length > 0 
-    ? occupancyData.reduce((sum, report) => sum + report.occupancyRate, 0) / occupancyData.length 
-    : 0;
+  const totalUnitsAcrossAll = occupancyData.reduce(
+    (sum, report) => sum + report.totalUnits,
+    0,
+  );
+  const totalOccupiedUnits = occupancyData.reduce(
+    (sum, report) => sum + report.occupiedUnits,
+    0,
+  );
+  const totalAvailableUnits = occupancyData.reduce(
+    (sum, report) => sum + report.availableUnits,
+    0,
+  );
+  const averageOccupancyRate =
+    occupancyData.length > 0
+      ? occupancyData.reduce((sum, report) => sum + report.occupancyRate, 0) /
+        occupancyData.length
+      : 0;
 
   // Calculate revenue statistics
   let totalRevenue = 0;
   let totalBookings = 0;
   let totalPayments = 0;
-  
-  occupancyData.forEach(report => {
-    report.occupiedUnitDetails.forEach(unit => {
-      unit.bookings.forEach(booking => {
+
+  occupancyData.forEach((report) => {
+    report.occupiedUnitDetails.forEach((unit) => {
+      unit.bookings.forEach((booking) => {
         totalBookings++;
         totalRevenue += parseFloat(booking.price);
         totalPayments += booking.payments.length;
@@ -45,40 +63,43 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
   });
 
   // Group by warehouse for summary
-  const warehouseStats = new Map<string, {
-    totalUnits: number;
-    occupiedUnits: number;
-    availableUnits: number;
-    occupancyRate: number;
-    revenue: number;
-  }>();
+  const warehouseStats = new Map<
+    string,
+    {
+      totalUnits: number;
+      occupiedUnits: number;
+      availableUnits: number;
+      occupancyRate: number;
+      revenue: number;
+    }
+  >();
 
-  occupancyData.forEach(report => {
-    report.occupiedUnitDetails.forEach(unit => {
+  occupancyData.forEach((report) => {
+    report.occupiedUnitDetails.forEach((unit) => {
       if (!warehouseStats.has(unit.warehouseName)) {
         warehouseStats.set(unit.warehouseName, {
           totalUnits: 0,
           occupiedUnits: 0,
           availableUnits: 0,
           occupancyRate: 0,
-          revenue: 0
+          revenue: 0,
         });
       }
       const stats = warehouseStats.get(unit.warehouseName)!;
       stats.occupiedUnits++;
-      unit.bookings.forEach(booking => {
+      unit.bookings.forEach((booking) => {
         stats.revenue += parseFloat(booking.price);
       });
     });
-    
-    report.availableUnitDetails.forEach(unit => {
+
+    report.availableUnitDetails.forEach((unit) => {
       if (!warehouseStats.has(unit.warehouseName)) {
         warehouseStats.set(unit.warehouseName, {
           totalUnits: 0,
           occupiedUnits: 0,
           availableUnits: 0,
           occupancyRate: 0,
-          revenue: 0
+          revenue: 0,
         });
       }
       const stats = warehouseStats.get(unit.warehouseName)!;
@@ -89,7 +110,8 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
   // Calculate occupancy rates for warehouses
   warehouseStats.forEach((stats, warehouse) => {
     stats.totalUnits = stats.occupiedUnits + stats.availableUnits;
-    stats.occupancyRate = stats.totalUnits > 0 ? (stats.occupiedUnits / stats.totalUnits) * 100 : 0;
+    stats.occupancyRate =
+      stats.totalUnits > 0 ? (stats.occupiedUnits / stats.totalUnits) * 100 : 0;
   });
 
   let html = `
@@ -344,11 +366,15 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
 
   // Add warehouse sections
   Array.from(warehouseStats.entries()).forEach(([warehouseName, stats]) => {
-    const occupiedUnits = occupancyData.flatMap(report => 
-      report.occupiedUnitDetails.filter(unit => unit.warehouseName === warehouseName)
+    const occupiedUnits = occupancyData.flatMap((report) =>
+      report.occupiedUnitDetails.filter(
+        (unit) => unit.warehouseName === warehouseName,
+      ),
     );
-    const availableUnits = occupancyData.flatMap(report => 
-      report.availableUnitDetails.filter(unit => unit.warehouseName === warehouseName)
+    const availableUnits = occupancyData.flatMap((report) =>
+      report.availableUnitDetails.filter(
+        (unit) => unit.warehouseName === warehouseName,
+      ),
     );
     const allUnits = [...occupiedUnits, ...availableUnits];
 
@@ -386,7 +412,7 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
     `;
 
     // Add occupied units
-    occupiedUnits.forEach(unit => {
+    occupiedUnits.forEach((unit) => {
       html += `
         <div class="unit-card unit-occupied">
           <div class="unit-header">
@@ -400,7 +426,7 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
       `;
 
       if (unit.bookings.length > 0) {
-        unit.bookings.forEach(booking => {
+        unit.bookings.forEach((booking) => {
           html += `
             <div class="booking-section">
               <div class="booking-header">Booking #${booking.bookingId}</div>
@@ -420,7 +446,7 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
               <div class="payments-section">
                 <strong>Payments:</strong>
             `;
-            booking.payments.forEach(payment => {
+            booking.payments.forEach((payment) => {
               html += `
                 <div class="payment-item">
                   <span>${formatDate(payment.date)} - ${payment.method}</span>
@@ -452,7 +478,7 @@ const generateOccupancyReportContent = (occupancyData: OccupancyReportData[]) =>
     });
 
     // Add available units
-    availableUnits.forEach(unit => {
+    availableUnits.forEach((unit) => {
       html += `
         <div class="unit-card unit-available">
           <div class="unit-header">

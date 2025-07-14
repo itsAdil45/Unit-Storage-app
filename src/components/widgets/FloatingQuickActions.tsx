@@ -81,18 +81,18 @@ const FloatingQuickActions: React.FC<FloatingQuickActionsProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { dark } = useTheme();
-  
+
   const animationProgress = useSharedValue(0);
   const fabScale = useSharedValue(1);
-  
+
   const toggleExpanded = () => {
     const newState = !isExpanded;
-    
+
     animationProgress.value = withSpring(newState ? 1 : 0, {
       damping: 15,
       stiffness: 150,
     });
-    
+
     runOnJS(setIsExpanded)(newState);
   };
 
@@ -103,7 +103,7 @@ const FloatingQuickActions: React.FC<FloatingQuickActionsProps> = ({
       stiffness: 150,
     });
     runOnJS(setIsExpanded)(false);
-    
+
     // Then call the action
     onActionPress?.(action);
   };
@@ -111,12 +111,8 @@ const FloatingQuickActions: React.FC<FloatingQuickActionsProps> = ({
   const fabAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
       { scale: fabScale.value },
-      { 
-        rotate: `${interpolate(
-          animationProgress.value,
-          [0, 1],
-          [0, 45]
-        )}deg` 
+      {
+        rotate: `${interpolate(animationProgress.value, [0, 1], [0, 45])}deg`,
       },
     ],
   }));
@@ -127,7 +123,7 @@ const FloatingQuickActions: React.FC<FloatingQuickActionsProps> = ({
   }));
 
   return (
-    <View  style={styles.container} pointerEvents="box-none">
+    <View style={styles.container} pointerEvents="box-none">
       {/* Overlay - Only visible when expanded */}
       {isExpanded && (
         <AnimatedPressable
@@ -139,34 +135,22 @@ const FloatingQuickActions: React.FC<FloatingQuickActionsProps> = ({
       {/* Action Items */}
       {actions.map((action, index) => {
         const actionAnimatedStyle = useAnimatedStyle(() => {
-const progress = animationProgress.value;
+          const progress = animationProgress.value;
 
-          
           // Increased spacing between actions
           const translateY = interpolate(
             progress,
             [0, 1],
-[0, -(index + 1) * 60]
+            [0, -(index + 1) * 60],
           );
-          
-          const scale = interpolate(
-            progress,
-            [0, 0.5, 1],
-            [0, 0.8, 1]
-          );
-          
-          const opacity = interpolate(
-            progress,
-            [0, 0.3, 1],
-            [0, 0.5, 1]
-          );
+
+          const scale = interpolate(progress, [0, 0.5, 1], [0, 0.8, 1]);
+
+          const opacity = interpolate(progress, [0, 0.3, 1], [0, 0.5, 1]);
 
           return {
             opacity,
-            transform: [
-              { translateY },
-              { scale },
-            ],
+            transform: [{ translateY }, { scale }],
           };
         });
 
@@ -223,13 +207,13 @@ const styles = StyleSheet.create({
     zIndex: 98,
   },
   container: {
-  position: 'absolute',
-  bottom: 0,
-  right: 0,
-  width: 100, // Adjust as needed
-  height: 400, // Enough to cover expanded actions
-  zIndex: 100,
-},
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 100, // Adjust as needed
+    height: 400, // Enough to cover expanded actions
+    zIndex: 100,
+  },
   fab: {
     position: 'absolute',
     bottom: 30,

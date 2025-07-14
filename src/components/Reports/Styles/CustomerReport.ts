@@ -102,10 +102,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
   },
-//   paymentItem: {
-//     flex: 1,
-//     alignItems: 'center',
-//   },
+  //   paymentItem: {
+  //     flex: 1,
+  //     alignItems: 'center',
+  //   },
   paymentLabel: {
     fontSize: 12,
     marginBottom: 4,
@@ -124,7 +124,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 12,
-    
   },
   bookingItem: {
     padding: 12,
@@ -136,9 +135,8 @@ const styles = StyleSheet.create({
   bookingHeader: {
     justifyContent: 'space-between',
     marginBottom: 8,
-        flexDirection: 'column',
+    flexDirection: 'column',
     gap: 8,
-    
   },
   bookingId: {
     fontSize: 14,
@@ -154,8 +152,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-        alignSelf: 'flex-start',
-
+    alignSelf: 'flex-start',
   },
   statusText: {
     color: '#fff',
@@ -213,7 +210,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
   },
-  
+
   expandedBookingContent: {
     marginTop: 12,
     paddingTop: 12,
@@ -337,12 +334,11 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  
   headerButtons: {
     flexDirection: 'row',
     gap: 8,
   },
-  
+
   exportButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -351,28 +347,28 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     gap: 4,
   },
-  
+
   exportButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
   },
-  
-//   // If you want to keep the old pdfButton styles for backward compatibility
-//   pdfButton: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     paddingHorizontal: 12,
-//     paddingVertical: 8,
-//     borderRadius: 6,
-//     gap: 4,
-//   },
-  
-//   pdfButtonText: {
-//     color: '#fff',
-//     fontSize: 14,
-//     fontWeight: '600',
-//   },
+
+  //   // If you want to keep the old pdfButton styles for backward compatibility
+  //   pdfButton: {
+  //     flexDirection: 'row',
+  //     alignItems: 'center',
+  //     paddingHorizontal: 12,
+  //     paddingVertical: 8,
+  //     borderRadius: 6,
+  //     gap: 4,
+  //   },
+
+  //   pdfButtonText: {
+  //     color: '#fff',
+  //     fontSize: 14,
+  //     fontWeight: '600',
+  //   },
 });
 
 export default styles;

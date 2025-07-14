@@ -95,8 +95,6 @@ const UnitListModal: React.FC<Props> = ({ visible, onClose, selectedDate }) => {
     );
   };
 
-
-
   const renderUnitItem = ({ item }: { item: UnitData }) => (
     <ModalUnitItem
       item={item}

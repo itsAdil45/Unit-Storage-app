@@ -1,6 +1,5 @@
-import { RevenueReportData } from "../../../types/RevenueReport";
-import { formatAEDCurrency } from "../../../Utils/Formatters";
-
+import { RevenueReportData } from '../../../types/RevenueReport';
+import { formatAEDCurrency } from '../../../Utils/Formatters';
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -18,9 +17,18 @@ const generateRevenueReportContent = (revenueData: RevenueReportData[]) => {
   });
 
   // Calculate totals across all warehouses
-  const totalRevenue = revenueData.reduce((sum, item) => sum + item.totalRevenue, 0);
-  const totalExpenses = revenueData.reduce((sum, item) => sum + item.totalExpenses, 0);
-  const totalNetRevenue = revenueData.reduce((sum, item) => sum + item.netRevenue, 0);
+  const totalRevenue = revenueData.reduce(
+    (sum, item) => sum + item.totalRevenue,
+    0,
+  );
+  const totalExpenses = revenueData.reduce(
+    (sum, item) => sum + item.totalExpenses,
+    0,
+  );
+  const totalNetRevenue = revenueData.reduce(
+    (sum, item) => sum + item.netRevenue,
+    0,
+  );
 
   let html = `
     <html>

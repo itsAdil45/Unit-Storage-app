@@ -100,13 +100,13 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
 
       if (res?.status === 'success') {
         const expensesData = res.data.expenses || [];
-        
+
         if (isLoadMore) {
-          setExpenses(prev => [...prev, ...expensesData]);
+          setExpenses((prev) => [...prev, ...expensesData]);
         } else {
           setExpenses(expensesData);
         }
-        
+
         setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
         setTotalItems(parseInt(res.data.pagination.total) || 0);
       }
@@ -174,7 +174,7 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
       removingId={removingId}
       onDelete={(id) => {
         handleDelete(id, setExpenses);
-        setTotalItems(prev => prev - 1);
+        setTotalItems((prev) => prev - 1);
       }}
       deleteTitle="Delete Expense"
       itemName={item.description}

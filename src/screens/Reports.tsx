@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Text, 
-  View, 
-  FlatList, 
-  TouchableOpacity, 
-  StyleSheet, 
-  Modal, 
-  Dimensions 
+import {
+  Text,
+  View,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CustomerReport from '../components/Reports/CustomerReport';
@@ -31,7 +31,7 @@ const reportTypes: ReportType[] = [
   {
     id: 'customer',
     label: 'Customer Report',
-    icon: 'people-outline', 
+    icon: 'people-outline',
     description: 'View customer bookings and payment details',
     component: CustomerReport,
   },
@@ -45,7 +45,7 @@ const reportTypes: ReportType[] = [
   {
     id: 'expense',
     label: 'Expense Report',
-    icon: 'cash-outline', 
+    icon: 'cash-outline',
     description: 'Monitor business expenses and spending trends',
     component: ExpenseReport,
   },
@@ -59,27 +59,28 @@ const reportTypes: ReportType[] = [
   {
     id: 'units',
     label: 'Units Report',
-    icon: 'layers-outline', 
+    icon: 'layers-outline',
     description: 'Detailed report on all storage units and their statuses',
     component: UnitsReport,
   },
 ];
 
-
 export default function Reports() {
-type ReportsRouteProp = RouteProp<RootTabParamList, 'Reports'>;
-const route = useRoute<ReportsRouteProp>();
-const { openReport } = route.params || {};
-useEffect(() => {
-  if (openReport) {
-    const found = reportTypes.find(r => r.id === openReport);
-    if (found) {
-      setSelectedReport(found);
+  type ReportsRouteProp = RouteProp<RootTabParamList, 'Reports'>;
+  const route = useRoute<ReportsRouteProp>();
+  const { openReport } = route.params || {};
+  useEffect(() => {
+    if (openReport) {
+      const found = reportTypes.find((r) => r.id === openReport);
+      if (found) {
+        setSelectedReport(found);
+      }
     }
-  }
-}, [openReport]);
+  }, [openReport]);
 
-  const [selectedReport, setSelectedReport] = useState<ReportType>(reportTypes[0]);
+  const [selectedReport, setSelectedReport] = useState<ReportType>(
+    reportTypes[0],
+  );
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
@@ -92,22 +93,25 @@ useEffect(() => {
     <TouchableOpacity
       style={[
         styles.dropdownItem,
-        selectedReport.id === item.id && styles.selectedDropdownItem
+        selectedReport.id === item.id && styles.selectedDropdownItem,
       ]}
       onPress={() => handleReportSelection(item)}
     >
       <View style={styles.dropdownItemContent}>
         <View style={styles.dropdownItemLeft}>
-          <Ionicons 
-            name={item.icon as any} 
-            size={24} 
-            color={selectedReport.id === item.id ? '#007bff' : '#666'} 
+          <Ionicons
+            name={item.icon as any}
+            size={24}
+            color={selectedReport.id === item.id ? '#007bff' : '#666'}
           />
           <View style={styles.dropdownItemText}>
-            <Text style={[
-              styles.dropdownItemLabel,
-              selectedReport.id === item.id && styles.selectedDropdownItemLabel
-            ]}>
+            <Text
+              style={[
+                styles.dropdownItemLabel,
+                selectedReport.id === item.id &&
+                  styles.selectedDropdownItemLabel,
+              ]}
+            >
               {item.label}
             </Text>
             <Text style={styles.dropdownItemDescription}>
@@ -132,38 +136,46 @@ useEffect(() => {
       keyboardShouldPersistTaps="handled"
       removeClippedSubviews={false}
       ListHeaderComponent={() => (
-        <View style={[styles.container,{backgroundColor:colors.background}]}>
+        <View
+          style={[styles.container, { backgroundColor: colors.background }]}
+        >
           {/* Header */}
-          <View style={[styles.header,{backgroundColor:colors.card}]}>
-            <Text style={[styles.headerTitle,{color:colors.text}]}>Reports</Text>
+          <View style={[styles.header, { backgroundColor: colors.card }]}>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>
+              Reports
+            </Text>
             <Text style={styles.headerSubtitle}>
               Generate and view detailed reports
             </Text>
           </View>
 
           {/* Report Type Selector */}
-          <View style={[styles.selectorContainer ,{backgroundColor:colors.card}]}>
-            <Text style={[styles.selectorLabel, {color:colors.text}]}>Select Report Type</Text>
-            
+          <View
+            style={[styles.selectorContainer, { backgroundColor: colors.card }]}
+          >
+            <Text style={[styles.selectorLabel, { color: colors.text }]}>
+              Select Report Type
+            </Text>
+
             <TouchableOpacity
               style={styles.dropdown}
               onPress={() => setDropdownVisible(true)}
             >
               <View style={[styles.dropdownContent]}>
                 <View style={styles.dropdownLeft}>
-                  <Ionicons 
-                    name={selectedReport.icon as any} 
-                    size={20} 
-                    color="#007bff" 
+                  <Ionicons
+                    name={selectedReport.icon as any}
+                    size={20}
+                    color="#007bff"
                   />
                   <Text style={styles.dropdownText}>
                     {selectedReport.label}
                   </Text>
                 </View>
-                <Ionicons 
-                  name={dropdownVisible ? "chevron-up" : "chevron-down"} 
-                  size={20} 
-                  color="#666" 
+                <Ionicons
+                  name={dropdownVisible ? 'chevron-up' : 'chevron-down'}
+                  size={20}
+                  color="#666"
                 />
               </View>
             </TouchableOpacity>
@@ -193,7 +205,7 @@ useEffect(() => {
                     <Ionicons name="close" size={24} color="#666" />
                   </TouchableOpacity>
                 </View>
-                
+
                 <FlatList
                   data={reportTypes}
                   renderItem={renderDropdownItem}

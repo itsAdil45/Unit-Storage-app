@@ -39,8 +39,6 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({
     return `$${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
   };
 
-
-
   return (
     <TouchableOpacity
       style={[
@@ -157,6 +155,5 @@ const ExpenseItem: React.FC<ExpenseItemProps> = ({
     </TouchableOpacity>
   );
 };
-
 
 export default ExpenseItem;

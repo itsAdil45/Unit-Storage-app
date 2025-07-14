@@ -38,11 +38,21 @@ export const usePatchFormData = () => {
         const data = await response.json();
 
         if (!response.ok) {
+          // console.error('API Error:', data);
+          // throw new Error(data.message || 'Unknown API error');
           console.error('API Error:', data);
-          throw new Error(data.message || 'Unknown API error');
+          return {
+            status: 'error',
+            message: data.message || 'Unknown API error',
+            error: data.message || 'Unknown API error',
+          };
         }
 
-        return data;
+        return {
+          status: 'success',
+          data: data.data,
+          message: data.message,
+        };
       } catch (error) {
         console.error('usePatchFormData error:', error);
         return null;

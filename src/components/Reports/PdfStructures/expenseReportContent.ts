@@ -1,6 +1,5 @@
-import { ExpenseReportData } from "../../../types/ExpenseReport";
-import { formatAEDCurrency } from "../../../Utils/Formatters";
-
+import { ExpenseReportData } from '../../../types/ExpenseReport';
+import { formatAEDCurrency } from '../../../Utils/Formatters';
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -19,31 +18,44 @@ const generateExpenseReportContent = (expenseData: ExpenseReportData[]) => {
 
   // Calculate totals across all warehouses and expense types
   const totalExpenses = expenseData.reduce((sum, item) => sum + item.total, 0);
-  const totalWarehouses = [...new Set(expenseData.map(item => item.warehouseId))].length;
-  const totalExpenseTypes = [...new Set(expenseData.map(item => item.expenseType))].length;
+  const totalWarehouses = [
+    ...new Set(expenseData.map((item) => item.warehouseId)),
+  ].length;
+  const totalExpenseTypes = [
+    ...new Set(expenseData.map((item) => item.expenseType)),
+  ].length;
 
   // Group by warehouse for summary
-  const warehouseExpenses = expenseData.reduce((acc, item) => {
-    if (!acc[item.warehouseId]) {
-      acc[item.warehouseId] = {
-        warehouseName: item.warehouseName,
-        total: 0,
-        expenseCount: 0
-      };
-    }
-    acc[item.warehouseId].total += item.total;
-    acc[item.warehouseId].expenseCount += 1;
-    return acc;
-  }, {} as Record<number, { warehouseName: string; total: number; expenseCount: number }>);
+  const warehouseExpenses = expenseData.reduce(
+    (acc, item) => {
+      if (!acc[item.warehouseId]) {
+        acc[item.warehouseId] = {
+          warehouseName: item.warehouseName,
+          total: 0,
+          expenseCount: 0,
+        };
+      }
+      acc[item.warehouseId].total += item.total;
+      acc[item.warehouseId].expenseCount += 1;
+      return acc;
+    },
+    {} as Record<
+      number,
+      { warehouseName: string; total: number; expenseCount: number }
+    >,
+  );
 
   // Group by expense type for summary
-  const expenseTypeBreakdown = expenseData.reduce((acc, item) => {
-    if (!acc[item.expenseType]) {
-      acc[item.expenseType] = 0;
-    }
-    acc[item.expenseType] += item.total;
-    return acc;
-  }, {} as Record<string, number>);
+  const expenseTypeBreakdown = expenseData.reduce(
+    (acc, item) => {
+      if (!acc[item.expenseType]) {
+        acc[item.expenseType] = 0;
+      }
+      acc[item.expenseType] += item.total;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   let html = `
     <html>
@@ -205,7 +217,7 @@ const generateExpenseReportContent = (expenseData: ExpenseReportData[]) => {
 
   // Add warehouse breakdown
   Object.entries(warehouseExpenses)
-    .sort(([,a], [,b]) => b.total - a.total)
+    .sort(([, a], [, b]) => b.total - a.total)
     .forEach(([warehouseId, data]) => {
       html += `
         <div class="breakdown-item">
@@ -223,7 +235,7 @@ const generateExpenseReportContent = (expenseData: ExpenseReportData[]) => {
 
   // Add expense type breakdown
   Object.entries(expenseTypeBreakdown)
-    .sort(([,a], [,b]) => b - a)
+    .sort(([, a], [, b]) => b - a)
     .forEach(([expenseType, total]) => {
       html += `
         <div class="breakdown-item">

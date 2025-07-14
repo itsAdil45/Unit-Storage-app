@@ -1,6 +1,5 @@
-import { UnitReportData } from "../../../types/StorageUnitsReport";
-import { formatAEDCurrency } from "../../../Utils/Formatters";
-
+import { UnitReportData } from '../../../types/StorageUnitsReport';
+import { formatAEDCurrency } from '../../../Utils/Formatters';
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -129,11 +128,25 @@ const generateUnitPDFContent = (units: UnitReportData[]) => {
 
   units.forEach((unit) => {
     const totalBookings = unit.bookings.length;
-    const activeBookings = unit.bookings.filter(b => b.bookingStatus === 'active').length;
-    const completedBookings = unit.bookings.filter(b => b.bookingStatus === 'completed').length;
-    const totalRevenue = unit.bookings.reduce((sum, booking) => sum + parseFloat(booking.price), 0);
-    const totalPayments = unit.bookings.reduce((sum, booking) => sum + booking.payments.length, 0);
-    const paidPayments = unit.bookings.reduce((sum, booking) => sum + booking.payments.filter(p => p.status === 'paid').length, 0);
+    const activeBookings = unit.bookings.filter(
+      (b) => b.bookingStatus === 'active',
+    ).length;
+    const completedBookings = unit.bookings.filter(
+      (b) => b.bookingStatus === 'completed',
+    ).length;
+    const totalRevenue = unit.bookings.reduce(
+      (sum, booking) => sum + parseFloat(booking.price),
+      0,
+    );
+    const totalPayments = unit.bookings.reduce(
+      (sum, booking) => sum + booking.payments.length,
+      0,
+    );
+    const paidPayments = unit.bookings.reduce(
+      (sum, booking) =>
+        sum + booking.payments.filter((p) => p.status === 'paid').length,
+      0,
+    );
 
     html += `
       <div class="unit-section">

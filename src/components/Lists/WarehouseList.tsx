@@ -36,7 +36,9 @@ const WarehouseList: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
-  const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(null);
+  const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
+    null,
+  );
   const [showAddModal, setShowAddModal] = useState(false);
 
   const { get } = useGet();
@@ -78,16 +80,18 @@ const WarehouseList: React.FC = () => {
 
       if (res?.status === 'success') {
         const warehousesData = res.data?.warehouses || [];
-        const newWarehouses = Array.isArray(warehousesData) ? warehousesData : [];
-        
+        const newWarehouses = Array.isArray(warehousesData)
+          ? warehousesData
+          : [];
+
         if (isLoadMore) {
           // Append new items to existing ones
-          setWarehouses(prev => [...prev, ...newWarehouses]);
+          setWarehouses((prev) => [...prev, ...newWarehouses]);
         } else {
           // Replace existing items
           setWarehouses(newWarehouses);
         }
-        
+
         setTotalPages(parseInt(res.data?.pagination?.totalPages) || 1);
         setTotalItems(parseInt(res.data?.pagination?.total) || 0);
       }
@@ -132,7 +136,7 @@ const WarehouseList: React.FC = () => {
 
   const addWarehouse = (newWarehouse: Warehouse) => {
     setWarehouses((prev) => [newWarehouse, ...prev]);
-    setTotalItems(prev => prev + 1);
+    setTotalItems((prev) => prev + 1);
   };
 
   const displayWarehouses = useMemo(() => {
@@ -151,7 +155,7 @@ const WarehouseList: React.FC = () => {
       removingId={removingId}
       onDelete={(id) => {
         handleDelete(id, setWarehouses);
-        setTotalItems(prev => prev - 1);
+        setTotalItems((prev) => prev - 1);
       }}
       deleteTitle="Delete Warehouse"
       itemName={item.name}
@@ -164,7 +168,7 @@ const WarehouseList: React.FC = () => {
         colors={colors}
         dark={dark}
         onEdit={handleEdit}
-        onDeletePress={() => {}} 
+        onDeletePress={() => {}}
       />
     </AnimatedDeleteWrapper>
   );
@@ -187,8 +191,12 @@ const WarehouseList: React.FC = () => {
 
   if (initialLoad) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background,          zIndex: 120
- }]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.background, zIndex: 120 },
+        ]}
+      >
         <StatusBar
           barStyle={dark ? 'light-content' : 'dark-content'}
           backgroundColor={colors.card}
