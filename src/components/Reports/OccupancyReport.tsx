@@ -6,8 +6,6 @@ import {
   StatusBar,
   ActivityIndicator,
   FlatList,
-  Alert,
-  Modal,
 } from 'react-native';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -34,6 +32,8 @@ import {
   createHandleLoadMore,
   useTotalPages,
 } from '../../Utils/PaginationUtils';
+import LoadingModal from '../Reusable/LoadingModal';
+import EmptyList from '../Reusable/EmptyList';
 
 const OccupancyReport: React.FC = () => {
   const { dark } = useTheme();
@@ -163,63 +163,19 @@ const OccupancyReport: React.FC = () => {
     };
   }, [reportData]);
 
-  const renderEmptyList = () => (
-    <View style={styles.emptyContainer}>
-      <MaterialIcons name="domain" size={64} color={colors.subtext} />
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>
-        No occupancy reports available
-      </Text>
-      <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
-        Occupancy reports will appear here once data is available
-      </Text>
-    </View>
-  );
+  const renderEmptyList = () => {
+   return EmptyList(styles, colors, "Occupancy");
+  };
 
-  const renderPDFLoadingOverlay = () => (
-    <Modal
-      visible={generatingPDF}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-    >
-      <View style={styles.pdfOverlay}>
-        <View
-          style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}
-        >
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>
-            Generating PDF...
-          </Text>
-          <Text style={[styles.pdfLoadingSubtext, { color: colors.subtext }]}>
-            Please wait while we prepare your report
-          </Text>
-        </View>
-      </View>
-    </Modal>
-  );
 
-  const renderExcelLoadingOverlay = () => (
-    <Modal
-      visible={generatingExcel}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-    >
-      <View style={styles.pdfOverlay}>
-        <View
-          style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}
-        >
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>
-            Generating Excel...
-          </Text>
-          <Text style={[styles.pdfLoadingSubtext, { color: colors.subtext }]}>
-            Please wait while we prepare your Excel file
-          </Text>
-        </View>
-      </View>
-    </Modal>
-  );
+  const renderPDFLoadingOverlay = () => {
+    return LoadingModal(generatingPDF, "PDF", colors);
+  };
+
+  const renderExcelLoadingOverlay = () => {
+        return LoadingModal(generatingExcel, "Excel", colors);
+
+  }
 
   return initialLoad ? (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

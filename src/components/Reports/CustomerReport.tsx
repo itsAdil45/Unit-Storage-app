@@ -6,8 +6,6 @@ import {
   StatusBar,
   ActivityIndicator,
   FlatList,
-  Alert,
-  Modal,
 } from 'react-native';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
@@ -21,6 +19,7 @@ import { generateAndSharePDF } from '../Reusable/GenerateAndSharePDF';
 import { generateAndShareExcel } from '../Reusable/GenerateAndShareExcel';
 import { generateCustomerExcelWorkbook } from './ExcelStructures/customerExcelContent';
 import { CustomerReportData, ApiResponse } from '../../types/CustomerReport';
+import LoadingModal from '../Reusable/LoadingModal';
 import {
   formatDate,
   getStatusColor,
@@ -31,7 +30,7 @@ import {
   createHandleLoadMore,
   useTotalPages,
 } from '../../Utils/PaginationUtils';
-
+import EmptyList from '../Reusable/EmptyList';
 const CustomerReport: React.FC = () => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
@@ -123,63 +122,18 @@ const CustomerReport: React.FC = () => {
     });
   };
 
-  const renderEmptyList = () => (
-    <View style={styles.emptyContainer}>
-      <MaterialIcons name="assessment" size={64} color={colors.subtext} />
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>
-        No customer reports available
-      </Text>
-      <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
-        Customer reports will appear here once data is available
-      </Text>
-    </View>
-  );
+  const renderEmptyList = () => {
+   return EmptyList(styles, colors, "Customer");
+  };
 
-  const renderPDFLoadingOverlay = () => (
-    <Modal
-      visible={generatingPDF}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-    >
-      <View style={styles.pdfOverlay}>
-        <View
-          style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}
-        >
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>
-            Generating PDF...
-          </Text>
-          <Text style={[styles.pdfLoadingSubtext, { color: colors.subtext }]}>
-            Please wait while we prepare your report
-          </Text>
-        </View>
-      </View>
-    </Modal>
-  );
+  const renderPDFLoadingOverlay = () => {
+    return LoadingModal(generatingPDF, "PDF", colors);
+  };
 
-  const renderExcelLoadingOverlay = () => (
-    <Modal
-      visible={generatingExcel}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-    >
-      <View style={styles.pdfOverlay}>
-        <View
-          style={[styles.pdfLoadingContainer, { backgroundColor: colors.card }]}
-        >
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.pdfLoadingText, { color: colors.text }]}>
-            Generating Excel...
-          </Text>
-          <Text style={[styles.pdfLoadingSubtext, { color: colors.subtext }]}>
-            Please wait while we prepare your Excel file
-          </Text>
-        </View>
-      </View>
-    </Modal>
-  );
+  const renderExcelLoadingOverlay = () => {
+        return LoadingModal(generatingExcel, "Excel", colors);
+
+  }
 
   return initialLoad ? (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
