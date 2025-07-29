@@ -19,6 +19,7 @@ import Animated, {
   withSequence,
 } from 'react-native-reanimated';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as DefaultSplashScreen from 'expo-splash-screen';
 
 const { width, height } = Dimensions.get('window');
 
@@ -41,8 +42,10 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   const decorationOpacity = useSharedValue(0);
   const decorationScale = useSharedValue(0);
 
-  const finishSplash = () => {
+  const finishSplash = async() => {
+    await DefaultSplashScreen.hideAsync();
     onFinish();
+
   };
 
   useEffect(() => {
@@ -157,7 +160,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         </Animated.View> */}
 
         <Animated.Text style={[styles.subtitle, subtitleAnimatedStyle]}>
-          Choose • Move • Settle
+          Choose & Move 
         </Animated.Text>
 
         <Animated.View style={[styles.taglineContainer, taglineAnimatedStyle]}>

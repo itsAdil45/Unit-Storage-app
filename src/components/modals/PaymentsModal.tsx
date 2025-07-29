@@ -206,6 +206,7 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
                 : colors.border,
               opacity: item.paymentReceivedAttachment ? 1 : 0.5,
             },
+            
           ]}
           onPress={() => handleViewPaymentReceivedAttachment(item)}
           disabled={!item.paymentReceivedAttachment}
@@ -230,6 +231,7 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
             {
               backgroundColor: item.invoiceAttachment ? 'green' : colors.border,
               opacity: item.invoiceAttachment ? 1 : 0.5,
+      
             },
           ]}
           onPress={() => handleViewInvoice(item)}
@@ -256,8 +258,8 @@ const PaymentsModal: React.FC<PaymentsModalProps> = ({
             { backgroundColor: colors.secondary + '15' },
           ]}
         >
-          <MaterialIcons name="edit" size={16} color={colors.secondary} />
-          <Text style={[styles.actionText, { color: colors.secondary }]}>
+          <MaterialIcons name="edit" size={16} color={colors.subtext} />
+          <Text style={[styles.actionText, { color: colors.subtext }]}>
             Edit
           </Text>
         </TouchableOpacity>
@@ -524,7 +526,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
     marginTop: 2,
-    width: 70,
+    width: 90,
     height: 30,
   },
   invoiceAttachmentText: {

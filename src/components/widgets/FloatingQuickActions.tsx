@@ -34,9 +34,9 @@ const actions = [
   // },
   {
     title: 'Expense',
-    icon: 'archive-outline',
+    icon: 'money-bill-wave',
     color: '#3f51b5',
-    lib: 'MaterialCommunityIcons',
+    lib: 'FontAwesome5',
   },
   // {
   //   title: 'Revenue',
@@ -174,7 +174,7 @@ const FloatingQuickActions: React.FC<FloatingQuickActionsProps> = ({
           >
             {renderIcon(action, 15)}
             <View style={styles.labelContainer}>
-              {/* <Text style={styles.actionLabel}>{action.title}</Text> */}
+              <Text style={styles.actionLabel}>{action.title}</Text>
             </View>
           </AnimatedPressable>
         );

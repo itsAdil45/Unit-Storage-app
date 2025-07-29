@@ -25,7 +25,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { MaterialIcons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,6 +73,8 @@ const LoginScreen = () => {
         text1: 'Login Success',
         text2: `Welcome ${email}`,
       });
+      await AsyncStorage.setItem('user', email);
+
     } catch (err) {
       Toast.show({
         type: 'error',

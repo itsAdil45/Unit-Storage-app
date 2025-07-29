@@ -235,8 +235,8 @@ const BookingItem: React.FC<BookingItemProps> = ({
             { backgroundColor: colors.secondary + '15' },
           ]}
         >
-          <MaterialIcons name="edit" size={16} color={colors.secondary} />
-          <Text style={[styles.actionText, { color: colors.secondary }]}>
+          <MaterialIcons name="edit" size={16} color={colors.subtext} />
+          <Text style={[styles.actionText, { color: colors.subtext }]}>
             Edit
           </Text>
         </TouchableOpacity>

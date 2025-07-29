@@ -145,7 +145,7 @@ const UnitItem: React.FC<UnitItemProps> = ({
                 >
                   {item.percentage}%
                 </Text>
-                <Text style={[styles.statusText]}>
+                <Text style={[styles.statusText, { color: colors.subtext }]}>
                   {item.status.toUpperCase()}
                 </Text>
               </View>

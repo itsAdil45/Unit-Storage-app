@@ -5,7 +5,7 @@ import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
 
 const screenWidth = Dimensions.get('window').width;
-import { StorageOverviewData } from '../../types/Types'; // ⬅️ import type
+import { StorageOverviewData } from '../../types/Types'; 
 
 interface Props {
   overview: StorageOverviewData | null;
@@ -83,7 +83,7 @@ const StorageUnitsOverview: React.FC<Props> = ({ overview }) => {
           </View>
         ))}
       </View>
-      <Text style={{ textAlign: 'center', fontWeight: '800', fontSize: 20 }}>
+      <Text style={{ textAlign: 'center', fontWeight: '800', fontSize: 20 , color:themeColors.text}}>
         Total: {overview?.total}
       </Text>
     </View>

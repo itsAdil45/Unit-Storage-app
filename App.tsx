@@ -5,6 +5,8 @@ import { ThemeProvider, useThemeContext } from './src/context/ThemeContext';
 import CustomToast from './src/components/CustomToast';
 import Toast from 'react-native-toast-message';
 import { AuthProvider } from './src/context/AuthContext';
+import * as SplashScreen from 'expo-splash-screen';
+SplashScreen.preventAutoHideAsync();
 
 const AppInner = () => {
   const { theme } = useThemeContext();

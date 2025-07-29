@@ -180,7 +180,7 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
                   onValueChange={(itemValue) => setWarehouse(itemValue)}
                   style={styles.picker}
                 >
-                  <Picker.Item label="Select Warehouse" value="" />
+                  <Picker.Item style={{color: colors.subtext}} label="Select Warehouse" value="" />
                   {warehouses.map((wh) => (
                     <Picker.Item
                       key={wh.id}

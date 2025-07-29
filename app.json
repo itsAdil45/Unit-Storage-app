@@ -8,9 +8,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#f3a222"
     },
     "ios": {
       "supportsTablet": true
@@ -20,7 +18,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-
       "edgeToEdgeEnabled": true,
       "package": "com.adil45.unitstorageapp"
     },
@@ -29,8 +26,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "083996fd-162c-4e3c-94d8-5ca5b231ab9f"
+        "projectId": "ff43384a-76da-4d40-8f19-8133aa12cd0f"
       }
-    }
+    },
+    "owner": "adilshakeel"
   }
 }
