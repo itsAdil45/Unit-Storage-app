@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   FlatList,
   TextInput,
+  RefreshControl, // Add this import
 } from 'react-native';
 import LoadMorePagination from './../Reusable/LoadMorePagination';
 import AnimatedDeleteWrapper, {
@@ -33,6 +34,7 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // Add refreshing state
   const [initialLoad, setInitialLoad] = useState(true);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [search, setSearch] = useState('');
@@ -75,9 +77,11 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
     }, []),
   );
 
-  const fetchExpenses = async (pg: number, isLoadMore: boolean = false) => {
+  const fetchExpenses = async (pg: number, isLoadMore: boolean = false, isRefresh: boolean = false) => {
     if (isLoadMore) {
       setLoadingMore(true);
+    } else if (isRefresh) {
+      setRefreshing(true);
     } else {
       setLoading(true);
       if (pg === 1) {
@@ -104,6 +108,7 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
         if (isLoadMore) {
           setExpenses((prev) => [...prev, ...expensesData]);
         } else {
+          // Replace existing items (for refresh or initial load)
           setExpenses(expensesData);
         }
 
@@ -121,6 +126,8 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
 
     if (isLoadMore) {
       setLoadingMore(false);
+    } else if (isRefresh) {
+      setRefreshing(false);
     } else {
       setLoading(false);
       if (initialLoad) {
@@ -129,8 +136,14 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
     }
   };
 
+  // Add pull to refresh handler
+  const onRefresh = useCallback(() => {
+    setPage(1);
+    fetchExpenses(1, false, true);
+  }, [searchDebounced]);
+
   const handleLoadMore = () => {
-    if (page < totalPages && !loading && !loadingMore) {
+    if (page < totalPages && !loading && !loadingMore && !refreshing) {
       const nextPage = page + 1;
       setPage(nextPage);
       fetchExpenses(nextPage, true);
@@ -209,10 +222,10 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
   if (initialLoad) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar
+        {/* <StatusBar
           barStyle={dark ? 'light-content' : 'dark-content'}
           backgroundColor={colors.card}
-        />
+        /> */}
         <View style={styles.initialLoadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -268,6 +281,15 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]} // Android
+            tintColor={colors.primary} // iOS
+            progressBackgroundColor={colors.card} // Android background
+          />
+        }
         ListFooterComponent={
           <LoadMorePagination
             currentPage={page}

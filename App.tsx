@@ -1,18 +1,22 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { StatusBar } from 'react-native';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ThemeProvider, useThemeContext } from './src/context/ThemeContext';
 import CustomToast from './src/components/CustomToast';
 import Toast from 'react-native-toast-message';
 import { AuthProvider } from './src/context/AuthContext';
 import * as SplashScreen from 'expo-splash-screen';
-SplashScreen.preventAutoHideAsync();
+// SplashScreen.preventAutoHideAsync();
 
 const AppInner = () => {
   const { theme } = useThemeContext();
 
   return (
     <>
+      <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} 
+        backgroundColor={theme.dark ? '#000' : '#fff'}
+/>
       <NavigationContainer theme={theme}>
         <AuthProvider>
           <AppNavigator />

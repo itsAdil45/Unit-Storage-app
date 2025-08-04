@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
@@ -42,6 +43,7 @@ const UnitList = ({ refresh }: { refresh: number }) => {
   const [sortDirection, setSortDirection] = useState('asc');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<StorageUnit | null>(null);
+  const [refreshing, setRefreshing] = useState(false); 
 
   const [allUnits, setAllUnits] = useState<StorageUnit[]>([]);
   const [warehouseGroups, setWarehouseGroups] = useState<WarehouseGroup>({});
@@ -65,7 +67,6 @@ const UnitList = ({ refresh }: { refresh: number }) => {
   const { removingId, handleDelete: baseHandleDelete } =
     useAnimatedDelete<StorageUnit>(deleteRequest, '/storage-units');
 
-  // Reset pagination when warehouse changes
   useEffect(() => {
     setCurrentPage(1);
     setDisplayedUnits([]);
@@ -203,7 +204,6 @@ const UnitList = ({ refresh }: { refresh: number }) => {
 
     setLoadingMore(true);
 
-    // Simulate loading delay (remove in production if not needed)
     setTimeout(() => {
       const nextPage = currentPage + 1;
       const startIndex = (nextPage - 1) * itemsPerPage;
@@ -264,7 +264,6 @@ const UnitList = ({ refresh }: { refresh: number }) => {
       return newGroups;
     });
 
-    // Update displayed units as well
     setDisplayedUnits((prev) =>
       prev.map((unit) =>
         unit.id === updatedUnit.id
@@ -279,7 +278,12 @@ const UnitList = ({ refresh }: { refresh: number }) => {
       ),
     );
   };
-
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    Promise.all([fetchAllUnits(), fetchUnitsOverview()]).finally(() => {
+      setRefreshing(false);
+    });
+  }, []);
   const handleUnitDelete = (unitId: number) => {
     setAllUnits((prev) => prev.filter((unit) => unit.id !== unitId));
     setDisplayedUnits((prev) => prev.filter((unit) => unit.id !== unitId));
@@ -621,6 +625,15 @@ const UnitList = ({ refresh }: { refresh: number }) => {
             currentItemCount={displayedUnits.length}
           />
         )}
+         refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]} 
+            tintColor={colors.primary} 
+            progressBackgroundColor={colors.card} 
+          />
+        }
       />
 
       {loading && (

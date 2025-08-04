@@ -7,6 +7,7 @@ import {
   StatusBar,
   ActivityIndicator,
   FlatList,
+  RefreshControl, // Add this import
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
@@ -20,7 +21,7 @@ import EditWarehouseModal from '../modals/EditWarehouseModal';
 import AnimatedDeleteWrapper, {
   useAnimatedDelete,
 } from '../Reusable/AnimatedDeleteWrapper';
-import LoadMorePagination from '../Reusable/LoadMorePagination'; // Updated import
+import LoadMorePagination from '../Reusable/LoadMorePagination';
 import WarehouseItem from '../Items/WarehouseItem';
 import { Warehouse } from '../../types/Warehouses';
 import styles from './Styles/WarehouseList';
@@ -35,6 +36,7 @@ const WarehouseList: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // Add refreshing state
   const [initialLoad, setInitialLoad] = useState(true);
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
     null,
@@ -64,9 +66,11 @@ const WarehouseList: React.FC = () => {
     }, []),
   );
 
-  const fetchWarehouses = async (pg: number, isLoadMore: boolean = false) => {
+  const fetchWarehouses = async (pg: number, isLoadMore: boolean = false, isRefresh: boolean = false) => {
     if (isLoadMore) {
       setLoadingMore(true);
+    } else if (isRefresh) {
+      setRefreshing(true);
     } else {
       setLoading(true);
       if (pg === 1) {
@@ -88,7 +92,7 @@ const WarehouseList: React.FC = () => {
           // Append new items to existing ones
           setWarehouses((prev) => [...prev, ...newWarehouses]);
         } else {
-          // Replace existing items
+          // Replace existing items (for refresh or initial load)
           setWarehouses(newWarehouses);
         }
 
@@ -106,6 +110,8 @@ const WarehouseList: React.FC = () => {
 
     if (isLoadMore) {
       setLoadingMore(false);
+    } else if (isRefresh) {
+      setRefreshing(false);
     } else {
       setLoading(false);
       if (initialLoad) {
@@ -114,8 +120,14 @@ const WarehouseList: React.FC = () => {
     }
   };
 
+  // Add pull to refresh handler
+  const onRefresh = useCallback(() => {
+    setPage(1);
+    fetchWarehouses(1, false, true);
+  }, []);
+
   const handleLoadMore = () => {
-    if (page < totalPages && !loading && !loadingMore) {
+    if (page < totalPages && !loading && !loadingMore && !refreshing) {
       const nextPage = page + 1;
       setPage(nextPage);
       fetchWarehouses(nextPage, true);
@@ -197,10 +209,10 @@ const WarehouseList: React.FC = () => {
           { backgroundColor: colors.background, zIndex: 120 },
         ]}
       >
-        <StatusBar
+        {/* <StatusBar
           barStyle={dark ? 'light-content' : 'dark-content'}
           backgroundColor={colors.card}
-        />
+        /> */}
         <View style={styles.initialLoadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -244,6 +256,15 @@ const WarehouseList: React.FC = () => {
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]} // Android
+            tintColor={colors.primary} // iOS
+            progressBackgroundColor={colors.card} // Android background
+          />
+        }
         ListFooterComponent={
           <LoadMorePagination
             currentPage={page}

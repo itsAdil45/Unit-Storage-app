@@ -114,10 +114,10 @@ const ExpenseReport: React.FC = () => {
 
   return initialLoad ? (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar
+      {/* <StatusBar
         barStyle={dark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.card}
-      />
+      /> */}
       <View style={styles.initialLoadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -127,10 +127,10 @@ const ExpenseReport: React.FC = () => {
     </View>
   ) : (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar
+      {/* <StatusBar
         barStyle={dark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.card}
-      />
+      /> */}
 
       <View
         style={[

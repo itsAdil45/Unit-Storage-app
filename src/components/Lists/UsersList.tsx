@@ -1,90 +1,84 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   StatusBar,
   ActivityIndicator,
   FlatList,
   TextInput,
-  RefreshControl, // Add this import
+  RefreshControl,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
 import { useTheme } from '@react-navigation/native';
+import { lightColors, darkColors } from '../../constants/color';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
 import { useDelete } from '../../hooks/useDelete';
-import { lightColors, darkColors } from '../../constants/color';
-import { FilterType } from '../../types/Types';
-import EmailLogModal from '../modals/EmailLogModal';
-import EditCustomerModal from '../modals/EditCustomerModal';
+import { User, UserFilterType } from '../../types/Users';
 import AnimatedDeleteWrapper, {
   useAnimatedDelete,
 } from '../Reusable/AnimatedDeleteWrapper';
 import LoadMorePagination from '../Reusable/LoadMorePagination';
-import CustomerItem from '../Items/CustomerItem';
-import { Customer } from '../../types/Customers';
-import styles from './Styles/CustomersList';
+import UserItem from '../Items/UserItem';
+import styles from './Styles/BookingList'; // You may want to rename this file to UsersList
 
-const CustomersList = ({ refresh }: { refresh: number }) => {
+const UsersList = ({ refresh }: { refresh: number }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
-  const [emailModalVisible, setEmailModalVisible] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false); // Add refreshing state
+  const [refreshing, setRefreshing] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<FilterType>('All');
+  const [filterStatus, setFilterStatus] = useState<UserFilterType>(0);
   const [searchDebounced, setSearchDebounced] = useState('');
 
   const { get } = useGet();
   const { del: deleteRequest } = useDelete();
 
-  // Use the custom hook for animated delete
-  const { removingId, handleDelete } = useAnimatedDelete<Customer>(
+  const { removingId, handleDelete } = useAnimatedDelete<User>(
     deleteRequest,
-    '/customers',
+    '/users',
   );
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchDebounced(search);
-    }, 50);
+    }, 500);
     return () => clearTimeout(timer);
   }, [search]);
 
   useEffect(() => {
     if (!initialLoad) {
       setPage(1);
-      setCustomers([]);
-      fetchCustomers(1, false);
+      setUsers([]);
+      fetchUsers(1, false);
     }
-  }, [searchDebounced, statusFilter, refresh]);
+  }, [searchDebounced, filterStatus, refresh]);
 
   useEffect(() => {
     if (page === 1) {
-      fetchCustomers(1, false);
+      fetchUsers(1, false);
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       setPage(1);
-      setCustomers([]);
-      fetchCustomers(1, false);
+      setUsers([]);
+      fetchUsers(1, false);
     }, []),
   );
 
-  const fetchCustomers = async (pg: number, isLoadMore: boolean = false, isRefresh: boolean = false) => {
+  const fetchUsers = async (pg: number, isLoadMore: boolean = false, isRefresh: boolean = false) => {
     if (isLoadMore) {
       setLoadingMore(true);
     } else if (isRefresh) {
@@ -92,7 +86,7 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
     } else {
       setLoading(true);
       if (pg === 1) {
-        setCustomers([]);
+        setUsers([]);
       }
     }
 
@@ -106,32 +100,30 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
         queryParams.append('search', searchDebounced.trim());
       }
 
-      let statusValue = '0';
-      if (statusFilter === 'Inactive') {
-        statusValue = '1';
+      if (filterStatus !== undefined) {
+        queryParams.append('filterStatus', filterStatus.toString());
       }
-      queryParams.append('filterStatus', statusValue);
 
-      const endpoint = `/customers?${queryParams.toString()}`;
+      const endpoint = `/users?${queryParams.toString()}`;
       const res = await get(endpoint);
 
       if (res?.status === 'success') {
-        const customersData = res.data.customers || [];
+        const usersData = res.data.users || [];
 
         if (isLoadMore) {
-          setCustomers((prev) => [...prev, ...customersData]);
+          setUsers((prev) => [...prev, ...usersData]);
         } else {
           // Replace existing items (for refresh or initial load)
-          setCustomers(customersData);
+          setUsers(usersData);
         }
 
         setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
         setTotalItems(parseInt(res.data.pagination.total) || 0);
       }
     } catch (error) {
-      console.error('Error fetching customers:', error);
+      console.error('Error fetching users:', error);
       if (!isLoadMore) {
-        setCustomers([]);
+        setUsers([]);
         setTotalPages(1);
         setTotalItems(0);
       }
@@ -149,40 +141,35 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
     }
   };
 
-  // Add pull to refresh handler
+  // Pull to refresh handler
   const onRefresh = useCallback(() => {
     setPage(1);
-    fetchCustomers(1, false, true);
-  }, [searchDebounced, statusFilter]);
+    fetchUsers(1, false, true);
+  }, [searchDebounced, filterStatus]);
 
   const handleLoadMore = () => {
     if (page < totalPages && !loading && !loadingMore && !refreshing) {
       const nextPage = page + 1;
       setPage(nextPage);
-      fetchCustomers(nextPage, true);
+      fetchUsers(nextPage, true);
     }
   };
 
-  const handleEmailModal = (userId: number) => {
-    setSelectedUserId(userId);
-    setEmailModalVisible(true);
+  const handleEdit = (user: User) => {
+    setEditingUser(user);
   };
 
-  const handleEdit = (customer: Customer) => {
-    setEditingCustomer(customer);
-  };
-
-  const updateCustomer = (updated: Customer) => {
-    setCustomers((prev) =>
-      prev.map((customer) =>
-        customer.id === updated.id ? { ...customer, ...updated } : customer,
+  const updateUser = (updated: User) => {
+    setUsers((prev) =>
+      prev.map((user) =>
+        user.id === updated.id ? { ...user, ...updated } : user,
       ),
     );
   };
 
-  const displayCustomers = useMemo(() => {
-    return customers;
-  }, [customers]);
+  const displayUsers = useMemo(() => {
+    return users;
+  }, [users]);
 
   const handleSearchChange = (text: string) => {
     setSearch(text);
@@ -193,15 +180,22 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
     setSearchDebounced('');
   };
 
-  const handleStatusFilter = (filter: FilterType) => {
-    setStatusFilter(filter);
+  const handleStatusFilter = (filter: UserFilterType) => {
+    setFilterStatus(filter);
   };
 
-  const renderFilterChip = (
-    label: string,
-    value: FilterType,
-    color?: string,
-  ) => (
+  const getFilterColor = (filter: UserFilterType) => {
+    switch (filter) {
+      case 0:
+        return '#4CAF50'; // Green for Active
+      case 1:
+        return '#FF5722'; // Red for Inactive
+      default:
+        return undefined;
+    }
+  };
+
+  const renderFilterChip = (label: string, value: UserFilterType) => (
     <TouchableOpacity
       key={value}
       onPress={() => handleStatusFilter(value)}
@@ -209,21 +203,24 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
         styles.filterChip,
         {
           backgroundColor:
-            statusFilter === value ? colors.primary : colors.card,
+            filterStatus === value ? colors.primary : colors.card,
           borderColor: colors.border,
+          zIndex: 120,
         },
       ]}
     >
       <Text
         style={[
           styles.filterText,
-          { color: statusFilter === value ? '#fff' : colors.text },
+          { color: filterStatus === value ? '#fff' : colors.text },
         ]}
       >
         {label}
       </Text>
-      {color && statusFilter === value && (
-        <View style={[styles.colorDot, { backgroundColor: color }]} />
+      {getFilterColor(value) && filterStatus === value && (
+        <View
+          style={[styles.colorDot, { backgroundColor: getFilterColor(value) }]}
+        />
       )}
     </TouchableOpacity>
   );
@@ -232,41 +229,40 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
     item,
     index,
   }: {
-    item: Customer;
+    item: User;
     index: number;
   }) => (
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
       onDelete={(id) => {
-        handleDelete(id, setCustomers);
+        handleDelete(id, setUsers);
         setTotalItems((prev) => prev - 1);
       }}
-      deleteTitle="Delete Customer"
+      deleteTitle="Delete User"
       itemName={`${item.firstName} ${item.lastName}`}
     >
-      <CustomerItem
+      <UserItem
         item={item}
         index={index}
         colors={colors}
         dark={dark}
         onEdit={handleEdit}
-        onEmail={handleEmailModal}
-        onDeletePress={() => {}} // This will be overridden by AnimatedDeleteWrapper
+        onDeletePress={() => {}}
       />
     </AnimatedDeleteWrapper>
   );
 
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
-      <MaterialIcons name="people-outline" size={64} color={colors.subtext} />
+      <MaterialIcons name="people" size={64} color={colors.subtext} />
       <Text style={[styles.emptyTitle, { color: colors.text }]}>
-        {searchDebounced ? 'No customers found' : 'No customers available'}
+        {searchDebounced ? 'No users found' : 'No users available'}
       </Text>
       <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
         {searchDebounced
           ? 'Try adjusting your search or filters'
-          : 'Add some customers to get started'}
+          : 'Add some users to get started'}
       </Text>
     </View>
   );
@@ -274,14 +270,10 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
   if (initialLoad) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* <StatusBar
-          barStyle={dark ? 'light-content' : 'dark-content'}
-          backgroundColor={colors.card}
-        /> */}
         <View style={styles.initialLoadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.text }]}>
-            Loading customers...
+            Loading users...
           </Text>
         </View>
       </View>
@@ -295,7 +287,6 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
         backgroundColor={colors.card}
       />
 
-      {/* Search Bar */}
       <View
         style={[
           styles.searchContainer,
@@ -306,7 +297,7 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
         <TextInput
           value={search}
           onChangeText={handleSearchChange}
-          placeholder="Search customers..."
+          placeholder="Search users..."
           placeholderTextColor={colors.subtext}
           style={[styles.searchInput, { color: colors.text }]}
         />
@@ -317,7 +308,6 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
         )}
       </View>
 
-      {/* Search Indicator */}
       {searchDebounced && (
         <View style={styles.searchIndicator}>
           <Text style={[styles.searchIndicatorText, { color: colors.subtext }]}>
@@ -326,21 +316,18 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
         </View>
       )}
 
-      {/* Filter Chips */}
       <View style={styles.filtersContainer}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Filter:
         </Text>
         <View style={styles.chipsRow}>
-          {renderFilterChip('All', 'All')}
-          {renderFilterChip('Active', 'Active', '#4CAF50')}
-          {renderFilterChip('Inactive', 'Inactive', '#FF9800')}
+          {renderFilterChip('Active', 0)}
+          {renderFilterChip('Inactive', 1)}
         </View>
       </View>
 
-      {/* List */}
       <FlatList
-        data={displayCustomers}
+        data={displayUsers}
         renderItem={renderUserCard}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
@@ -366,37 +353,12 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
             onLoadMore={handleLoadMore}
             showItemCount={true}
             totalItems={totalItems}
-            currentItemCount={displayCustomers.length}
+            currentItemCount={displayUsers.length}
           />
         }
       />
-
-      {/* Edit Modal */}
-      {editingCustomer && (
-        <EditCustomerModal
-          visible={true}
-          customer={editingCustomer}
-          onClose={() => setEditingCustomer(null)}
-          onSaveSuccess={(updated) => {
-            updateCustomer(updated);
-            setEditingCustomer(null);
-          }}
-        />
-      )}
-
-      {/* Email Modal */}
-      {emailModalVisible && selectedUserId && (
-        <EmailLogModal
-          visible={emailModalVisible}
-          userId={selectedUserId}
-          onClose={() => {
-            setEmailModalVisible(false);
-            setSelectedUserId(null);
-          }}
-        />
-      )}
     </View>
   );
 };
 
-export default CustomersList;
+export default UsersList;

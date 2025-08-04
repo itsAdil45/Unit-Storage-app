@@ -43,7 +43,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   const decorationScale = useSharedValue(0);
 
   const finishSplash = async() => {
-    await DefaultSplashScreen.hideAsync();
+    // await DefaultSplashScreen.hideAsync();
     onFinish();
 
   };

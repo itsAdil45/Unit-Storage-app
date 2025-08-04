@@ -139,10 +139,10 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
       transparent
       statusBarTranslucent
     >
-      <StatusBar
+      {/* <StatusBar
         backgroundColor="rgba(0,0,0,0.6)"
         barStyle={dark ? 'light-content' : 'dark-content'}
-      />
+      /> */}
       <View style={styles.overlay}>
         <Animated.View
           style={[

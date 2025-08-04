@@ -13,6 +13,7 @@ import Customers from '../screens/Customers';
 import Expenses from '../screens/Expenses';
 import WareHouses from '../screens/WareHouses';
 import Bookings from '../screens/Bookings';
+import Users from '../screens/Users';
 const Drawer = createDrawerNavigator();
 import { TouchableOpacity } from 'react-native';
 import { useAuth } from '../context/AuthContext';
@@ -186,6 +187,11 @@ const DrawerNavigator = () => (
       name="Bookings"
       component={Bookings}
       options={{ drawerLabel: 'Bookings', headerShown: true }}
+    />
+        <Drawer.Screen
+      name="Users"
+      component={Users}
+      options={{ drawerLabel: 'Users', headerShown: true }}
     />
   </Drawer.Navigator>
 );
