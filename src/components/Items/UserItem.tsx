@@ -13,6 +13,7 @@ interface UserItemProps {
   dark: boolean;
   onEdit: (booking: User) => void;
   onDeletePress: () => void;
+  onStatusToggle: (user: User) => void;
 }
 
 const UserItem: React.FC<UserItemProps> = ({
@@ -22,6 +23,7 @@ const UserItem: React.FC<UserItemProps> = ({
   dark,
   onEdit,
   onDeletePress,
+  onStatusToggle,
 }) => {
   return (
     <View
@@ -39,13 +41,15 @@ const UserItem: React.FC<UserItemProps> = ({
             User #{item.id}
           </Text>
         </View>
-<View
-  style={[
-    styles.statusBadge,
-    { 
-      backgroundColor: item.deleted === 1 
-        ? (dark ? '#FF5722' : '#ffcdd2') 
+        <TouchableOpacity
+          onPress={() => onStatusToggle(item)}
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor: item.deleted === 1
+                ? (dark ? '#FF5722' : '#ffcdd2')
         : (dark ? '#4CAF50' : '#c8e6c9'),
+
     },
   ]}
 >
@@ -61,7 +65,7 @@ const UserItem: React.FC<UserItemProps> = ({
   >
     {item.deleted === 1 ? 'Inactive' : 'Active'}
   </Text>
-</View>
+</TouchableOpacity>
       </View>
 
       <View style={styles.customerInfo}>

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   createDrawerNavigator,
   DrawerContentScrollView,
-  DrawerItemList,
+  DrawerItem,
 } from '@react-navigation/drawer';
 import { View, Switch, Text, Image, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import TabNavigator from './TabNavigator';
 import { useThemeContext } from '../context/ThemeContext';
 import { useTheme } from '@react-navigation/native';
@@ -24,6 +25,7 @@ const CustomDrawerContent = (props: any) => {
   const { dark } = useTheme();
   const { logout } = useAuth();
   const [userName, setUserName] = useState('');
+  const [isUnitManagementExpanded, setIsUnitManagementExpanded] = useState(false);
 
   useEffect(() => {
     const getUserName = async () => {
@@ -41,6 +43,10 @@ const CustomDrawerContent = (props: any) => {
 
     getUserName();
   }, []);
+
+  const toggleUnitManagement = () => {
+    setIsUnitManagementExpanded(!isUnitManagementExpanded);
+  };
   
   return (
     <View style={styles.drawerContainer}>
@@ -65,7 +71,98 @@ const CustomDrawerContent = (props: any) => {
       </View>
 
       <DrawerContentScrollView {...props} style={styles.scrollView}>
-        <DrawerItemList {...props} />
+        {/* Home Section */}
+        <DrawerItem
+          label="Home"
+          icon={({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
+          )}
+          onPress={() => props.navigation.navigate('Tabs')}
+          labelStyle={{ color: dark ? darkColors.text : lightColors.text }}
+        />
+
+        {/* Unit Management Section */}
+        <View style={styles.sectionContainer}>
+          <TouchableOpacity 
+            style={styles.sectionHeaderButton}
+            onPress={toggleUnitManagement}
+          >
+            <View style={styles.sectionHeaderContent}>
+              <View style={styles.sectionHeaderLeft}>
+                <Ionicons 
+                  name="business" 
+                  size={16} 
+                  color={dark ? darkColors.text : lightColors.text} 
+                />
+                <Text style={[
+                  styles.sectionHeader,
+                  { color: dark ? darkColors.text : lightColors.text }
+                ]}>
+                  Unit Management
+                </Text>
+              </View>
+              <Ionicons 
+                name={isUnitManagementExpanded ? "chevron-up" : "chevron-down"} 
+                size={16} 
+                color={dark ? darkColors.text : lightColors.text} 
+              />
+            </View>
+          </TouchableOpacity>
+          
+          {isUnitManagementExpanded && (
+            <>
+              <DrawerItem
+                label="Customers"
+                icon={({ color, size }) => (
+                  <Ionicons name="people" size={size} color={color} />
+                )}
+                onPress={() => props.navigation.navigate('Customers')}
+                labelStyle={{ color: dark ? darkColors.text : lightColors.text }}
+                style={styles.subMenuItem}
+              />
+              
+              <DrawerItem
+                label="Expenses"
+                icon={({ color, size }) => (
+                  <Ionicons name="card" size={size} color={color} />
+                )}
+                onPress={() => props.navigation.navigate('Expenses')}
+                labelStyle={{ color: dark ? darkColors.text : lightColors.text }}
+                style={styles.subMenuItem}
+              />
+              
+              <DrawerItem
+                label="Warehouses"
+                icon={({ color, size }) => (
+                  <Ionicons name="storefront" size={size} color={color} />
+                )}
+                onPress={() => props.navigation.navigate('Warehouses')}
+                labelStyle={{ color: dark ? darkColors.text : lightColors.text }}
+                style={styles.subMenuItem}
+              />
+              
+              <DrawerItem
+                label="Bookings"
+                icon={({ color, size }) => (
+                  <Ionicons name="calendar" size={size} color={color} />
+                )}
+                onPress={() => props.navigation.navigate('Bookings')}
+                labelStyle={{ color: dark ? darkColors.text : lightColors.text }}
+                style={styles.subMenuItem}
+              />
+            </>
+          )}
+        </View>
+
+        {/* Users Section */}
+        <DrawerItem
+          label="Users"
+          icon={({ color, size }) => (
+            <Ionicons name="person-circle" size={size} color={color} />
+          )}
+          onPress={() => props.navigation.navigate('Users')}
+          labelStyle={{ color: dark ? darkColors.text : lightColors.text }}
+        />
 
         <View style={styles.toggleSection}>
           <Text style={{ color: dark ? darkColors.text : lightColors.text }}>
@@ -127,6 +224,31 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  sectionContainer: {
+    marginVertical: 10,
+  },
+  sectionHeaderButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  sectionHeaderContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sectionHeader: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+    opacity: 0.8,
+  },
+  subMenuItem: {
+    marginLeft: 16,
+  },
   toggleSection: {
     padding: 16,
     flexDirection: 'row',
@@ -160,7 +282,12 @@ const styles = StyleSheet.create({
 
 const DrawerNavigator = () => (
   <Drawer.Navigator
-    screenOptions={{ headerShown: false }}
+    screenOptions={{ 
+      headerShown: false,
+      drawerStyle: {
+        width: 280,
+      },
+    }}
     drawerContent={(props) => <CustomDrawerContent {...props} />}
   >
     <Drawer.Screen
@@ -188,7 +315,7 @@ const DrawerNavigator = () => (
       component={Bookings}
       options={{ drawerLabel: 'Bookings', headerShown: true }}
     />
-        <Drawer.Screen
+    <Drawer.Screen
       name="Users"
       component={Users}
       options={{ drawerLabel: 'Users', headerShown: true }}

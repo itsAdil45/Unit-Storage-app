@@ -16,13 +16,33 @@ import { lightColors, darkColors } from '../../constants/color';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGet } from '../../hooks/useGet';
 import { useDelete } from '../../hooks/useDelete';
+import { usePatch } from '../../hooks/usePatch';
 import { User, UserFilterType } from '../../types/Users';
 import AnimatedDeleteWrapper, {
   useAnimatedDelete,
 } from '../Reusable/AnimatedDeleteWrapper';
 import LoadMorePagination from '../Reusable/LoadMorePagination';
 import UserItem from '../Items/UserItem';
+import AddEditUserModal from '../modals/AddEditUserModal';
 import styles from './Styles/BookingList'; // You may want to rename this file to UsersList
+
+// Add these styles to your stylesheet or create them inline
+const additionalStyles = {
+  addUserButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginLeft: 52,
+  },
+  addUserButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500' as const,
+    marginLeft: 4,
+  },
+};
 
 const UsersList = ({ refresh }: { refresh: number }) => {
   const { dark } = useTheme();
@@ -36,6 +56,7 @@ const UsersList = ({ refresh }: { refresh: number }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showAddEditModal, setShowAddEditModal] = useState(false);
 
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<UserFilterType>(0);
@@ -43,6 +64,7 @@ const UsersList = ({ refresh }: { refresh: number }) => {
 
   const { get } = useGet();
   const { del: deleteRequest } = useDelete();
+  const { patch } = usePatch();
 
   const { removingId, handleDelete } = useAnimatedDelete<User>(
     deleteRequest,
@@ -157,6 +179,64 @@ const UsersList = ({ refresh }: { refresh: number }) => {
 
   const handleEdit = (user: User) => {
     setEditingUser(user);
+    setShowAddEditModal(true);
+  };
+
+  const handleAddUser = () => {
+    setEditingUser(null);
+    setShowAddEditModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowAddEditModal(false);
+    setEditingUser(null);
+  };
+
+  const handleUserSuccess = (user: User) => {
+    if (editingUser) {
+      // Update existing user
+      updateUser(user);
+    } else {
+      // Add new user
+      setUsers(prev => [user, ...prev]);
+      setTotalItems(prev => prev + 1);
+    }
+  };
+
+  const handleStatusToggle = async (user: User) => {
+    try {
+      const newDeletedStatus = user.deleted === 0 ? 1 : 0;
+      const statusText = newDeletedStatus === 0 ? 'active' : 'inactive';
+      
+      const response = await patch(`/users/${user.id}`, { 
+        deleted: newDeletedStatus 
+      });
+
+      if (response?.status === 'success') {
+        // Update the user in the local state
+        const updatedUser = { ...user, deleted: newDeletedStatus };
+        updateUser(updatedUser);
+        
+        Toast.show({
+          type: 'success',
+          text1: 'Status Updated',
+          text2: `User is now ${statusText}`,
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: response?.message || 'Failed to update user status',
+        });
+      }
+    } catch (error: any) {
+      console.error('Error updating user status:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to update user status',
+      });
+    }
   };
 
   const updateUser = (updated: User) => {
@@ -249,6 +329,7 @@ const UsersList = ({ refresh }: { refresh: number }) => {
         dark={dark}
         onEdit={handleEdit}
         onDeletePress={() => {}}
+        onStatusToggle={handleStatusToggle}
       />
     </AnimatedDeleteWrapper>
   );
@@ -321,8 +402,22 @@ const UsersList = ({ refresh }: { refresh: number }) => {
           Filter:
         </Text>
         <View style={styles.chipsRow}>
-          {renderFilterChip('Active', 0)}
-          {renderFilterChip('Inactive', 1)}
+       
+              {renderFilterChip('Active', 0)}
+              {renderFilterChip('Inactive', 1)}
+
+          <View>
+              <TouchableOpacity
+                onPress={handleAddUser}
+                style={[
+                  { ...styles, ...additionalStyles }.addUserButton,
+                  { backgroundColor: colors.primary }
+                ]}
+              >
+                <MaterialIcons name="add" size={20} color="#fff" />
+                <Text style={additionalStyles.addUserButtonText}>Add User</Text>
+              </TouchableOpacity>
+            </View>
         </View>
       </View>
 
@@ -356,6 +451,15 @@ const UsersList = ({ refresh }: { refresh: number }) => {
             currentItemCount={displayUsers.length}
           />
         }
+      />
+
+      <AddEditUserModal
+        visible={showAddEditModal}
+        onClose={handleModalClose}
+        onSuccess={handleUserSuccess}
+        editingUser={editingUser}
+        colors={colors}
+        dark={dark}
       />
     </View>
   );
