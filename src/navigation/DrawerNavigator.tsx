@@ -47,6 +47,12 @@ const CustomDrawerContent = (props: any) => {
   const toggleUnitManagement = () => {
     setIsUnitManagementExpanded(!isUnitManagementExpanded);
   };
+
+  const navigateToHome = () => {
+    props.navigation.navigate('Tabs', {
+      screen: 'Dashboard'
+    });
+  };
   
   return (
     <View style={styles.drawerContainer}>
@@ -71,17 +77,15 @@ const CustomDrawerContent = (props: any) => {
       </View>
 
       <DrawerContentScrollView {...props} style={styles.scrollView}>
-        {/* Home Section */}
         <DrawerItem
           label="Home"
           icon={({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           )}
-          onPress={() => props.navigation.navigate('Tabs')}
+          onPress={navigateToHome}
           labelStyle={{ color: dark ? darkColors.text : lightColors.text }}
         />
 
-        {/* Unit Management Section */}
         <View style={styles.sectionContainer}>
           <TouchableOpacity 
             style={styles.sectionHeaderButton}
@@ -154,7 +158,6 @@ const CustomDrawerContent = (props: any) => {
           )}
         </View>
 
-        {/* Users Section */}
         <DrawerItem
           label="Users"
           icon={({ color, size }) => (
@@ -184,7 +187,7 @@ const CustomDrawerContent = (props: any) => {
         { borderTopColor: dark ? darkColors.border : lightColors.border }
       ]}>
         <Image
-          source={require('../../assets/logo.png')} 
+          source={require('../../assets/logo1.png')} 
           style={styles.logoImage}
           resizeMode="contain"
         />

@@ -148,16 +148,11 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
           <View style={styles.logoBackground}>
             <View style={styles.logoShadow} />
             <Image
-              source={require('../../assets/logo.png')}
+              source={require('../../assets/logo1.png')}
               style={styles.logoImage}
             />
           </View>
         </Animated.View>
-
-        {/* <Animated.View style={[styles.textContainer, titleAnimatedStyle]}>
-          <Text style={styles.title}>MoveHub</Text>
-          <View style={styles.titleUnderline} />
-        </Animated.View> */}
 
         <Animated.Text style={[styles.subtitle, subtitleAnimatedStyle]}>
           Choose & Move 

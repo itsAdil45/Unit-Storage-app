@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "unit-storage-app",
-    "slug": "unit-storage-app",
+    "name": "Choose and Moves",
+    "slug": "choose-and-moves",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-    "image": "./assets/logo.png",
-    "resizeMode": "contain",
-    "backgroundColor": "#f3a222"
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f3a222"
     },
     "ios": {
       "supportsTablet": true
@@ -28,9 +28,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "ff43384a-76da-4d40-8f19-8133aa12cd0f"
+        "projectId": "083996fd-162c-4e3c-94d8-5ca5b231ab9f"
       }
     },
-    "owner": "adilshakeel"
+    "owner": "adil45"
   }
 }

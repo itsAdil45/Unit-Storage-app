@@ -94,6 +94,7 @@ export default function Reports() {
       style={[
         styles.dropdownItem,
         selectedReport.id === item.id && styles.selectedDropdownItem,
+        { backgroundColor: colors.card },
       ]}
       onPress={() => handleReportSelection(item)}
     >
@@ -110,6 +111,7 @@ export default function Reports() {
                 styles.dropdownItemLabel,
                 selectedReport.id === item.id &&
                   styles.selectedDropdownItemLabel,
+                { color: colors.text },
               ]}
             >
               {item.label}
@@ -158,7 +160,7 @@ export default function Reports() {
             </Text>
 
             <TouchableOpacity
-              style={styles.dropdown}
+              style={[styles.dropdown,{backgroundColor: colors.card}]}
               onPress={() => setDropdownVisible(true)}
             >
               <View style={[styles.dropdownContent]}>
@@ -168,7 +170,7 @@ export default function Reports() {
                     size={20}
                     color="#007bff"
                   />
-                  <Text style={styles.dropdownText}>
+                  <Text style={[styles.dropdownText,{color: colors.text}]}>
                     {selectedReport.label}
                   </Text>
                 </View>
@@ -194,8 +196,8 @@ export default function Reports() {
               onPress={() => setDropdownVisible(false)}
             >
               <View style={styles.dropdownModal}>
-                <View style={styles.dropdownHeader}>
-                  <Text style={styles.dropdownHeaderText}>
+                <View style={[styles.dropdownHeader ,{ backgroundColor: colors.card }]}>
+                  <Text style={[styles.dropdownHeaderText, { color: colors.text }]}>
                     Select Report Type
                   </Text>
                   <TouchableOpacity

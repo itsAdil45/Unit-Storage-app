@@ -10,7 +10,6 @@ const AppNavigator = () => {
   const { isThemeLoaded } = useThemeContext();
   const [isSplashFinished, setIsSplashFinished] = useState(false);
 
-  // Wait for both splash screen to finish AND theme to load
   const isAppReady = isSplashFinished && isThemeLoaded;
 
   if (!isAppReady) {

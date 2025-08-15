@@ -12,6 +12,7 @@ import {
   StatusBar,
   Keyboard,
   ScrollView,
+  Image,
   TouchableWithoutFeedback,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
@@ -26,6 +27,9 @@ import Animated, {
 import { MaterialIcons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '@react-navigation/native';
+import { lightColors, darkColors } from '../constants/color';
+
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,6 +38,8 @@ const LoginScreen = () => {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const { login } = useAuth();
+  const { dark } = useTheme();
+  const colors = dark ? darkColors : lightColors;
 
   const logoScale = useSharedValue(0);
   const formTranslateY = useSharedValue(50);
@@ -121,13 +127,16 @@ const LoginScreen = () => {
             <View style={styles.content}>
               <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
                 <View style={styles.logoWrapper}>
-                  <MaterialIcons name="lock" size={40} color="#fff" />
-                </View>
+            <Image
+              source={require('../../assets/logo1.png')}
+              style={styles.logoImage}
+            />               
+             </View>
                 <Animated.Text
                   style={styles.logoText}
                   entering={FadeInUp.duration(500)}
                 >
-                  SecureApp
+                  Choose & Move
                 </Animated.Text>
               </Animated.View>
 
@@ -141,12 +150,12 @@ const LoginScreen = () => {
                 </Text>
               </Animated.View>
 
-              <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
+              <Animated.View style={[styles.formContainer, formAnimatedStyle, {backgroundColor: colors.formColor}]}>
                 <Animated.View
                   style={styles.inputContainer}
                   entering={FadeInUp.delay(200).duration(500)}
                 >
-                  <View style={styles.inputWrapper}>
+                  <View style={[styles.inputWrapper, {backgroundColor: colors.formInput}]}>
                     <MaterialIcons
                       name="email"
                       size={20}
@@ -163,7 +172,7 @@ const LoginScreen = () => {
                       keyboardType="email-address"
                       autoCapitalize="none"
                       autoCorrect={false}
-                      style={styles.input}
+                      style={[styles.input,{color: colors.text}]}
                     />
                   </View>
                 </Animated.View>
@@ -172,7 +181,7 @@ const LoginScreen = () => {
                   style={styles.inputContainer}
                   entering={FadeInUp.delay(300).duration(500)}
                 >
-                  <View style={styles.inputWrapper}>
+                  <View style={[styles.inputWrapper, {backgroundColor: colors.formInput}]}>
                     <MaterialIcons
                       name="lock"
                       size={20}
@@ -188,7 +197,7 @@ const LoginScreen = () => {
                       onBlur={() => setPasswordFocused(false)}
                       secureTextEntry={!showPassword}
                       autoCapitalize="none"
-                      style={styles.input}
+                      style={[styles.input,{color: colors.text}]}
                     />
                     <TouchableOpacity
                       onPress={() => setShowPassword(!showPassword)}
@@ -259,10 +268,10 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logoWrapper: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     borderRadius: 40,
-    backgroundColor: 'rgba(98,14,15, 0.2)',
+    backgroundColor: 'rgba(98, 14, 15, 0.14)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -358,6 +367,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginLeft: 12,
+  },
+    logoImage: {
+    width: 80,
+    height: 80,
+    resizeMode: 'cover',
   },
 });
 
