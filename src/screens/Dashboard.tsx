@@ -108,7 +108,7 @@ const Dashboard = () => {
         const [custRes, storRes, expRes] = await Promise.all([
           get('/dashboard/customerOverview'),
           get('/dashboard/storageOverview'),
-          get('/expenses'), // ← Replace this endpoint if it's different
+          get('/expenses'), 
         ]);
 
         setPaymentOverview(custRes?.data || null);
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     paddingVertical: 8,
-    paddingBottom: 100, // Add padding to avoid overlap with floating button
+    paddingBottom: 100, 
   },
 });
 

@@ -14,19 +14,15 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '@react-navigation/native';
 import { lightColors, darkColors } from '../../constants/color';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useGet } from '../../hooks/useGet';
-import { useDelete } from '../../hooks/useDelete';
 import { usePatch } from '../../hooks/usePatch';
 import { User, UserFilterType } from '../../types/Users';
-import AnimatedDeleteWrapper, {
-  useAnimatedDelete,
-} from '../Reusable/AnimatedDeleteWrapper';
+import AnimatedDeleteWrapper from '../Reusable/AnimatedDeleteWrapper';
 import LoadMorePagination from '../Reusable/LoadMorePagination';
 import UserItem from '../Items/UserItem';
 import AddEditUserModal from '../modals/AddEditUserModal';
-import styles from './Styles/BookingList'; // You may want to rename this file to UsersList
+import styles from './Styles/BookingList';
+import { useListData } from '../../hooks/useListData';
 
-// Add these styles to your stylesheet or create them inline
 const additionalStyles = {
   addUserButton: {
     flexDirection: 'row' as const,
@@ -47,29 +43,41 @@ const additionalStyles = {
 const UsersList = ({ refresh }: { refresh: number }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
-  const [users, setUsers] = useState<User[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
+
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showAddEditModal, setShowAddEditModal] = useState(false);
-
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<UserFilterType>(0);
   const [searchDebounced, setSearchDebounced] = useState('');
 
-  const { get } = useGet();
-  const { del: deleteRequest } = useDelete();
   const { patch } = usePatch();
 
-  const { removingId, handleDelete } = useAnimatedDelete<User>(
-    deleteRequest,
-    '/users',
-  );
+  const {
+    items: users,
+    setItems: setUsers,
+    page,
+    totalPages,
+    totalItems,
+    loading,
+    loadingMore,
+    refreshing,
+    initialLoad,
+    removingId,
+    handleLoadMore,
+    onRefresh,
+    handleDelete,
+    addItem: addUser,
+    updateItem: updateUser,
+    resetAndFetch,
+  } = useListData<User>({
+    endpoint: '/users',
+    searchDebounced,
+    filter: filterStatus !== undefined ? filterStatus.toString() : undefined,
+    filterKey: 'filterStatus',
+    refresh,
+    searchParam: 'search',
+    dataKey: 'users',
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -78,104 +86,11 @@ const UsersList = ({ refresh }: { refresh: number }) => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    if (!initialLoad) {
-      setPage(1);
-      setUsers([]);
-      fetchUsers(1, false);
-    }
-  }, [searchDebounced, filterStatus, refresh]);
-
-  useEffect(() => {
-    if (page === 1) {
-      fetchUsers(1, false);
-    }
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
-      setPage(1);
-      setUsers([]);
-      fetchUsers(1, false);
-    }, []),
+      resetAndFetch();
+    }, [resetAndFetch])
   );
-
-  const fetchUsers = async (pg: number, isLoadMore: boolean = false, isRefresh: boolean = false) => {
-    if (isLoadMore) {
-      setLoadingMore(true);
-    } else if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-      if (pg === 1) {
-        setUsers([]);
-      }
-    }
-
-    try {
-      const queryParams = new URLSearchParams({
-        page: pg.toString(),
-        limit: '10',
-      });
-
-      if (searchDebounced.trim()) {
-        queryParams.append('search', searchDebounced.trim());
-      }
-
-      if (filterStatus !== undefined) {
-        queryParams.append('filterStatus', filterStatus.toString());
-      }
-
-      const endpoint = `/users?${queryParams.toString()}`;
-      const res = await get(endpoint);
-
-      if (res?.status === 'success') {
-        const usersData = res.data.users || [];
-
-        if (isLoadMore) {
-          setUsers((prev) => [...prev, ...usersData]);
-        } else {
-          // Replace existing items (for refresh or initial load)
-          setUsers(usersData);
-        }
-
-        setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
-        setTotalItems(parseInt(res.data.pagination.total) || 0);
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      if (!isLoadMore) {
-        setUsers([]);
-        setTotalPages(1);
-        setTotalItems(0);
-      }
-    }
-
-    if (isLoadMore) {
-      setLoadingMore(false);
-    } else if (isRefresh) {
-      setRefreshing(false);
-    } else {
-      setLoading(false);
-      if (initialLoad) {
-        setInitialLoad(false);
-      }
-    }
-  };
-
-  // Pull to refresh handler
-  const onRefresh = useCallback(() => {
-    setPage(1);
-    fetchUsers(1, false, true);
-  }, [searchDebounced, filterStatus]);
-
-  const handleLoadMore = () => {
-    if (page < totalPages && !loading && !loadingMore && !refreshing) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchUsers(nextPage, true);
-    }
-  };
 
   const handleEdit = (user: User) => {
     setEditingUser(user);
@@ -194,12 +109,9 @@ const UsersList = ({ refresh }: { refresh: number }) => {
 
   const handleUserSuccess = (user: User) => {
     if (editingUser) {
-      // Update existing user
       updateUser(user);
     } else {
-      // Add new user
-      setUsers(prev => [user, ...prev]);
-      setTotalItems(prev => prev + 1);
+      addUser(user);
     }
   };
 
@@ -213,7 +125,6 @@ const UsersList = ({ refresh }: { refresh: number }) => {
       });
 
       if (response?.status === 'success') {
-        // Update the user in the local state
         const updatedUser = { ...user, deleted: newDeletedStatus };
         updateUser(updatedUser);
         
@@ -239,14 +150,6 @@ const UsersList = ({ refresh }: { refresh: number }) => {
     }
   };
 
-  const updateUser = (updated: User) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === updated.id ? { ...user, ...updated } : user,
-      ),
-    );
-  };
-
   const displayUsers = useMemo(() => {
     return users;
   }, [users]);
@@ -267,9 +170,9 @@ const UsersList = ({ refresh }: { refresh: number }) => {
   const getFilterColor = (filter: UserFilterType) => {
     switch (filter) {
       case 0:
-        return '#4CAF50'; // Green for Active
+        return '#4CAF50'; 
       case 1:
-        return '#FF5722'; // Red for Inactive
+        return '#FF5722'; 
       default:
         return undefined;
     }
@@ -315,10 +218,7 @@ const UsersList = ({ refresh }: { refresh: number }) => {
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
-      onDelete={(id) => {
-        handleDelete(id, setUsers);
-        setTotalItems((prev) => prev - 1);
-      }}
+      onDelete={handleDelete}
       deleteTitle="Delete User"
       itemName={`${item.firstName} ${item.lastName}`}
     >
@@ -402,22 +302,21 @@ const UsersList = ({ refresh }: { refresh: number }) => {
           Filter:
         </Text>
         <View style={styles.chipsRow}>
-       
-              {renderFilterChip('Active', 0)}
-              {renderFilterChip('Inactive', 1)}
+          {renderFilterChip('Active', 0)}
+          {renderFilterChip('Inactive', 1)}
 
           <View>
-              <TouchableOpacity
-                onPress={handleAddUser}
-                style={[
-                  { ...styles, ...additionalStyles }.addUserButton,
-                  { backgroundColor: colors.primary }
-                ]}
-              >
-                <MaterialIcons name="add" size={20} color="#fff" />
-                <Text style={additionalStyles.addUserButtonText}>Add User</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={handleAddUser}
+              style={[
+                { ...styles, ...additionalStyles }.addUserButton,
+                { backgroundColor: colors.primary }
+              ]}
+            >
+              <MaterialIcons name="add" size={20} color="#fff" />
+              <Text style={additionalStyles.addUserButtonText}>Add User</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -433,9 +332,9 @@ const UsersList = ({ refresh }: { refresh: number }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.primary]} // Android
-            tintColor={colors.primary} // iOS
-            progressBackgroundColor={colors.card} // Android background
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+            progressBackgroundColor={colors.card}
           />
         }
         ListFooterComponent={

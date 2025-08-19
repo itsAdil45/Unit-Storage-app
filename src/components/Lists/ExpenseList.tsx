@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,164 +7,53 @@ import {
   ActivityIndicator,
   FlatList,
   TextInput,
-  RefreshControl, // Add this import
+  RefreshControl,
 } from 'react-native';
-import LoadMorePagination from './../Reusable/LoadMorePagination';
-import AnimatedDeleteWrapper, {
-  useAnimatedDelete,
-} from './../Reusable/AnimatedDeleteWrapper';
-import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useGet } from '../../hooks/useGet';
-import { useDelete } from '../../hooks/useDelete';
-import { lightColors, darkColors } from '../../constants/color';
-import EditExpenseModal from './../modals/EditExpenseModal';
-import ExpenseItem from './../Items/ExpenseItem';
+import { useListData } from '../../hooks/useListData';
+import LoadMorePagination from '../Reusable/LoadMorePagination';
+import AnimatedDeleteWrapper from '../Reusable/AnimatedDeleteWrapper';
+import EditExpenseModal from '../modals/EditExpenseModal';
+import ExpenseItem from '../Items/ExpenseItem';
 import { Expense } from '../../types/Expenses';
+import { lightColors, darkColors } from '../../constants/color';
 import styles from './Styles/ExpenseList';
 
 const ExpenseList = ({ refresh }: { refresh: number }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
 
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false); // Add refreshing state
-  const [initialLoad, setInitialLoad] = useState(true);
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [search, setSearch] = useState('');
   const [searchDebounced, setSearchDebounced] = useState('');
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
-  const { get } = useGet();
-  const { del: deleteRequest } = useDelete();
+  const {
+    items: expenses,
+    setItems: setExpenses,
+    loading,
+    loadingMore,
+    refreshing,
+    initialLoad,
+    page,
+    totalPages,
+    totalItems,
+    removingId,
+    handleLoadMore,
+    onRefresh,
+    handleDelete
+  } = useListData<Expense>({
+    endpoint: '/expenses',
+    searchDebounced,
+    refresh
+  });
 
-  const { removingId, handleDelete } = useAnimatedDelete<Expense>(
-    deleteRequest,
-    '/expenses',
-  );
-
-  useEffect(() => {
+  React.useEffect(() => {
     const timer = setTimeout(() => {
       setSearchDebounced(search);
     }, 500);
     return () => clearTimeout(timer);
   }, [search]);
-
-  useEffect(() => {
-    if (!initialLoad) {
-      setPage(1);
-      setExpenses([]);
-      fetchExpenses(1, false);
-    }
-  }, [searchDebounced, refresh]);
-
-  useEffect(() => {
-    if (page === 1) {
-      fetchExpenses(1, false);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      setPage(1);
-      setExpenses([]);
-      fetchExpenses(1, false);
-    }, []),
-  );
-
-  const fetchExpenses = async (pg: number, isLoadMore: boolean = false, isRefresh: boolean = false) => {
-    if (isLoadMore) {
-      setLoadingMore(true);
-    } else if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-      if (pg === 1) {
-        setExpenses([]);
-      }
-    }
-
-    try {
-      const queryParams = new URLSearchParams({
-        page: pg.toString(),
-        limit: '10',
-      });
-
-      if (searchDebounced.trim()) {
-        queryParams.append('search', searchDebounced.trim());
-      }
-
-      const endpoint = `/expenses?${queryParams.toString()}`;
-      const res = await get(endpoint);
-
-      if (res?.status === 'success') {
-        const expensesData = res.data.expenses || [];
-
-        if (isLoadMore) {
-          setExpenses((prev) => [...prev, ...expensesData]);
-        } else {
-          // Replace existing items (for refresh or initial load)
-          setExpenses(expensesData);
-        }
-
-        setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
-        setTotalItems(parseInt(res.data.pagination.total) || 0);
-      }
-    } catch (error) {
-      console.error('Error fetching expenses:', error);
-      if (!isLoadMore) {
-        setExpenses([]);
-        setTotalPages(1);
-        setTotalItems(0);
-      }
-    }
-
-    if (isLoadMore) {
-      setLoadingMore(false);
-    } else if (isRefresh) {
-      setRefreshing(false);
-    } else {
-      setLoading(false);
-      if (initialLoad) {
-        setInitialLoad(false);
-      }
-    }
-  };
-
-  // Add pull to refresh handler
-  const onRefresh = useCallback(() => {
-    setPage(1);
-    fetchExpenses(1, false, true);
-  }, [searchDebounced]);
-
-  const handleLoadMore = () => {
-    if (page < totalPages && !loading && !loadingMore && !refreshing) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchExpenses(nextPage, true);
-    }
-  };
-
-  const handleEdit = (expense: Expense) => {
-    setEditingExpense(expense);
-  };
-
-  const updateExpense = (updated: Expense) => {
-    setExpenses((prev) =>
-      prev.map((expense) =>
-        expense.id === updated.id ? { ...expense, ...updated } : expense,
-      ),
-    );
-  };
-
-  const displayExpenses = useMemo(() => {
-    return expenses;
-  }, [expenses]);
 
   const handleSearchChange = (text: string) => {
     setSearch(text);
@@ -175,20 +64,24 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
     setSearchDebounced('');
   };
 
-  const renderExpenseCard = ({
-    item,
-    index,
-  }: {
-    item: Expense;
-    index: number;
-  }) => (
+  // Expense management
+  const handleEdit = (expense: Expense) => {
+    setEditingExpense(expense);
+  };
+
+  const updateExpense = (updated: Expense) => {
+    setExpenses((prev) =>
+      prev.map((expense) =>
+        expense.id === updated.id ? { ...expense, ...updated } : expense
+      )
+    );
+  };
+
+  const renderExpenseCard = ({ item, index }: { item: Expense; index: number }) => (
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
-      onDelete={(id) => {
-        handleDelete(id, setExpenses);
-        setTotalItems((prev) => prev - 1);
-      }}
+      onDelete={handleDelete}
       deleteTitle="Delete Expense"
       itemName={item.description}
       animationDuration={300}
@@ -222,10 +115,6 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
   if (initialLoad) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* <StatusBar
-          barStyle={dark ? 'light-content' : 'dark-content'}
-          backgroundColor={colors.card}
-        /> */}
         <View style={styles.initialLoadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -273,21 +162,20 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
       )}
 
       <FlatList
-        data={displayExpenses}
+        data={expenses}
         renderItem={renderExpenseCard}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={renderEmptyList}
         scrollEnabled={!loading}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.primary]} // Android
-            tintColor={colors.primary} // iOS
-            progressBackgroundColor={colors.card} // Android background
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+            progressBackgroundColor={colors.card}
           />
         }
         ListFooterComponent={
@@ -300,7 +188,7 @@ const ExpenseList = ({ refresh }: { refresh: number }) => {
             onLoadMore={handleLoadMore}
             showItemCount={true}
             totalItems={totalItems}
-            currentItemCount={displayExpenses.length}
+            currentItemCount={expenses.length}
           />
         }
       />

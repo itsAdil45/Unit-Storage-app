@@ -22,7 +22,7 @@ import Toast from 'react-native-toast-message';
 interface AddEditPaymentModalProps {
   visible: boolean;
   booking: Booking;
-  payment?: Payment; // undefined for add, defined for edit
+  payment?: Payment; 
   onClose: () => void;
   onSuccess: (payment: Payment) => void;
   colors: any;
@@ -63,7 +63,6 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
   useEffect(() => {
     if (visible) {
       if (isEditMode && payment) {
-        // Pre-fill form for edit mode
         setFormData({
           amount: payment.amount,
           paymentMethod: payment.paymentMethod || '',
@@ -74,7 +73,6 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
         setStartDate(new Date(payment.startDate));
         setEndDate(new Date(payment.endDate));
       } else {
-        // Reset form for add mode
         const today = new Date();
         setFormData({
           amount: '',
@@ -184,7 +182,6 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
       const form = new FormData();
 
       if (isEditMode) {
-        // Edit mode - only include fields that can be updated
         form.append('amount', formData.amount);
         form.append('paymentDate', paymentDate.toISOString().split('T')[0]);
         form.append('paymentMethod', formData.paymentMethod);
@@ -193,7 +190,6 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
         form.append('status', formData.status);
         form.append('remarks', formData.remarks);
       } else {
-        // Add mode - include bookingId
         form.append('bookingId', booking.id.toString());
         form.append('amount', formData.amount);
         form.append('paymentDate', paymentDate.toISOString().split('T')[0]);
@@ -204,7 +200,6 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
         form.append('remarks', formData.remarks);
       }
 
-      // Add attachments if selected
       if (paymentReceivedAttachment) {
         form.append('paymentReceivedAttachment', {
           uri: paymentReceivedAttachment.uri,
@@ -230,37 +225,50 @@ const AddEditPaymentModal: React.FC<AddEditPaymentModalProps> = ({
       }
 
       if (response?.status === 'success') {
-        {
-          onClose();
-        }
-        {
-          isEditMode
-            ? Toast.show({
-                type: 'success',
-                text1: 'Updated',
-                text2: `Payment updated successfully`,
-              })
-            : Toast.show({
-                type: 'success',
-                text1: 'Added',
-                text2: `Payment added successfully`,
-              });
-        }
+        const updatedPayment: Payment = {
+          ...(isEditMode ? payment! : {}),
+          ...(response.data || response.payment || {}),
+          id: isEditMode ? payment!.id : (response.data?.id || response.payment?.id),
+          amount: formData.amount,
+          paymentDate: paymentDate.toISOString().split('T')[0],
+          paymentMethod: formData.paymentMethod,
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
+          status: formData.status,
+          remarks: formData.remarks,
+          paymentReceivedAttachment: 
+            response.data?.paymentReceivedAttachment || 
+            response.payment?.paymentReceivedAttachment || 
+            (isEditMode ? payment!.paymentReceivedAttachment : null),
+          invoiceAttachment: 
+            response.data?.invoiceAttachment || 
+            response.payment?.invoiceAttachment || 
+            (isEditMode ? payment!.invoiceAttachment : null),
+        };
+
+        onSuccess(updatedPayment);
+        
+        onClose();
+        
+        Toast.show({
+          type: 'success',
+          text1: isEditMode ? 'Updated' : 'Added',
+          text2: `Payment ${isEditMode ? 'updated' : 'added'} successfully`,
+        });
       } else {
-        {
-          onClose();
-        }
+        onClose();
         Toast.show({
           type: 'error',
           text1: 'Failed',
-          text2: `${response?.message}`,
+          text2: `${response?.message || 'Failed to save payment'}`,
         });
       }
     } catch (error) {
+      console.error('Error saving payment:', error);
       Toast.show({
         type: 'error',
         text1: 'Failed',
-        text2: `Error', Failed to save payment`,
+        text2: `Failed to save payment`,
       });
     } finally {
       setLoading(false);

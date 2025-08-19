@@ -8,52 +8,52 @@ import {
   ActivityIndicator,
   FlatList,
   TextInput,
-  RefreshControl, // Add this import
+  RefreshControl,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
 import { useTheme } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useGet } from '../../hooks/useGet';
-import { useDelete } from '../../hooks/useDelete';
 import { lightColors, darkColors } from '../../constants/color';
 import { FilterType } from '../../types/Types';
 import EmailLogModal from '../modals/EmailLogModal';
 import EditCustomerModal from '../modals/EditCustomerModal';
 import AnimatedDeleteWrapper, {
-  useAnimatedDelete,
 } from '../Reusable/AnimatedDeleteWrapper';
 import LoadMorePagination from '../Reusable/LoadMorePagination';
 import CustomerItem from '../Items/CustomerItem';
 import { Customer } from '../../types/Customers';
 import styles from './Styles/CustomersList';
-
+import { useListData } from '../../hooks/useListData';
 const CustomersList = ({ refresh }: { refresh: number }) => {
   const { dark } = useTheme();
   const colors = dark ? darkColors : lightColors;
   const [emailModalVisible, setEmailModalVisible] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false); // Add refreshing state
-  const [initialLoad, setInitialLoad] = useState(true);
+
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterType>('All');
   const [searchDebounced, setSearchDebounced] = useState('');
 
-  const { get } = useGet();
-  const { del: deleteRequest } = useDelete();
-
-  // Use the custom hook for animated delete
-  const { removingId, handleDelete } = useAnimatedDelete<Customer>(
-    deleteRequest,
-    '/customers',
-  );
+  const {
+    items: customers,
+    setItems: setCustomers,
+    page,
+    totalPages,
+    totalItems,
+    loading,
+    loadingMore,
+    refreshing,
+    initialLoad,
+    removingId,
+    handleLoadMore,
+    onRefresh,
+    handleDelete,
+  } = useListData<Customer>({
+    endpoint: '/customers',
+    searchDebounced,
+    filter: statusFilter === 'Inactive' ? '1' : statusFilter === 'Active' ? '0' : undefined,
+    refresh,
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -62,106 +62,6 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    if (!initialLoad) {
-      setPage(1);
-      setCustomers([]);
-      fetchCustomers(1, false);
-    }
-  }, [searchDebounced, statusFilter, refresh]);
-
-  useEffect(() => {
-    if (page === 1) {
-      fetchCustomers(1, false);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      setPage(1);
-      setCustomers([]);
-      fetchCustomers(1, false);
-    }, []),
-  );
-
-  const fetchCustomers = async (pg: number, isLoadMore: boolean = false, isRefresh: boolean = false) => {
-    if (isLoadMore) {
-      setLoadingMore(true);
-    } else if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-      if (pg === 1) {
-        setCustomers([]);
-      }
-    }
-
-    try {
-      const queryParams = new URLSearchParams({
-        page: pg.toString(),
-        limit: '10',
-      });
-
-      if (searchDebounced.trim()) {
-        queryParams.append('search', searchDebounced.trim());
-      }
-
-      let statusValue = '0';
-      if (statusFilter === 'Inactive') {
-        statusValue = '1';
-      }
-      queryParams.append('filterStatus', statusValue);
-
-      const endpoint = `/customers?${queryParams.toString()}`;
-      const res = await get(endpoint);
-
-      if (res?.status === 'success') {
-        const customersData = res.data.customers || [];
-
-        if (isLoadMore) {
-          setCustomers((prev) => [...prev, ...customersData]);
-        } else {
-          // Replace existing items (for refresh or initial load)
-          setCustomers(customersData);
-        }
-
-        setTotalPages(parseInt(res.data.pagination.totalPages) || 1);
-        setTotalItems(parseInt(res.data.pagination.total) || 0);
-      }
-    } catch (error) {
-      console.error('Error fetching customers:', error);
-      if (!isLoadMore) {
-        setCustomers([]);
-        setTotalPages(1);
-        setTotalItems(0);
-      }
-    }
-
-    if (isLoadMore) {
-      setLoadingMore(false);
-    } else if (isRefresh) {
-      setRefreshing(false);
-    } else {
-      setLoading(false);
-      if (initialLoad) {
-        setInitialLoad(false);
-      }
-    }
-  };
-
-  // Add pull to refresh handler
-  const onRefresh = useCallback(() => {
-    setPage(1);
-    fetchCustomers(1, false, true);
-  }, [searchDebounced, statusFilter]);
-
-  const handleLoadMore = () => {
-    if (page < totalPages && !loading && !loadingMore && !refreshing) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchCustomers(nextPage, true);
-    }
-  };
 
   const handleEmailModal = (userId: number) => {
     setSelectedUserId(userId);
@@ -238,10 +138,7 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
     <AnimatedDeleteWrapper
       itemId={item.id}
       removingId={removingId}
-      onDelete={(id) => {
-        handleDelete(id, setCustomers);
-        setTotalItems((prev) => prev - 1);
-      }}
+      onDelete={handleDelete}
       deleteTitle="Delete Customer"
       itemName={`${item.firstName} ${item.lastName}`}
     >
@@ -252,7 +149,7 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
         dark={dark}
         onEdit={handleEdit}
         onEmail={handleEmailModal}
-        onDeletePress={() => {}} // This will be overridden by AnimatedDeleteWrapper
+        onDeletePress={() => {}} 
       />
     </AnimatedDeleteWrapper>
   );
@@ -274,10 +171,7 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
   if (initialLoad) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* <StatusBar
-          barStyle={dark ? 'light-content' : 'dark-content'}
-          backgroundColor={colors.card}
-        /> */}
+
         <View style={styles.initialLoadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.text }]}>
@@ -295,7 +189,6 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
         backgroundColor={colors.card}
       />
 
-      {/* Search Bar */}
       <View
         style={[
           styles.searchContainer,
@@ -317,7 +210,6 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
         )}
       </View>
 
-      {/* Search Indicator */}
       {searchDebounced && (
         <View style={styles.searchIndicator}>
           <Text style={[styles.searchIndicatorText, { color: colors.subtext }]}>
@@ -351,9 +243,9 @@ const CustomersList = ({ refresh }: { refresh: number }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.primary]} // Android
-            tintColor={colors.primary} // iOS
-            progressBackgroundColor={colors.card} // Android background
+            colors={[colors.primary]} 
+            tintColor={colors.primary} 
+            progressBackgroundColor={colors.card} 
           />
         }
         ListFooterComponent={
